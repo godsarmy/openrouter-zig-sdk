@@ -51,8 +51,10 @@ pub fn main() !void {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
-    var client = try openrouter.Client.init(.{
-        .allocator = allocator,
+    var threaded: std.Io.Threaded = .init_single_threaded;
+    defer threaded.deinit();
+
+    var client = try openrouter.Client.init(allocator, threaded.io(), .{
         .api_key = std.posix.getenv("OPENROUTER_API_KEY") orelse return error.MissingApiKey,
     });
     defer client.deinit();

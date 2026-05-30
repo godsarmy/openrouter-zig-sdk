@@ -37,6 +37,7 @@ zig build test
 ## API Design Guidelines
 
 - Require callers to pass an allocator for owned data.
+- Require callers to pass `std.Io` to the client; do not create a hidden/global I/O backend inside the library.
 - Document ownership and lifetime of every returned value.
 - Prefer typed enums/structs over loosely typed strings where practical.
 - Preserve OpenRouter-compatible model IDs as strings.
@@ -46,6 +47,10 @@ zig build test
   - `X-Title`
 
 ## HTTP/API Notes
+
+Zig `0.16.x` uses I/O as an explicit interface. The OpenRouter client should use `std.http.Client` with caller-provided `std.Io`, for example from application-owned `std.Io.Threaded`.
+
+Do not hard-code an async runtime or event-loop backend into the library.
 
 Base URL:
 
