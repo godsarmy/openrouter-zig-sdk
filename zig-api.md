@@ -36,7 +36,7 @@ After reviewing the initial plan, use these choices as implementation constraint
 - [ ] Prefer an arena per parsed response/chunk to avoid nested string/slice free logic.
 - [ ] Use lightweight resource namespace structs holding `*Client`; no heap allocation for namespaces.
 - [ ] Make the HTTP transport mockable from day one so unit tests do not require network access.
-- [ ] Compile-check the exact Zig `0.16.x` `std.Io`, `std.http.Client`, and `std.json` APIs before freezing signatures.
+- [x] Compile-check the exact Zig `0.16.x` `std.Io`, `std.http.Client`, and `std.json` APIs before freezing signatures.
 
 ## Target Public API Shape
 
@@ -164,17 +164,17 @@ Verify the exact Zig `0.16.x` standard-library APIs before locking public signat
 
 ## Tasks
 
-- [ ] Confirm `std.Io` and `std.Io.Threaded` construction/usage compile on installed Zig `0.16.x`.
-- [ ] Confirm `std.http.Client` initialization with caller-provided I/O compiles.
-- [ ] Confirm `std.json` stringify/parse option names used by this plan compile.
-- [ ] Build a tiny throwaway request/response path using the planned `Client.init` shape.
-- [ ] Remove or fold the spike code into Milestone 1 once signatures are proven.
+- [x] Confirm `std.Io` and `std.Io.Threaded` construction/usage compile on installed Zig `0.16.x`.
+- [x] Confirm `std.http.Client` initialization with caller-provided I/O compiles.
+- [x] Confirm `std.json` stringify/parse option names used by this plan compile.
+- [x] Build a tiny throwaway request/response path using the planned `Client.init` shape.
+- [x] Remove or fold the spike code into Milestone 1 once signatures are proven.
 
 ## Acceptance Criteria
 
-- [ ] Planned `Client.init(allocator, io, config)` signature is compile-verified.
-- [ ] Planned JSON helper options are compile-verified.
-- [ ] Any stdlib API differences are reflected back into this plan before implementation continues.
+- [x] Planned `Client.init(allocator, io, config)` signature is compile-verified.
+- [x] Planned JSON helper options are compile-verified.
+- [x] Any stdlib API differences are reflected back into this plan before implementation continues.
 
 ---
 
