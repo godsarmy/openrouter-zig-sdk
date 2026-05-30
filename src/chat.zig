@@ -1,0 +1,1 @@
+//! Chat completions API placeholder.

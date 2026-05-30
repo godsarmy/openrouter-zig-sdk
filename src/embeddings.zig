@@ -1,0 +1,1 @@
+//! Embeddings API placeholder.

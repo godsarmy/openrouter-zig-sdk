@@ -122,37 +122,37 @@ while (try stream.next()) |chunk| {
 
 ## Files
 
-- [ ] `build.zig`
-- [ ] `build.zig.zon`
-- [ ] `src/openrouter.zig`
-- [ ] `src/client.zig`
-- [ ] `src/config.zig`
-- [ ] `src/options.zig`
-- [ ] `src/errors.zig`
-- [ ] `src/http.zig`
-- [ ] `src/json.zig`
-- [ ] `src/retry.zig`
-- [ ] `src/stream.zig`
-- [ ] `src/chat.zig`
-- [ ] `src/models.zig`
-- [ ] `src/embeddings.zig`
-- [ ] `examples/chat.zig`
-- [ ] `examples/stream.zig`
-- [ ] `examples/list_models.zig`
+- [x] `build.zig`
+- [x] `build.zig.zon`
+- [x] `src/openrouter.zig`
+- [x] `src/client.zig`
+- [x] `src/config.zig`
+- [x] `src/options.zig`
+- [x] `src/errors.zig`
+- [x] `src/http.zig`
+- [x] `src/json.zig`
+- [x] `src/retry.zig`
+- [x] `src/stream.zig`
+- [x] `src/chat.zig`
+- [x] `src/models.zig`
+- [x] `src/embeddings.zig`
+- [x] `examples/chat.zig`
+- [x] `examples/stream.zig`
+- [x] `examples/list_models.zig`
 
 ## Tasks
 
-- [ ] Create Zig package targeting Zig `0.16.x`.
-- [ ] Add library module named `openrouter`.
-- [ ] Add test step: `zig build test`.
-- [ ] Add example build steps.
-- [ ] Ensure `zig fmt .` works.
+- [x] Create Zig package targeting Zig `0.16.x`.
+- [x] Add library module named `openrouter`.
+- [x] Add test step: `zig build test`.
+- [x] Add example build steps.
+- [x] Ensure `zig fmt .` works.
 
 ## Acceptance Criteria
 
-- [ ] `zig build` succeeds.
-- [ ] `zig build test` succeeds.
-- [ ] A consumer can `@import("openrouter")`.
+- [x] `zig build` succeeds.
+- [x] `zig build test` succeeds.
+- [x] A consumer can `@import("openrouter")`.
 
 ---
 
@@ -1068,7 +1068,7 @@ Rules:
 - [x] `README.md` exists.
 - [x] `AGENT.md` exists.
 - [x] `.gitignore` exists.
-- [ ] Zig package files exist.
+- [x] Zig package files exist.
 - [ ] Library implementation exists.
-- [ ] Tests exist.
-- [ ] Examples exist.
+- [x] Tests exist.
+- [x] Examples exist.
