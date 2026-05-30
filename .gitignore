@@ -1,0 +1,40 @@
+# Zig build artifacts
+.zig-cache/
+zig-cache/
+zig-out/
+
+# Zig package manager cache/temporary files
+.zig-cache-local/
+
+# Build outputs and binaries
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+*.exe
+*.pdb
+
+# Logs
+*.log
+logs/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Editor/IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
