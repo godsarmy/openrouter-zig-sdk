@@ -22,9 +22,21 @@ Adapt for Zig:
 - `snake_case` names
 - options structs instead of Go variadic option functions
 - `?T` for optional values
-- `error{...}!T` and result unions for errors
+- `error{...}!T` for the primary public API
 - iterator-style streaming
 - compact handwritten internals instead of generated-code verbosity
+
+## Review Decisions Incorporated
+
+After reviewing the initial plan, use these choices as implementation constraints:
+
+- [ ] Keep `client.chat.completions.create(...)` as the canonical chat API; update README/examples to match it before publishing.
+- [ ] Public endpoint methods return `!T`, not `ApiResult(T)`. HTTP/API failures map to typed errors; rich `ApiError` payloads are internal/diagnostic unless a later API deliberately exposes them.
+- [ ] Owning public response structs store their allocator/arena and expose `deinit(self)` only.
+- [ ] Prefer an arena per parsed response/chunk to avoid nested string/slice free logic.
+- [ ] Use lightweight resource namespace structs holding `*Client`; no heap allocation for namespaces.
+- [ ] Make the HTTP transport mockable from day one so unit tests do not require network access.
+- [ ] Compile-check the exact Zig `0.16.x` `std.Io`, `std.http.Client`, and `std.json` APIs before freezing signatures.
 
 ## Target Public API Shape
 
@@ -53,7 +65,7 @@ pub fn main() !void {
     var response = try client.chat.completions.create(.{
         .model = "openai/gpt-4o-mini",
         .messages = &.{
-            .{ .role = .user, .content = "Say hello from Zig." },
+            .{ .role = .user, .content = .{ .text = "Say hello from Zig." } },
         },
     }, .{});
     defer response.deinit();
@@ -68,7 +80,7 @@ Streaming style:
 var stream = try client.chat.completions.stream(.{
     .model = "openai/gpt-4o-mini",
     .messages = &.{
-        .{ .role = .user, .content = "Stream a short answer." },
+        .{ .role = .user, .content = .{ .text = "Stream a short answer." } },
     },
 }, .{});
 defer stream.deinit();
@@ -144,6 +156,28 @@ while (try stream.next()) |chunk| {
 
 ---
 
+# Milestone 0.5 — Zig 0.16 Compile Spike
+
+## Goal
+
+Verify the exact Zig `0.16.x` standard-library APIs before locking public signatures.
+
+## Tasks
+
+- [ ] Confirm `std.Io` and `std.Io.Threaded` construction/usage compile on installed Zig `0.16.x`.
+- [ ] Confirm `std.http.Client` initialization with caller-provided I/O compiles.
+- [ ] Confirm `std.json` stringify/parse option names used by this plan compile.
+- [ ] Build a tiny throwaway request/response path using the planned `Client.init` shape.
+- [ ] Remove or fold the spike code into Milestone 1 once signatures are proven.
+
+## Acceptance Criteria
+
+- [ ] Planned `Client.init(allocator, io, config)` signature is compile-verified.
+- [ ] Planned JSON helper options are compile-verified.
+- [ ] Any stdlib API differences are reflected back into this plan before implementation continues.
+
+---
+
 # Milestone 1 — Core Client and Configuration
 
 ## Goal
@@ -166,6 +200,9 @@ pub const Client = struct {
     pub fn init(allocator: std.mem.Allocator, io: std.Io, config: Config) !Client;
     pub fn deinit(self: *Client) void;
 };
+
+// Resource namespace structs are lightweight values containing *Client.
+// They are initialized by Client.init and do not allocate.
 ```
 
 ## Resource Namespaces
@@ -185,8 +222,9 @@ pub const Client = struct {
 - [ ] Store caller-provided `std.Io` explicitly.
 - [ ] Initialize `std.http.Client` with `.allocator` and `.io`.
 - [ ] Do not create `std.Io.Threaded` inside library production code.
-- [ ] Initialize resource namespace structs.
+- [ ] Initialize lightweight resource namespace structs that hold `*Client`.
 - [ ] Validate base URL format without panicking.
+- [ ] Document that `Client` is not thread-safe unless externally synchronized or used as client-per-worker.
 
 ## Acceptance Criteria
 
@@ -250,6 +288,7 @@ Centralize all HTTP behavior instead of duplicating endpoint logic.
 - [ ] Library code must accept/store `std.Io`; it must not secretly create a global/default I/O backend.
 - [ ] Avoid adding a third-party HTTP dependency for `v0.1.0` unless `std.http.Client` proves insufficient for Zig `0.16.x` streaming or TLS behavior.
 - [ ] Keep the HTTP layer isolated so an alternate transport can be added later without changing endpoint APIs.
+- [ ] Define a small internal transport interface/fake transport from day one for unit tests.
 
 ## Sync/Async Decision for Zig 0.16
 
@@ -319,11 +358,15 @@ pub const HttpRequest = struct {
 };
 
 pub const HttpResponse = struct {
+    allocator: std.mem.Allocator,
     status: std.http.Status,
     body: []u8,
     content_type: ?[]const u8 = null,
+    request_id: ?[]const u8 = null,
+    rate_limit_remaining: ?[]const u8 = null,
+    rate_limit_reset: ?[]const u8 = null,
 
-    pub fn deinit(self: *HttpResponse, allocator: std.mem.Allocator) void;
+    pub fn deinit(self: *HttpResponse) void;
 };
 ```
 
@@ -346,13 +389,16 @@ pub const HttpResponse = struct {
 - [ ] Implement response body allocation.
 - [ ] Preserve response status.
 - [ ] Capture response content type.
+- [ ] Capture useful response metadata when present, such as request id and rate-limit headers.
 - [ ] Redact authorization header from debug/error messages.
+- [ ] Add fake/mock transport support for tests.
 
 ## Acceptance Criteria
 
 - [ ] HTTP layer can issue `GET`.
 - [ ] HTTP layer can issue `POST` with JSON body.
 - [ ] Response body ownership is documented.
+- [ ] HTTP layer can be unit tested without network.
 - [ ] No API key appears in errors/logs.
 
 ---
@@ -405,25 +451,18 @@ Map OpenRouter HTTP/API errors into useful Zig errors and payloads.
 
 ```zig
 pub const ApiError = struct {
+    arena: std.heap.ArenaAllocator,
     status: u16,
     code: ?[]const u8 = null,
     message: []const u8,
     raw_body: []const u8,
+    request_id: ?[]const u8 = null,
 
-    pub fn deinit(self: *ApiError, allocator: std.mem.Allocator) void;
+    pub fn deinit(self: *ApiError) void;
 };
 ```
 
-Use result unions where rich API error payloads matter:
-
-```zig
-pub fn ApiResult(comptime T: type) type {
-    return union(enum) {
-        success: T,
-        api_error: ApiError,
-    };
-}
-```
+Public endpoint methods should return `!T`. Do not expose a second `ApiResult(T)` success/error style in the v0.1 public API. Keep rich `ApiError` payload handling centralized in the HTTP/error layer so a future explicit diagnostic API can expose it without changing endpoint method names.
 
 ## Tasks
 
@@ -432,13 +471,15 @@ pub fn ApiResult(comptime T: type) type {
 - [ ] Preserve raw body for unknown error shapes.
 - [ ] Implement generic fallback API error.
 - [ ] Ensure all owned error fields can be freed.
+- [ ] Keep public endpoint return style consistently `!T`.
 
 ## Acceptance Criteria
 
 - [ ] `401` maps to unauthorized error behavior.
 - [ ] `429` maps to rate-limited behavior.
 - [ ] `5xx` errors are detectable for retry.
-- [ ] Unknown `4xx/5xx` returns a generic API error payload.
+- [ ] Unknown `4xx/5xx` builds a generic `ApiError` payload and returns `error.ApiError`.
+- [ ] Public methods do not mix `!T` and `ApiResult(T)` styles.
 
 ---
 
@@ -512,6 +553,7 @@ defer result.deinit();
 
 ```zig
 pub const ListResponse = struct {
+    arena: std.heap.ArenaAllocator,
     data: []Model,
 
     pub fn deinit(self: *ListResponse) void;
@@ -566,7 +608,7 @@ POST /chat/completions
 var response = try client.chat.completions.create(.{
     .model = "openai/gpt-4o-mini",
     .messages = &.{
-        .{ .role = .user, .content = "Hello from Zig." },
+        .{ .role = .user, .content = .{ .text = "Hello from Zig." } },
     },
 }, .{});
 defer response.deinit();
@@ -584,7 +626,26 @@ pub const Role = enum {
 
 pub const Message = struct {
     role: Role,
-    content: []const u8,
+    content: MessageContent,
+    name: ?[]const u8 = null,
+    tool_call_id: ?[]const u8 = null,
+    tool_calls: ?[]const ToolCall = null,
+};
+
+pub const MessageContent = union(enum) {
+    text: []const u8,
+    parts: []const ContentPart,
+};
+
+pub const ContentPart = union(enum) {
+    text: []const u8,
+    image_url: []const u8,
+};
+
+pub const ToolCall = struct {
+    id: []const u8,
+    name: []const u8,
+    arguments: []const u8,
 };
 
 pub const CompletionRequest = struct {
@@ -593,11 +654,30 @@ pub const CompletionRequest = struct {
     temperature: ?f32 = null,
     top_p: ?f32 = null,
     max_tokens: ?u32 = null,
+    seed: ?i64 = null,
+    frequency_penalty: ?f32 = null,
+    presence_penalty: ?f32 = null,
+    response_format: ?ResponseFormat = null,
+    provider: ?ProviderRouting = null,
     stream: bool = false,
     stop: ?[]const []const u8 = null,
+    // Escape hatch for OpenRouter/provider fields not typed yet.
+    // Exact representation should be compile-checked in JSON helpers.
+    extra_body: ?std.json.Value = null,
+};
+
+pub const ResponseFormat = struct {
+    type: []const u8,
+};
+
+pub const ProviderRouting = struct {
+    order: ?[]const []const u8 = null,
+    allow_fallbacks: ?bool = null,
+    require_parameters: ?bool = null,
 };
 
 pub const CompletionResponse = struct {
+    arena: std.heap.ArenaAllocator,
     id: []const u8,
     model: []const u8,
     choices: []Choice,
@@ -618,9 +698,9 @@ pub const AssistantMessage = struct {
 };
 
 pub const Usage = struct {
-    prompt_tokens: u32,
-    completion_tokens: u32,
-    total_tokens: u32,
+    prompt_tokens: ?u32 = null,
+    completion_tokens: ?u32 = null,
+    total_tokens: ?u32 = null,
 };
 ```
 
@@ -629,6 +709,8 @@ pub const Usage = struct {
 - [ ] Implement `client.chat.completions.create(request, options)`.
 - [ ] Serialize chat request.
 - [ ] Ensure `.stream = false` for non-streaming path.
+- [ ] Re-check OpenRouter docs before freezing the final typed chat fields.
+- [ ] Preserve an escape hatch for unsupported provider/OpenRouter request fields.
 - [ ] Parse chat response.
 - [ ] Add deinit logic for owned response data.
 - [ ] Add example `examples/chat.zig`.
@@ -654,7 +736,7 @@ Implement `text/event-stream` chat completions.
 var stream = try client.chat.completions.stream(.{
     .model = "openai/gpt-4o-mini",
     .messages = &.{
-        .{ .role = .user, .content = "Stream a short answer." },
+        .{ .role = .user, .content = .{ .text = "Stream a short answer." } },
     },
 }, .{});
 defer stream.deinit();
@@ -677,6 +759,7 @@ pub const CompletionStream = struct {
 };
 
 pub const CompletionChunk = struct {
+    arena: std.heap.ArenaAllocator,
     id: ?[]const u8 = null,
     model: ?[]const u8 = null,
     choices: []ChunkChoice,
@@ -700,11 +783,16 @@ pub const Delta = struct {
 ## SSE Behavior
 
 - [ ] Parse event boundaries separated by blank lines.
-- [ ] Parse `data:` lines.
+- [ ] Parse `data:` lines, including multiple `data:` lines per event joined with `\n`.
 - [ ] Ignore comment/keepalive lines beginning with `:`.
+- [ ] Ignore unsupported `event:`, `id:`, and `retry:` fields unless needed later.
+- [ ] Handle LF and CRLF line endings.
+- [ ] Enforce bounded line/event sizes to avoid unbounded memory growth.
 - [ ] Stop on `data: [DONE]`.
 - [ ] Return malformed JSON errors clearly.
+- [ ] Distinguish malformed SSE, malformed JSON, unexpected upstream close, and cancellation where possible.
 - [ ] Close response body on `deinit`.
+- [ ] After done, repeated `next()` calls return `null`.
 
 ## Tasks
 
@@ -760,6 +848,7 @@ pub const Input = union(enum) {
 };
 
 pub const CreateResponse = struct {
+    arena: std.heap.ArenaAllocator,
     data: []Embedding,
     model: []const u8,
     usage: ?chat.Usage = null,
@@ -850,6 +939,7 @@ Implement after `v0.1.0` core is stable.
 ## Unit Tests
 
 - [ ] Config validation.
+- [ ] Fake/mock HTTP transport behavior.
 - [ ] URL construction.
 - [ ] Auth header construction.
 - [ ] Optional headers.
@@ -863,6 +953,7 @@ Implement after `v0.1.0` core is stable.
 - [ ] SSE parsing.
 - [ ] `[DONE]` stream termination.
 - [ ] Response `deinit` behavior.
+- [ ] Arena-backed response cleanup behavior.
 
 ## Integration Tests
 
@@ -891,10 +982,11 @@ Integration tests must be opt-in and require environment variables.
 
 ## Documentation
 
-- [ ] Update `README.md` after implementation begins.
+- [ ] Update `README.md` to use the canonical `client.chat.completions.create(...)` API before publishing examples.
 - [ ] Document allocator ownership.
 - [ ] Document response deinit requirements.
 - [ ] Document streaming lifecycle.
+- [ ] Document `Client` thread-safety policy.
 - [ ] Document retry behavior.
 - [ ] Document error behavior.
 - [ ] Document supported endpoints.
@@ -962,12 +1054,12 @@ Rules:
 
 # Review Checklist Before Implementation
 
-- [ ] Confirm installed Zig version is `0.16.x`.
+- [x] Confirm installed Zig version is `0.16.x` (`0.16.0` installed).
 - [ ] Re-check OpenRouter docs for current endpoint fields.
 - [ ] Re-check official Go SDK for current resource names.
-- [ ] Decide whether public methods return `!T` or `ApiResult(T)` for API errors.
-- [ ] Decide exact resource namespace storage layout in `Client`.
-- [ ] Decide whether HTTP transport is mockable from day one.
+- [x] Public endpoint methods return `!T`; do not expose `ApiResult(T)` in v0.1.
+- [x] Resource namespaces are lightweight structs containing `*Client`.
+- [x] HTTP transport is mockable from day one with an internal fake transport for tests.
 
 ---
 

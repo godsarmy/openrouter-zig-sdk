@@ -59,15 +59,15 @@ pub fn main() !void {
     });
     defer client.deinit();
 
-    const response = try client.chat(.{
+    var response = try client.chat.completions.create(.{
         .model = "openai/gpt-4o-mini",
         .messages = &.{
-            .{ .role = .user, .content = "Say hello from Zig." },
+            .{ .role = .user, .content = .{ .text = "Say hello from Zig." } },
         },
-    });
+    }, .{});
     defer response.deinit();
 
-    std.debug.print("{s}\n", .{response.choices[0].message.content});
+    std.debug.print("{s}\n", .{response.choices[0].message.content.?});
 }
 ```
 
