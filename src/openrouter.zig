@@ -8,6 +8,8 @@ pub const ApiError = @import("errors.zig").ApiError;
 pub const Header = @import("options.zig").Header;
 pub const HttpRequest = @import("http.zig").HttpRequest;
 pub const HttpResponse = @import("http.zig").HttpResponse;
+pub const Model = @import("models.zig").Model;
+pub const ModelsListResponse = @import("models.zig").ListResponse;
 pub const RequestOptions = @import("options.zig").RequestOptions;
 pub const RetryConfig = @import("retry.zig").RetryConfig;
 pub const json = @import("json.zig");
@@ -23,5 +25,6 @@ test {
     _ = @import("errors.zig");
     _ = @import("http.zig");
     _ = @import("json.zig");
+    _ = @import("models.zig");
     _ = @import("options.zig");
 }

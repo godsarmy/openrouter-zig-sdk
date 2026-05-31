@@ -1,6 +1,20 @@
 const std = @import("std");
 const openrouter = @import("openrouter");
 
-pub fn main() !void {
-    std.debug.print("list models example placeholder for openrouter-zig {s}\n", .{openrouter.version});
+pub fn main(init: std.process.Init) !void {
+    const allocator = init.gpa;
+    const api_key = init.minimal.environ.getAlloc(allocator, "OPENROUTER_API_KEY") catch return error.MissingApiKey;
+    defer allocator.free(api_key);
+
+    var client = try openrouter.Client.init(allocator, init.io, .{
+        .api_key = api_key,
+    });
+    defer client.deinit();
+
+    var response = try client.models.list(.{});
+    defer response.deinit();
+
+    for (response.data) |model| {
+        std.debug.print("{s}\n", .{model.id});
+    }
 }

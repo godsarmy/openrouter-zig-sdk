@@ -2,6 +2,8 @@
 
 const std = @import("std");
 const config_mod = @import("config.zig");
+const models_mod = @import("models.zig");
+const options_mod = @import("options.zig");
 
 pub const Config = config_mod.Config;
 
@@ -15,7 +17,12 @@ pub const ChatResource = struct {
 };
 
 pub const ChatCompletionsResource = struct {};
-pub const ModelsResource = struct {};
+pub const ModelsResource = struct {
+    pub fn list(self: *ModelsResource, request_options: options_mod.RequestOptions) !models_mod.ListResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("models", self));
+        return models_mod.list(client, request_options);
+    }
+};
 pub const EmbeddingsResource = struct {};
 
 /// Root OpenRouter client.

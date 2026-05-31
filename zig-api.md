@@ -574,21 +574,31 @@ pub const Pricing = struct {
     completion: ?[]const u8 = null,
     image: ?[]const u8 = null,
     request: ?[]const u8 = null,
+    web_search: ?[]const u8 = null,
+    internal_reasoning: ?[]const u8 = null,
+    input_cache_read: ?[]const u8 = null,
+    input_cache_write: ?[]const u8 = null,
+    audio: ?[]const u8 = null,
+    audio_output: ?[]const u8 = null,
+    image_output: ?[]const u8 = null,
+    image_token: ?[]const u8 = null,
+    input_audio_cache: ?[]const u8 = null,
+    discount: ?f64 = null,
 };
 ```
 
 ## Tasks
 
-- [ ] Implement `client.models.list(options)`.
-- [ ] Parse model list response.
-- [ ] Add model response deinit logic.
-- [ ] Add example `examples/list_models.zig`.
+- [x] Implement `client.models.list(options)`.
+- [x] Parse model list response.
+- [x] Add model response deinit logic.
+- [x] Add example `examples/list_models.zig`.
 
 ## Acceptance Criteria
 
-- [ ] `client.models.list(.{})` compiles.
-- [ ] Model IDs are accessible.
-- [ ] Unknown fields in model JSON are ignored.
+- [x] `client.models.list(.{})` compiles.
+- [x] Model IDs are accessible.
+- [x] Unknown fields in model JSON are ignored.
 
 ---
 
