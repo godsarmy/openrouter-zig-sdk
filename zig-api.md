@@ -261,17 +261,18 @@ pub const RequestOptions = struct {
 
 ## Tasks
 
-- [ ] Implement `Header`.
-- [ ] Implement `RequestOptions`.
-- [ ] Merge client defaults with per-request options.
-- [ ] Support extra headers.
-- [ ] Ensure user headers cannot accidentally remove required auth unless explicitly designed later.
+- [x] Implement `Header`.
+- [x] Implement `RequestOptions`.
+- [x] Merge client defaults with per-request options.
+- [x] Support extra headers.
+- [x] Ensure user headers cannot accidentally remove required auth unless explicitly designed later.
 
 ## Acceptance Criteria
 
-- [ ] Per-request timeout override is accepted.
-- [ ] Per-request retry override is accepted.
-- [ ] Extra headers are included in HTTP requests.
+- [x] Per-request timeout override is accepted.
+- [x] Per-request retry override is accepted.
+- [x] Extra headers are included in merged request options.
+- [x] Reserved built-in headers are rejected in `extra_headers`.
 
 ---
 
@@ -944,7 +945,7 @@ Implement after `v0.1.0` core is stable.
 - [ ] URL construction.
 - [ ] Auth header construction.
 - [ ] Optional headers.
-- [ ] Extra request headers.
+- [x] Extra request headers.
 - [ ] JSON request encoding.
 - [ ] JSON response parsing.
 - [ ] Unknown response fields.
