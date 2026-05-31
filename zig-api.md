@@ -507,28 +507,28 @@ pub const RetryConfig = struct {
 
 ## Retryable Conditions
 
-- [ ] Connection errors, if enabled
-- [ ] `500`
-- [ ] `502`
-- [ ] `503`
-- [ ] `524`
-- [ ] `529`
-- [ ] `429`, if enabled
+- [x] Connection errors, if enabled
+- [x] `500`
+- [x] `502`
+- [x] `503`
+- [x] `524`
+- [x] `529`
+- [x] `429`, if enabled
 
 ## Tasks
 
-- [ ] Implement retry decision function.
-- [ ] Implement exponential backoff.
-- [ ] Respect `Retry-After` header when available.
-- [ ] Bound max attempts.
-- [ ] Bound max delay.
-- [ ] Allow per-request retry override.
+- [x] Implement retry decision function.
+- [x] Implement exponential backoff.
+- [x] Respect `Retry-After` header when available.
+- [x] Bound max attempts.
+- [x] Bound max delay.
+- [x] Allow per-request retry override.
 
 ## Acceptance Criteria
 
-- [ ] Retry policy is tested independently.
-- [ ] Non-retryable `4xx` statuses are not retried.
-- [ ] Retry stops at configured max attempts.
+- [x] Retry policy is tested independently.
+- [x] Non-retryable `4xx` statuses are not retried.
+- [x] Retry stops at configured max attempts.
 
 ---
 
@@ -950,8 +950,8 @@ Implement after `v0.1.0` core is stable.
 - [x] JSON response parsing.
 - [x] Unknown response fields.
 - [x] Error status mapping.
-- [ ] Retry decision logic.
-- [ ] Retry backoff calculation.
+- [x] Retry decision logic.
+- [x] Retry backoff calculation.
 - [ ] SSE parsing.
 - [ ] `[DONE]` stream termination.
 - [ ] Response `deinit` behavior.
