@@ -718,21 +718,21 @@ pub const Usage = struct {
 
 ## Tasks
 
-- [ ] Implement `client.chat.completions.create(request, options)`.
-- [ ] Serialize chat request.
-- [ ] Ensure `.stream = false` for non-streaming path.
-- [ ] Re-check OpenRouter docs before freezing the final typed chat fields.
-- [ ] Preserve an escape hatch for unsupported provider/OpenRouter request fields.
-- [ ] Parse chat response.
-- [ ] Add deinit logic for owned response data.
-- [ ] Add example `examples/chat.zig`.
+- [x] Implement `client.chat.completions.create(request, options)`.
+- [x] Serialize chat request.
+- [x] Ensure `.stream = false` for non-streaming path.
+- [x] Re-check OpenRouter docs before freezing the final typed chat fields.
+- [x] Preserve an escape hatch for unsupported provider/OpenRouter request fields.
+- [x] Parse chat response.
+- [x] Add deinit logic for owned response data.
+- [x] Add example `examples/chat.zig`.
 
 ## Acceptance Criteria
 
-- [ ] Chat request JSON matches OpenRouter field names.
-- [ ] Optional fields are omitted when null.
-- [ ] Non-streaming response parses successfully.
-- [ ] Usage data is parsed when present.
+- [x] Chat request JSON matches OpenRouter field names.
+- [x] Optional fields are omitted when null.
+- [x] Non-streaming response parses successfully.
+- [x] Usage data is parsed when present.
 
 ---
 

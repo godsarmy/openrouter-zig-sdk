@@ -1,6 +1,7 @@
 //! Root OpenRouter client.
 
 const std = @import("std");
+const chat_mod = @import("chat.zig");
 const config_mod = @import("config.zig");
 const models_mod = @import("models.zig");
 const options_mod = @import("options.zig");
@@ -16,7 +17,17 @@ pub const ChatResource = struct {
     completions: ChatCompletionsResource = .{},
 };
 
-pub const ChatCompletionsResource = struct {};
+pub const ChatCompletionsResource = struct {
+    pub fn create(
+        self: *ChatCompletionsResource,
+        request: chat_mod.CompletionRequest,
+        request_options: options_mod.RequestOptions,
+    ) !chat_mod.CompletionResponse {
+        const chat: *ChatResource = @alignCast(@fieldParentPtr("completions", self));
+        const client: *Client = @alignCast(@fieldParentPtr("chat", chat));
+        return chat_mod.create(client, request, request_options);
+    }
+};
 pub const ModelsResource = struct {
     pub fn list(self: *ModelsResource, request_options: options_mod.RequestOptions) !models_mod.ListResponse {
         const client: *Client = @alignCast(@fieldParentPtr("models", self));

@@ -5,6 +5,10 @@ const std = @import("std");
 pub const Client = @import("client.zig").Client;
 pub const Config = @import("config.zig").Config;
 pub const ApiError = @import("errors.zig").ApiError;
+pub const ChatCompletionResponse = @import("chat.zig").CompletionResponse;
+pub const ChatMessage = @import("chat.zig").Message;
+pub const ChatMessageContent = @import("chat.zig").MessageContent;
+pub const ChatRole = @import("chat.zig").Role;
 pub const Header = @import("options.zig").Header;
 pub const HttpRequest = @import("http.zig").HttpRequest;
 pub const HttpResponse = @import("http.zig").HttpResponse;
@@ -21,6 +25,7 @@ test "openrouter module exposes package version" {
 }
 
 test {
+    _ = @import("chat.zig");
     _ = @import("client.zig");
     _ = @import("errors.zig");
     _ = @import("http.zig");
