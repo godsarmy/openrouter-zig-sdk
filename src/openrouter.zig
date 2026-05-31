@@ -3,7 +3,8 @@
 const std = @import("std");
 
 pub const Client = @import("client.zig").Client;
-pub const Config = @import("client.zig").Config;
+pub const Config = @import("config.zig").Config;
+pub const RetryConfig = @import("retry.zig").RetryConfig;
 
 pub const version = "0.0.0";
 

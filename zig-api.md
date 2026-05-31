@@ -34,7 +34,7 @@ After reviewing the initial plan, use these choices as implementation constraint
 - [ ] Public endpoint methods return `!T`, not `ApiResult(T)`. HTTP/API failures map to typed errors; rich `ApiError` payloads are internal/diagnostic unless a later API deliberately exposes them.
 - [ ] Owning public response structs store their allocator/arena and expose `deinit(self)` only.
 - [ ] Prefer an arena per parsed response/chunk to avoid nested string/slice free logic.
-- [ ] Use lightweight resource namespace structs holding `*Client`; no heap allocation for namespaces.
+- [ ] Use lightweight embedded resource namespace structs; no heap allocation for namespaces.
 - [ ] Make the HTTP transport mockable from day one so unit tests do not require network access.
 - [x] Compile-check the exact Zig `0.16.x` `std.Io`, `std.http.Client`, and `std.json` APIs before freezing signatures.
 
@@ -201,8 +201,9 @@ pub const Client = struct {
     pub fn deinit(self: *Client) void;
 };
 
-// Resource namespace structs are lightweight values containing *Client.
+// Resource namespace structs are lightweight embedded values.
 // They are initialized by Client.init and do not allocate.
+// Endpoint methods can recover the parent client with @fieldParentPtr as needed.
 ```
 
 ## Resource Namespaces
@@ -215,25 +216,25 @@ pub const Client = struct {
 
 ## Tasks
 
-- [ ] Implement `Config`.
-- [ ] Implement `Client.init`.
-- [ ] Implement `Client.deinit`.
-- [ ] Store allocator explicitly.
-- [ ] Store caller-provided `std.Io` explicitly.
-- [ ] Initialize `std.http.Client` with `.allocator` and `.io`.
-- [ ] Do not create `std.Io.Threaded` inside library production code.
-- [ ] Initialize lightweight resource namespace structs that hold `*Client`.
-- [ ] Validate base URL format without panicking.
-- [ ] Document that `Client` is not thread-safe unless externally synchronized or used as client-per-worker.
+- [x] Implement `Config`.
+- [x] Implement `Client.init`.
+- [x] Implement `Client.deinit`.
+- [x] Store allocator explicitly.
+- [x] Store caller-provided `std.Io` explicitly.
+- [x] Initialize `std.http.Client` with `.allocator` and `.io`.
+- [x] Do not create `std.Io.Threaded` inside library production code.
+- [x] Initialize lightweight embedded resource namespace structs.
+- [x] Validate base URL format without panicking.
+- [x] Document that `Client` is not thread-safe unless externally synchronized or used as client-per-worker.
 
 ## Acceptance Criteria
 
-- [ ] Client initializes with API key.
-- [ ] Client initialization requires caller-provided `std.Io`.
-- [ ] Client supports custom base URL.
-- [ ] Client supports optional `HTTP-Referer`.
-- [ ] Client supports optional `X-Title`.
-- [ ] Client deinitializes cleanly.
+- [x] Client initializes with API key.
+- [x] Client initialization requires caller-provided `std.Io`.
+- [x] Client supports custom base URL.
+- [x] Client supports optional `HTTP-Referer`.
+- [x] Client supports optional `X-Title`.
+- [x] Client deinitializes cleanly.
 
 ---
 
@@ -1058,7 +1059,7 @@ Rules:
 - [ ] Re-check OpenRouter docs for current endpoint fields.
 - [ ] Re-check official Go SDK for current resource names.
 - [x] Public endpoint methods return `!T`; do not expose `ApiResult(T)` in v0.1.
-- [x] Resource namespaces are lightweight structs containing `*Client`.
+- [x] Resource namespaces are lightweight embedded structs initialized by `Client.init`.
 - [x] HTTP transport is mockable from day one with an internal fake transport for tests.
 
 ---
