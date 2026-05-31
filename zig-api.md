@@ -435,19 +435,19 @@ Map OpenRouter HTTP/API errors into useful Zig errors and payloads.
 
 ## Known Statuses to Handle
 
-- [ ] `400 BadRequest`
-- [ ] `401 Unauthorized`
-- [ ] `402 PaymentRequired`
-- [ ] `404 NotFound`
-- [ ] `408 RequestTimeout`
-- [ ] `413 PayloadTooLarge`
-- [ ] `422 UnprocessableEntity`
-- [ ] `429 RateLimited`
-- [ ] `500 InternalServerError`
-- [ ] `502 BadGateway`
-- [ ] `503 ServiceUnavailable`
-- [ ] `524 Timeout`
-- [ ] `529 Overloaded`
+- [x] `400 BadRequest`
+- [x] `401 Unauthorized`
+- [x] `402 PaymentRequired`
+- [x] `404 NotFound`
+- [x] `408 RequestTimeout`
+- [x] `413 PayloadTooLarge`
+- [x] `422 UnprocessableEntity`
+- [x] `429 RateLimited`
+- [x] `500 InternalServerError`
+- [x] `502 BadGateway`
+- [x] `503 ServiceUnavailable`
+- [x] `524 Timeout`
+- [x] `529 Overloaded`
 
 ## Proposed Types
 
@@ -468,20 +468,20 @@ Public endpoint methods should return `!T`. Do not expose a second `ApiResult(T)
 
 ## Tasks
 
-- [ ] Implement status-code mapping.
-- [ ] Parse OpenRouter error JSON when possible.
-- [ ] Preserve raw body for unknown error shapes.
-- [ ] Implement generic fallback API error.
-- [ ] Ensure all owned error fields can be freed.
-- [ ] Keep public endpoint return style consistently `!T`.
+- [x] Implement status-code mapping.
+- [x] Parse OpenRouter error JSON when possible.
+- [x] Preserve raw body for unknown error shapes.
+- [x] Implement generic fallback API error.
+- [x] Ensure all owned error fields can be freed.
+- [x] Keep public endpoint return style consistently `!T`.
 
 ## Acceptance Criteria
 
-- [ ] `401` maps to unauthorized error behavior.
-- [ ] `429` maps to rate-limited behavior.
-- [ ] `5xx` errors are detectable for retry.
-- [ ] Unknown `4xx/5xx` builds a generic `ApiError` payload and returns `error.ApiError`.
-- [ ] Public methods do not mix `!T` and `ApiResult(T)` styles.
+- [x] `401` maps to unauthorized error behavior.
+- [x] `429` maps to rate-limited behavior.
+- [x] `5xx` errors are detectable for retry.
+- [x] Unknown `4xx/5xx` builds a generic `ApiError` payload and returns `error.ApiError`.
+- [x] Public methods do not mix `!T` and `ApiResult(T)` styles.
 
 ---
 
@@ -949,7 +949,7 @@ Implement after `v0.1.0` core is stable.
 - [x] JSON request encoding.
 - [x] JSON response parsing.
 - [x] Unknown response fields.
-- [ ] Error status mapping.
+- [x] Error status mapping.
 - [ ] Retry decision logic.
 - [ ] Retry backoff calculation.
 - [ ] SSE parsing.
