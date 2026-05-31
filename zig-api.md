@@ -413,17 +413,17 @@ Centralize JSON encoding/decoding behavior.
 
 ## Tasks
 
-- [ ] Add request stringify helper.
-- [ ] Add response parse helper.
-- [ ] Use `.emit_null_optional_fields = false` for request JSON where appropriate.
-- [ ] Use `.ignore_unknown_fields = true` for response JSON.
-- [ ] Add helpers for string enums if needed.
+- [x] Add request stringify helper.
+- [x] Add response parse helper.
+- [x] Use `.emit_null_optional_fields = false` for request JSON where appropriate.
+- [x] Use `.ignore_unknown_fields = true` for response JSON.
+- [x] Add helpers for string enums if needed.
 
 ## Acceptance Criteria
 
-- [ ] Optional null request fields are not emitted by default.
-- [ ] Unknown response fields do not break parsing.
-- [ ] Invalid JSON returns a clear parse error.
+- [x] Optional null request fields are not emitted by default.
+- [x] Unknown response fields do not break parsing.
+- [x] Invalid JSON returns a clear parse error.
 
 ---
 
@@ -946,9 +946,9 @@ Implement after `v0.1.0` core is stable.
 - [x] Auth header construction.
 - [x] Optional headers.
 - [x] Extra request headers.
-- [ ] JSON request encoding.
-- [ ] JSON response parsing.
-- [ ] Unknown response fields.
+- [x] JSON request encoding.
+- [x] JSON response parsing.
+- [x] Unknown response fields.
 - [ ] Error status mapping.
 - [ ] Retry decision logic.
 - [ ] Retry backoff calculation.

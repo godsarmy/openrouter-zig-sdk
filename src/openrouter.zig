@@ -9,6 +9,7 @@ pub const HttpRequest = @import("http.zig").HttpRequest;
 pub const HttpResponse = @import("http.zig").HttpResponse;
 pub const RequestOptions = @import("options.zig").RequestOptions;
 pub const RetryConfig = @import("retry.zig").RetryConfig;
+pub const json = @import("json.zig");
 
 pub const version = "0.0.0";
 
