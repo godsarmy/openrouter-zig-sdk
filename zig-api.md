@@ -284,13 +284,13 @@ Centralize all HTTP behavior instead of duplicating endpoint logic.
 
 ## HTTP Library Decision
 
-- [ ] Use Zig standard library HTTP support as the default transport.
-- [ ] Primary planned transport: `std.http.Client` initialized with caller-provided `std.Io`.
-- [ ] App code owns the I/O backend, usually `std.Io.Threaded`.
-- [ ] Library code must accept/store `std.Io`; it must not secretly create a global/default I/O backend.
-- [ ] Avoid adding a third-party HTTP dependency for `v0.1.0` unless `std.http.Client` proves insufficient for Zig `0.16.x` streaming or TLS behavior.
-- [ ] Keep the HTTP layer isolated so an alternate transport can be added later without changing endpoint APIs.
-- [ ] Define a small internal transport interface/fake transport from day one for unit tests.
+- [x] Use Zig standard library HTTP support as the default transport.
+- [x] Primary planned transport: `std.http.Client` initialized with caller-provided `std.Io`.
+- [x] App code owns the I/O backend, usually `std.Io.Threaded`.
+- [x] Library code must accept/store `std.Io`; it must not secretly create a global/default I/O backend.
+- [x] Avoid adding a third-party HTTP dependency for `v0.1.0` unless `std.http.Client` proves insufficient for Zig `0.16.x` streaming or TLS behavior.
+- [x] Keep the HTTP layer isolated so an alternate transport can be added later without changing endpoint APIs.
+- [x] Define a small internal transport interface/fake transport from day one for unit tests.
 
 ## Sync/Async Decision for Zig 0.16
 
@@ -374,34 +374,34 @@ pub const HttpResponse = struct {
 
 ## Required Headers
 
-- [ ] `Authorization: Bearer <api-key>`
-- [ ] `User-Agent: openrouter-zig/<version>`
-- [ ] `Accept: application/json` by default
-- [ ] `Content-Type: application/json` when body exists
-- [ ] Optional `HTTP-Referer`
-- [ ] Optional `X-Title`
+- [x] `Authorization: Bearer <api-key>`
+- [x] `User-Agent: openrouter-zig/<version>`
+- [x] `Accept: application/json` by default
+- [x] `Content-Type: application/json` when body exists
+- [x] Optional `HTTP-Referer`
+- [x] Optional `X-Title`
 
 ## Tasks
 
-- [ ] Build full URL from `base_url`, path, and query.
-- [ ] Implement auth header creation.
-- [ ] Implement default headers.
-- [ ] Implement optional OpenRouter attribution headers.
-- [ ] Implement request body sending.
-- [ ] Implement response body allocation.
-- [ ] Preserve response status.
+- [x] Build full URL from `base_url`, path, and query.
+- [x] Implement auth header creation.
+- [x] Implement default headers.
+- [x] Implement optional OpenRouter attribution headers.
+- [x] Implement request body sending.
+- [x] Implement response body allocation.
+- [x] Preserve response status.
 - [ ] Capture response content type.
 - [ ] Capture useful response metadata when present, such as request id and rate-limit headers.
-- [ ] Redact authorization header from debug/error messages.
-- [ ] Add fake/mock transport support for tests.
+- [x] Redact authorization header from debug/error messages.
+- [x] Add fake/mock transport support for tests.
 
 ## Acceptance Criteria
 
-- [ ] HTTP layer can issue `GET`.
-- [ ] HTTP layer can issue `POST` with JSON body.
-- [ ] Response body ownership is documented.
-- [ ] HTTP layer can be unit tested without network.
-- [ ] No API key appears in errors/logs.
+- [x] HTTP layer can issue `GET`.
+- [x] HTTP layer can issue `POST` with JSON body.
+- [x] Response body ownership is documented.
+- [x] HTTP layer can be unit tested without network.
+- [x] No API key appears in errors/logs.
 
 ---
 
@@ -942,9 +942,9 @@ Implement after `v0.1.0` core is stable.
 
 - [ ] Config validation.
 - [ ] Fake/mock HTTP transport behavior.
-- [ ] URL construction.
-- [ ] Auth header construction.
-- [ ] Optional headers.
+- [x] URL construction.
+- [x] Auth header construction.
+- [x] Optional headers.
 - [x] Extra request headers.
 - [ ] JSON request encoding.
 - [ ] JSON response parsing.
