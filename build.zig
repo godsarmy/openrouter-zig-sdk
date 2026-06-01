@@ -10,9 +10,9 @@ pub fn build(b: *std.Build) void {
     });
 
     const examples_step = b.step("examples", "Build examples");
-    addExample(b, examples_step, target, optimize, openrouter, "chat", "examples/chat.zig");
-    addExample(b, examples_step, target, optimize, openrouter, "stream", "examples/stream.zig");
-    addExample(b, examples_step, target, optimize, openrouter, "list_models", "examples/list_models.zig");
+    addExample(b, examples_step, target, optimize, openrouter, "chat", "examples/chat.zig", "run-chat", "Run chat example");
+    addExample(b, examples_step, target, optimize, openrouter, "stream", "examples/stream.zig", "run-stream", "Run stream example");
+    addExample(b, examples_step, target, optimize, openrouter, "list_models", "examples/list_models.zig", "run-list-models", "Run list models example");
 
     const tests = b.addTest(.{
         .root_module = openrouter,
@@ -31,6 +31,8 @@ fn addExample(
     openrouter: *std.Build.Module,
     name: []const u8,
     path: []const u8,
+    run_step_name: []const u8,
+    run_step_description: []const u8,
 ) void {
     const exe = b.addExecutable(.{
         .name = name,
@@ -45,4 +47,9 @@ fn addExample(
     });
 
     examples_step.dependOn(&exe.step);
+
+    const run_step = b.step(run_step_name, run_step_description);
+    const run_cmd = b.addRunArtifact(exe);
+    if (b.args) |args| run_cmd.addArgs(args);
+    run_step.dependOn(&run_cmd.step);
 }
