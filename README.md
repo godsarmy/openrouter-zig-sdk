@@ -125,4 +125,4 @@ Early scaffolding. Public APIs may change until the first tagged release.
 
 ## License
 
-Add a license before publishing this package.
+Apache-2.0. See [LICENSE](LICENSE).
