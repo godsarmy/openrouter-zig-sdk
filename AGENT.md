@@ -73,6 +73,12 @@ Authorization: Bearer <OPENROUTER_API_KEY>
 
 Use current OpenRouter documentation when implementing new endpoints or fields.
 
+Official OpenRouter Go SDK reference for future cross-checks:
+
+```text
+https://github.com/OpenRouterTeam/go-sdk
+```
+
 ## Verification Checklist
 
 Before considering changes complete:
