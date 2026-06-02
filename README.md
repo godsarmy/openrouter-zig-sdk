@@ -2,7 +2,7 @@
 
 A Zig 0.16 client for the [OpenRouter API](https://openrouter.ai/docs).
 
-This project aims to provide a small, idiomatic Zig wrapper around OpenRouter's HTTP API, starting with chat completions and model listing.
+This project aims to provide a small, idiomatic Zig wrapper around OpenRouter's HTTP API, starting with chat completions, embeddings, and model listing.
 
 ## Requirements
 
@@ -77,9 +77,27 @@ Initial targets:
 
 - `GET /api/v1/models`
 - `POST /api/v1/chat/completions`
+- `POST /api/v1/embeddings`
 - Streaming chat completions
 - Typed request and response structs
 - Error mapping for OpenRouter API errors
+
+## Examples
+
+Build all examples:
+
+```sh
+zig build examples
+```
+
+Run individual examples:
+
+```sh
+zig build run-chat
+zig build run-stream
+zig build run-list-models
+zig build run-embeddings
+```
 
 ## Development
 

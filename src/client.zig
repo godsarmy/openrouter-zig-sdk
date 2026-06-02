@@ -3,6 +3,7 @@
 const std = @import("std");
 const chat_mod = @import("chat.zig");
 const config_mod = @import("config.zig");
+const embeddings_mod = @import("embeddings.zig");
 const models_mod = @import("models.zig");
 const options_mod = @import("options.zig");
 const stream_mod = @import("stream.zig");
@@ -45,7 +46,16 @@ pub const ModelsResource = struct {
         return models_mod.list(client, request_options);
     }
 };
-pub const EmbeddingsResource = struct {};
+pub const EmbeddingsResource = struct {
+    pub fn create(
+        self: *EmbeddingsResource,
+        request: embeddings_mod.CreateRequest,
+        request_options: options_mod.RequestOptions,
+    ) !embeddings_mod.CreateResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("embeddings", self));
+        return embeddings_mod.create(client, request, request_options);
+    }
+};
 
 /// Root OpenRouter client.
 ///

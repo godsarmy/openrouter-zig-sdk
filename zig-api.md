@@ -102,7 +102,7 @@ while (try stream.next()) |chunk| {
   - [ ] `client.chat.completions.create(...)`
   - [x] `client.chat.completions.stream(...)`
   - [ ] `client.models.list(...)`
-  - [ ] `client.embeddings.create(...)`
+  - [x] `client.embeddings.create(...)`
   - [ ] `client.credits.get(...)`
   - [ ] `client.providers.list(...)`
 - [ ] Keep request JSON fields aligned with OpenRouter API field names.
@@ -139,6 +139,7 @@ while (try stream.next()) |chunk| {
 - [x] `examples/chat.zig`
 - [x] `examples/stream.zig`
 - [x] `examples/list_models.zig`
+- [x] `examples/embeddings.zig`
 
 ## Tasks
 
@@ -211,7 +212,7 @@ pub const Client = struct {
 - [ ] `client.chat`
 - [ ] `client.chat.completions`
 - [ ] `client.models`
-- [ ] `client.embeddings`
+- [x] `client.embeddings`
 - [ ] Later: `client.credits`, `client.providers`, `client.guardrails`, `client.api_keys`, `client.workspaces`
 
 ## Tasks
@@ -876,16 +877,16 @@ pub const Embedding = struct {
 
 ## Tasks
 
-- [ ] Implement embeddings request serialization.
-- [ ] Implement embeddings response parsing.
-- [ ] Add deinit logic.
-- [ ] Add tests for string and string-array inputs.
+- [x] Implement embeddings request serialization.
+- [x] Implement embeddings response parsing.
+- [x] Add deinit logic.
+- [x] Add tests for string and string-array inputs.
 
 ## Acceptance Criteria
 
-- [ ] Single input string works.
-- [ ] Multiple input strings work.
-- [ ] Embedding vectors are accessible.
+- [x] Single input string works.
+- [x] Multiple input strings work.
+- [x] Embedding vectors are accessible.
 
 ---
 
@@ -987,10 +988,10 @@ Integration tests must be opt-in and require environment variables.
 
 ## Examples
 
-- [ ] `examples/list_models.zig`
-- [ ] `examples/chat.zig`
-- [ ] `examples/stream.zig`
-- [ ] Later: `examples/embeddings.zig`
+- [x] `examples/list_models.zig`
+- [x] `examples/chat.zig`
+- [x] `examples/stream.zig`
+- [x] `examples/embeddings.zig`
 
 ## Documentation
 
