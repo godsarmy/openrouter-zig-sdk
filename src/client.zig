@@ -5,6 +5,7 @@ const chat_mod = @import("chat.zig");
 const config_mod = @import("config.zig");
 const models_mod = @import("models.zig");
 const options_mod = @import("options.zig");
+const stream_mod = @import("stream.zig");
 
 pub const Config = config_mod.Config;
 
@@ -26,6 +27,16 @@ pub const ChatCompletionsResource = struct {
         const chat: *ChatResource = @alignCast(@fieldParentPtr("completions", self));
         const client: *Client = @alignCast(@fieldParentPtr("chat", chat));
         return chat_mod.create(client, request, request_options);
+    }
+
+    pub fn stream(
+        self: *ChatCompletionsResource,
+        request: chat_mod.CompletionRequest,
+        request_options: options_mod.RequestOptions,
+    ) !stream_mod.CompletionStream {
+        const chat: *ChatResource = @alignCast(@fieldParentPtr("completions", self));
+        const client: *Client = @alignCast(@fieldParentPtr("chat", chat));
+        return stream_mod.stream(client, request, request_options);
     }
 };
 pub const ModelsResource = struct {

@@ -100,7 +100,7 @@ while (try stream.next()) |chunk| {
 - [ ] Use Zig naming style for symbols and fields.
 - [ ] Prefer namespaced resources:
   - [ ] `client.chat.completions.create(...)`
-  - [ ] `client.chat.completions.stream(...)`
+  - [x] `client.chat.completions.stream(...)`
   - [ ] `client.models.list(...)`
   - [ ] `client.embeddings.create(...)`
   - [ ] `client.credits.get(...)`
@@ -794,33 +794,33 @@ pub const Delta = struct {
 
 ## SSE Behavior
 
-- [ ] Parse event boundaries separated by blank lines.
-- [ ] Parse `data:` lines, including multiple `data:` lines per event joined with `\n`.
-- [ ] Ignore comment/keepalive lines beginning with `:`.
-- [ ] Ignore unsupported `event:`, `id:`, and `retry:` fields unless needed later.
-- [ ] Handle LF and CRLF line endings.
-- [ ] Enforce bounded line/event sizes to avoid unbounded memory growth.
-- [ ] Stop on `data: [DONE]`.
-- [ ] Return malformed JSON errors clearly.
-- [ ] Distinguish malformed SSE, malformed JSON, unexpected upstream close, and cancellation where possible.
-- [ ] Close response body on `deinit`.
-- [ ] After done, repeated `next()` calls return `null`.
+- [x] Parse event boundaries separated by blank lines.
+- [x] Parse `data:` lines, including multiple `data:` lines per event joined with `\n`.
+- [x] Ignore comment/keepalive lines beginning with `:`.
+- [x] Ignore unsupported `event:`, `id:`, and `retry:` fields unless needed later.
+- [x] Handle LF and CRLF line endings.
+- [x] Enforce bounded line/event sizes to avoid unbounded memory growth.
+- [x] Stop on `data: [DONE]`.
+- [x] Return malformed JSON errors clearly.
+- [x] Distinguish malformed SSE, malformed JSON, and unexpected upstream close where possible.
+- [x] Close response body on `deinit`.
+- [x] After done, repeated `next()` calls return `null`.
 
 ## Tasks
 
-- [ ] Implement SSE parser in `stream.zig`.
-- [ ] Implement chat stream request.
-- [ ] Set request body `.stream = true`.
-- [ ] Use `Accept: text/event-stream`.
-- [ ] Parse each chunk as JSON.
-- [ ] Add example `examples/stream.zig`.
+- [x] Implement SSE parser in `stream.zig`.
+- [x] Implement chat stream request.
+- [x] Set request body `.stream = true`.
+- [x] Use `Accept: text/event-stream`.
+- [x] Parse each chunk as JSON.
+- [x] Add example `examples/stream.zig`.
 
 ## Acceptance Criteria
 
-- [ ] Stream iterator returns chunks.
-- [ ] Stream stops on `[DONE]`.
-- [ ] Stream deinitializes cleanly if user exits early.
-- [ ] SSE parser is unit tested without network.
+- [x] Stream iterator returns chunks.
+- [x] Stream stops on `[DONE]`.
+- [x] Stream deinitializes cleanly if user exits early.
+- [x] SSE parser is unit tested without network.
 
 ---
 
