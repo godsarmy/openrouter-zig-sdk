@@ -54,6 +54,21 @@ pub const HttpResponse = struct {
     }
 };
 
+const ResponseMetadata = struct {
+    content_type: ?[]const u8 = null,
+    request_id: ?[]const u8 = null,
+    rate_limit_remaining: ?[]const u8 = null,
+    rate_limit_reset: ?[]const u8 = null,
+
+    fn deinit(self: *ResponseMetadata, allocator: std.mem.Allocator) void {
+        if (self.content_type) |value| allocator.free(value);
+        if (self.request_id) |value| allocator.free(value);
+        if (self.rate_limit_remaining) |value| allocator.free(value);
+        if (self.rate_limit_reset) |value| allocator.free(value);
+        self.* = undefined;
+    }
+};
+
 pub fn prepareRequest(
     allocator: std.mem.Allocator,
     config: config_mod.Config,
@@ -94,34 +109,134 @@ pub fn execute(
         std_header.* = .{ .name = header.name, .value = header.value };
     }
 
-    const result = try client.fetch(.{
-        .location = .{ .url = prepared.url },
-        .method = prepared.method,
-        .payload = prepared.body,
-        .response_writer = &response_body.writer,
+    const uri = try std.Uri.parse(prepared.url);
+    const redirect_behavior: std.http.Client.Request.RedirectBehavior = if (prepared.body == null) @enumFromInt(3) else .unhandled;
+    var request = try std.http.Client.request(client, prepared.method, uri, .{
         .extra_headers = std_headers,
+        .redirect_behavior = redirect_behavior,
     });
+    defer request.deinit();
+
+    if (prepared.body) |body| {
+        request.transfer_encoding = .{ .content_length = body.len };
+        var request_body = try request.sendBodyUnflushed(&.{});
+        try request_body.writer.writeAll(body);
+        try request_body.end();
+        try request.connection.?.flush();
+    } else {
+        try request.sendBodiless();
+    }
+
+    const redirect_buffer: []u8 = if (redirect_behavior == .unhandled) &.{} else try allocator.alloc(u8, 8 * 1024);
+    defer if (redirect_buffer.len > 0) allocator.free(redirect_buffer);
+
+    var response = try request.receiveHead(redirect_buffer);
+    var metadata = try responseMetadataFromHead(allocator, response.head);
+    errdefer metadata.deinit(allocator);
+
+    const decompress_buffer = try responseDecompressBuffer(allocator, response.head.content_encoding);
+    defer if (decompress_buffer.len > 0) allocator.free(decompress_buffer);
+
+    var transfer_buffer: [64]u8 = undefined;
+    var decompress: std.http.Decompress = undefined;
+    const reader = response.readerDecompressing(&transfer_buffer, &decompress, decompress_buffer);
+
+    _ = reader.streamRemaining(&response_body.writer) catch |err| switch (err) {
+        error.ReadFailed => return response.bodyErr().?,
+        else => |e| return e,
+    };
 
     return .{
         .allocator = allocator,
-        .status = result.status,
+        .status = response.head.status,
         .body = try response_body.toOwnedSlice(),
+        .content_type = metadata.content_type,
+        .request_id = metadata.request_id,
+        .rate_limit_remaining = metadata.rate_limit_remaining,
+        .rate_limit_reset = metadata.rate_limit_reset,
     };
 }
 
 pub const FakeTransport = struct {
     status: std.http.Status = .ok,
     body: []const u8 = "",
+    headers: []const Header = &.{},
 
     pub fn execute(self: FakeTransport, allocator: std.mem.Allocator, prepared: PreparedRequest) !HttpResponse {
         _ = prepared;
+        var metadata = try responseMetadataFromHeaders(allocator, self.headers);
+        errdefer metadata.deinit(allocator);
+
         return .{
             .allocator = allocator,
             .status = self.status,
             .body = try allocator.dupe(u8, self.body),
+            .content_type = metadata.content_type,
+            .request_id = metadata.request_id,
+            .rate_limit_remaining = metadata.rate_limit_remaining,
+            .rate_limit_reset = metadata.rate_limit_reset,
         };
     }
 };
+
+fn responseDecompressBuffer(allocator: std.mem.Allocator, content_encoding: std.http.ContentEncoding) ![]u8 {
+    return switch (content_encoding) {
+        .identity => &.{},
+        .zstd => try allocator.alloc(u8, std.compress.zstd.default_window_len),
+        .deflate, .gzip => try allocator.alloc(u8, std.compress.flate.max_window_len),
+        .compress => error.UnsupportedCompressionMethod,
+    };
+}
+
+fn responseMetadataFromHead(allocator: std.mem.Allocator, head: std.http.Client.Response.Head) !ResponseMetadata {
+    var metadata: ResponseMetadata = .{};
+    errdefer metadata.deinit(allocator);
+
+    metadata.content_type = try copyOptional(allocator, head.content_type);
+
+    var iterator = head.iterateHeaders();
+    while (iterator.next()) |header| {
+        try captureMetadataHeader(allocator, &metadata, header.name, header.value);
+    }
+
+    return metadata;
+}
+
+fn responseMetadataFromHeaders(allocator: std.mem.Allocator, headers: []const Header) !ResponseMetadata {
+    var metadata: ResponseMetadata = .{};
+    errdefer metadata.deinit(allocator);
+
+    for (headers) |header| {
+        try captureMetadataHeader(allocator, &metadata, header.name, header.value);
+    }
+
+    return metadata;
+}
+
+fn captureMetadataHeader(
+    allocator: std.mem.Allocator,
+    metadata: *ResponseMetadata,
+    name: []const u8,
+    value: []const u8,
+) !void {
+    if (std.ascii.eqlIgnoreCase(name, "content-type")) {
+        try setOnce(allocator, &metadata.content_type, value);
+    } else if (std.ascii.eqlIgnoreCase(name, "x-request-id") or std.ascii.eqlIgnoreCase(name, "request-id")) {
+        try setOnce(allocator, &metadata.request_id, value);
+    } else if (std.ascii.eqlIgnoreCase(name, "x-ratelimit-remaining") or std.ascii.eqlIgnoreCase(name, "ratelimit-remaining")) {
+        try setOnce(allocator, &metadata.rate_limit_remaining, value);
+    } else if (std.ascii.eqlIgnoreCase(name, "x-ratelimit-reset") or std.ascii.eqlIgnoreCase(name, "ratelimit-reset")) {
+        try setOnce(allocator, &metadata.rate_limit_reset, value);
+    }
+}
+
+fn setOnce(allocator: std.mem.Allocator, slot: *?[]const u8, value: []const u8) !void {
+    if (slot.* == null) slot.* = try allocator.dupe(u8, value);
+}
+
+fn copyOptional(allocator: std.mem.Allocator, value: ?[]const u8) !?[]const u8 {
+    return if (value) |payload| try allocator.dupe(u8, payload) else null;
+}
 
 pub fn buildUrl(allocator: std.mem.Allocator, base_url: []const u8, path: []const u8, query: ?[]const u8) ![]u8 {
     if (path.len == 0 or path[0] != '/') return error.InvalidPath;
@@ -246,6 +361,43 @@ test "fake transport returns owned response body" {
 
     try std.testing.expectEqual(std.http.Status.ok, response.status);
     try std.testing.expectEqualStrings("{\"data\":[]}", response.body);
+}
+
+test "fake transport captures response metadata headers" {
+    var prepared = try prepareRequest(std.testing.allocator, .{ .api_key = "secret-key" }, .{
+        .method = .GET,
+        .path = "/models",
+    }, .{});
+    defer prepared.deinit();
+
+    var response = try (FakeTransport{
+        .headers = &.{
+            .{ .name = "Content-Type", .value = "application/json; charset=utf-8" },
+            .{ .name = "X-Request-ID", .value = "req_123" },
+            .{ .name = "X-RateLimit-Remaining", .value = "42" },
+            .{ .name = "X-RateLimit-Reset", .value = "1710000000" },
+        },
+    }).execute(std.testing.allocator, prepared);
+    defer response.deinit();
+
+    try std.testing.expectEqualStrings("application/json; charset=utf-8", response.content_type.?);
+    try std.testing.expectEqualStrings("req_123", response.request_id.?);
+    try std.testing.expectEqualStrings("42", response.rate_limit_remaining.?);
+    try std.testing.expectEqualStrings("1710000000", response.rate_limit_reset.?);
+}
+
+test "response metadata captures alternate header names case insensitively" {
+    const metadata = try responseMetadataFromHeaders(std.testing.allocator, &.{
+        .{ .name = "request-id", .value = "req_alt" },
+        .{ .name = "RateLimit-Remaining", .value = "9" },
+        .{ .name = "RateLimit-Reset", .value = "60" },
+    });
+    var mutable_metadata = metadata;
+    defer mutable_metadata.deinit(std.testing.allocator);
+
+    try std.testing.expectEqualStrings("req_alt", mutable_metadata.request_id.?);
+    try std.testing.expectEqualStrings("9", mutable_metadata.rate_limit_remaining.?);
+    try std.testing.expectEqualStrings("60", mutable_metadata.rate_limit_reset.?);
 }
 
 test "prepare POST request preserves JSON body for transport" {

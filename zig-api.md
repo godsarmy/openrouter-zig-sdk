@@ -392,8 +392,8 @@ pub const HttpResponse = struct {
 - [x] Implement request body sending.
 - [x] Implement response body allocation.
 - [x] Preserve response status.
-- [ ] Capture response content type.
-- [ ] Capture useful response metadata when present, such as request id and rate-limit headers.
+- [x] Capture response content type.
+- [x] Capture useful response metadata when present, such as request id and rate-limit headers.
 - [x] Redact authorization header from debug/error messages.
 - [x] Add fake/mock transport support for tests.
 
