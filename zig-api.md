@@ -132,6 +132,7 @@ while (try stream.next()) |chunk| {
 - [x] `src/http.zig`
 - [x] `src/json.zig`
 - [x] `src/retry.zig`
+- [x] `src/pagination.zig`
 - [x] `src/stream.zig`
 - [x] `src/chat.zig`
 - [x] `src/models.zig`
@@ -896,6 +897,8 @@ pub const Embedding = struct {
 
 Add pagination support for endpoints that need it without copying Go closure-based pagination.
 
+Known offset/limit paginated endpoint families from the OpenRouter Go SDK/OpenAPI include workspaces, guardrails and assignment lists, API key lists, and organization member lists. Core `models`, `chat`, and `embeddings` endpoints do not currently need pagers.
+
 ## Proposed Pattern
 
 ```zig
@@ -908,16 +911,16 @@ pub fn Pager(comptime Page: type) type {
 
 ## Tasks
 
-- [ ] Identify paginated OpenRouter endpoints.
-- [ ] Support offset/limit pagination.
-- [ ] Use pager structs, not closures attached to responses.
-- [ ] Keep pagination optional for initial endpoints.
+- [x] Identify paginated OpenRouter endpoints.
+- [x] Support offset/limit pagination.
+- [x] Use pager structs, not closures attached to responses.
+- [x] Keep pagination optional for initial endpoints.
 
 ## Acceptance Criteria
 
-- [ ] Pager returns `null` when complete.
-- [ ] Pager deinitializes any owned state.
-- [ ] Pagination behavior is unit tested with mocked pages.
+- [x] Pager returns `null` when complete.
+- [x] Pager deinitializes any owned state.
+- [x] Pagination behavior is unit tested with mocked pages.
 
 ---
 
