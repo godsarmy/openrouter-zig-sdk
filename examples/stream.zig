@@ -17,7 +17,7 @@ pub fn main(init: std.process.Init) !void {
 
     var client = try openrouter.Client.init(allocator, threaded.io(), .{
         .api_key = api_key,
-        .http_referer = "https://github.com/openrouter-zig/openrouter-zig",
+        .http_referer = "https://github.com/godsarmy/openrouter-zig-sdk",
         .x_title = "openrouter-zig example",
     });
     defer client.deinit();
