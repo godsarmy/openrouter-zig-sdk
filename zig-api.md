@@ -104,7 +104,7 @@ while (try stream.next()) |chunk| {
   - [x] `client.models.list(...)`
   - [x] `client.embeddings.create(...)`
   - [x] `client.credits.get(...)`
-  - [ ] `client.providers.list(...)`
+  - [x] `client.providers.list(...)`
 - [x] Keep request JSON fields aligned with OpenRouter API field names.
 - [x] Avoid generated internal type names in public API.
 
@@ -138,11 +138,13 @@ while (try stream.next()) |chunk| {
 - [x] `src/models.zig`
 - [x] `src/embeddings.zig`
 - [x] `src/credits.zig`
+- [x] `src/providers.zig`
 - [x] `examples/chat.zig`
 - [x] `examples/stream.zig`
 - [x] `examples/list_models.zig`
 - [x] `examples/embeddings.zig`
 - [x] `examples/credits.zig`
+- [x] `examples/providers.zig`
 
 ## Tasks
 
@@ -216,7 +218,7 @@ pub const Client = struct {
 - [x] `client.chat.completions`
 - [x] `client.models`
 - [x] `client.embeddings`
-- [ ] Later: `client.providers`, `client.guardrails`, `client.api_keys`, `client.workspaces`
+- [ ] Later: `client.guardrails`, `client.api_keys`, `client.workspaces`
 
 ## Tasks
 
@@ -933,7 +935,7 @@ Implement after `v0.1.0` core is stable.
 ## Candidate Resources
 
 - [x] `client.credits.get(...)`
-- [ ] `client.providers.list(...)`
+- [x] `client.providers.list(...)`
 - [ ] `client.endpoints.list(...)`
 - [ ] `client.guardrails.*`
 - [ ] `client.api_keys.*`
@@ -998,6 +1000,7 @@ Integration tests must be opt-in and require environment variables.
 - [x] `examples/stream.zig`
 - [x] `examples/embeddings.zig`
 - [x] `examples/credits.zig`
+- [x] `examples/providers.zig`
 
 ## Documentation
 

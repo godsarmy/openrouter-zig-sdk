@@ -24,6 +24,8 @@ pub const Model = @import("models.zig").Model;
 pub const ModelsListResponse = @import("models.zig").ListResponse;
 pub const OffsetLimit = @import("pagination.zig").OffsetLimit;
 pub const Pager = @import("pagination.zig").Pager;
+pub const Provider = @import("providers.zig").Provider;
+pub const ProvidersListResponse = @import("providers.zig").ListResponse;
 pub const RequestOptions = @import("options.zig").RequestOptions;
 pub const RetryConfig = @import("retry.zig").RetryConfig;
 pub const json = @import("json.zig");
@@ -47,5 +49,6 @@ test {
     _ = @import("models.zig");
     _ = @import("options.zig");
     _ = @import("pagination.zig");
+    _ = @import("providers.zig");
     _ = @import("stream.zig");
 }

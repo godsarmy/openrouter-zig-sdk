@@ -28,6 +28,7 @@ Status legend:
 | [x] | POST | `/embeddings` | `client.embeddings.create` | Text embedding requests. |
 | [x] | GET | `/models` | `client.models.list` | Lists available models. |
 | [x] | GET | `/credits` | `client.credits.get` | Gets remaining credits and usage. Requires a management API key. |
+| [x] | GET | `/providers` | `client.providers.list` | Lists available providers. |
 
 ## Core Inference Endpoints
 
@@ -54,7 +55,7 @@ Status legend:
 | [ ] | GET | `/models/count` | `listModelsCount` | Get the total count of available models. |  |
 | [ ] | GET | `/models/user` | `listModelsUser` | List models filtered by user preferences, privacy, or guardrails. |  |
 | [ ] | GET | `/models/{author}/{slug}/endpoints` | `listEndpoints` | List endpoints for a specific model. |  |
-| [ ] | GET | `/providers` | `listProviders` | List all providers. |  |
+| [x] | GET | `/providers` | `listProviders` | List all providers. | Implemented in `src/providers.zig`. |
 | [ ] | GET | `/endpoints/zdr` | `listEndpointsZdr` | Preview Zero Data Retention impact on available endpoints. |  |
 
 ## Usage, Billing, and Generation Metadata
