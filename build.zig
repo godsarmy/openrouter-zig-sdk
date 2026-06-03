@@ -14,6 +14,7 @@ pub fn build(b: *std.Build) void {
     addExample(b, examples_step, target, optimize, openrouter, "stream", "examples/stream.zig", "run-stream", "Run stream example");
     addExample(b, examples_step, target, optimize, openrouter, "list_models", "examples/list_models.zig", "run-list-models", "Run list models example");
     addExample(b, examples_step, target, optimize, openrouter, "embeddings", "examples/embeddings.zig", "run-embeddings", "Run embeddings example");
+    addExample(b, examples_step, target, optimize, openrouter, "credits", "examples/credits.zig", "run-credits", "Run credits example");
 
     const tests = b.addTest(.{
         .root_module = openrouter,

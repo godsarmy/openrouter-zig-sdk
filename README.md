@@ -78,6 +78,7 @@ Implemented endpoints:
 - `GET /api/v1/models`
 - `POST /api/v1/chat/completions`
 - `POST /api/v1/embeddings`
+- `GET /api/v1/credits` (requires a management API key)
 - Streaming chat completions
 - Typed request and response structs
 - Error mapping for OpenRouter API errors
@@ -118,6 +119,7 @@ zig build run-chat
 zig build run-stream
 zig build run-list-models
 zig build run-embeddings
+zig build run-credits
 ```
 
 ## Development

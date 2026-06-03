@@ -27,6 +27,7 @@ Status legend:
 | [x] | POST | `/chat/completions` | `client.chat.completions.create`, `client.chat.completions.stream` | Non-streaming and SSE streaming chat completions. |
 | [x] | POST | `/embeddings` | `client.embeddings.create` | Text embedding requests. |
 | [x] | GET | `/models` | `client.models.list` | Lists available models. |
+| [x] | GET | `/credits` | `client.credits.get` | Gets remaining credits and usage. Requires a management API key. |
 
 ## Core Inference Endpoints
 
@@ -60,7 +61,7 @@ Status legend:
 
 | Status | Method | Path | Operation | Description | SDK notes |
 |---|---|---|---|---|---|
-| [ ] | GET | `/credits` | `getCredits` | Get remaining credits. |  |
+| [x] | GET | `/credits` | `getCredits` | Get remaining credits. | Implemented in `src/credits.zig`. Requires a management API key. |
 | [ ] | POST | `/credits/coinbase` | `createCoinbaseCharge` | Create a Coinbase Commerce charge. Deprecated. |  |
 | [ ] | GET | `/generation` | `getGeneration` | Get request and usage metadata for a generation. |  |
 | [ ] | GET | `/generation/content` | `listGenerationContent` | Get stored prompt/completion content for a generation. |  |

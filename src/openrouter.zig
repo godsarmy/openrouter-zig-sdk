@@ -11,6 +11,8 @@ pub const ChatCompletionStream = @import("stream.zig").CompletionStream;
 pub const ChatMessage = @import("chat.zig").Message;
 pub const ChatMessageContent = @import("chat.zig").MessageContent;
 pub const ChatRole = @import("chat.zig").Role;
+pub const Credits = @import("credits.zig").Credits;
+pub const CreditsGetResponse = @import("credits.zig").GetResponse;
 pub const Embedding = @import("embeddings.zig").Embedding;
 pub const EmbeddingInput = @import("embeddings.zig").Input;
 pub const EmbeddingsCreateRequest = @import("embeddings.zig").CreateRequest;
@@ -28,15 +30,16 @@ pub const json = @import("json.zig");
 pub const pagination = @import("pagination.zig");
 pub const stream = @import("stream.zig");
 
-pub const version = "0.1.0";
+pub const version = "0.2.0-dev";
 
 test "openrouter module exposes package version" {
-    try std.testing.expectEqualStrings("0.1.0", version);
+    try std.testing.expectEqualStrings("0.2.0-dev", version);
 }
 
 test {
     _ = @import("chat.zig");
     _ = @import("client.zig");
+    _ = @import("credits.zig");
     _ = @import("embeddings.zig");
     _ = @import("errors.zig");
     _ = @import("http.zig");
