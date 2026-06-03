@@ -1071,8 +1071,8 @@ Rules:
 # Review Checklist Before Implementation
 
 - [x] Confirm installed Zig version is `0.16.x` (`0.16.0` installed).
-- [ ] Re-check OpenRouter docs for current endpoint fields.
-- [ ] Re-check official Go SDK for current resource names.
+- [x] Re-check OpenRouter docs for current endpoint fields.
+- [x] Re-check official Go SDK for current resource names.
 - [x] Public endpoint methods return `!T`; do not expose `ApiResult(T)` in v0.1.
 - [x] Resource namespaces are lightweight embedded structs initialized by `Client.init`.
 - [x] HTTP transport is mockable from day one with an internal fake transport for tests.

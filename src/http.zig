@@ -257,7 +257,7 @@ fn buildHeaders(
     errdefer headers.deinit(allocator);
 
     try appendHeader(allocator, &headers, "Authorization", try std.fmt.allocPrint(allocator, "Bearer {s}", .{config.api_key}));
-    try appendHeader(allocator, &headers, "User-Agent", "openrouter-zig/0.0.0");
+    try appendHeader(allocator, &headers, "User-Agent", "openrouter-zig/0.1.0");
     try appendHeader(allocator, &headers, "Accept", request.accept);
     if (request.body != null) {
         if (request.content_type) |content_type| try appendHeader(allocator, &headers, "Content-Type", content_type);
@@ -310,7 +310,7 @@ test "prepare request adds required and optional headers" {
 
     try std.testing.expectEqualStrings("https://openrouter.ai/api/v1/models", prepared.url);
     try std.testing.expectEqualStrings("Bearer secret-key", findHeader(prepared.headers, "authorization").?);
-    try std.testing.expectEqualStrings("openrouter-zig/0.0.0", findHeader(prepared.headers, "user-agent").?);
+    try std.testing.expectEqualStrings("openrouter-zig/0.1.0", findHeader(prepared.headers, "user-agent").?);
     try std.testing.expectEqualStrings("application/json", findHeader(prepared.headers, "accept").?);
     try std.testing.expectEqualStrings("https://example.com", findHeader(prepared.headers, "http-referer").?);
     try std.testing.expectEqualStrings("openrouter-zig-test", findHeader(prepared.headers, "x-title").?);
