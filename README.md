@@ -17,7 +17,7 @@ zig version
 
 ## Installation
 
-Add this package to your Zig project once the library API is implemented:
+Add this package to your Zig project:
 
 ```sh
 zig fetch --save <package-url>
@@ -40,7 +40,7 @@ export OPENROUTER_HTTP_REFERER="https://your-site.example"
 export OPENROUTER_APP_TITLE="Your App"
 ```
 
-## Planned Usage
+## Usage
 
 ```zig
 const std = @import("std");
@@ -73,7 +73,7 @@ pub fn main() !void {
 
 ## API Scope
 
-Initial targets:
+Implemented endpoints:
 
 - `GET /api/v1/models`
 - `POST /api/v1/chat/completions`
@@ -81,6 +81,27 @@ Initial targets:
 - Streaming chat completions
 - Typed request and response structs
 - Error mapping for OpenRouter API errors
+
+## Ownership and Lifecycle
+
+The caller provides the allocator and `std.Io` used by `Client.init`. The client owns its internal HTTP client and must be closed with `client.deinit()`.
+
+Response values own arena-backed parsed data. Call `deinit()` on every response or stream chunk when finished:
+
+- `ModelsListResponse.deinit()`
+- `ChatCompletionResponse.deinit()`
+- `EmbeddingsCreateResponse.deinit()`
+- `ChatCompletionChunk.deinit()`
+
+Streaming responses use a pull iterator. Call `stream.deinit()` even if you stop reading before `[DONE]` so the HTTP request is closed.
+
+`Client` is not thread-safe unless access is externally synchronized. Prefer one client per worker when issuing concurrent requests.
+
+## Retry and Errors
+
+Requests use the client retry policy by default and can override it per request with `RequestOptions.retry`. Retryable responses include `429` and common transient `5xx` OpenRouter statuses when enabled.
+
+Public endpoint methods return `!T`. HTTP/API failures map to Zig errors such as `error.ApiError`; API keys are redacted from error/debug output.
 
 ## Examples
 
@@ -113,6 +134,12 @@ Run tests:
 zig build test
 ```
 
+Run opt-in integration tests against OpenRouter. Without `OPENROUTER_API_KEY`, these tests do nothing:
+
+```sh
+zig build integration-test
+```
+
 Format Zig files:
 
 ```sh
@@ -121,7 +148,7 @@ zig fmt .
 
 ## Project Status
 
-Early scaffolding. Public APIs may change until the first tagged release.
+The core SDK APIs are implemented for models, chat completions, streaming chat completions, and embeddings. Public APIs may change until the first tagged release.
 
 ## License
 

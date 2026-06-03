@@ -30,12 +30,12 @@ Adapt for Zig:
 
 After reviewing the initial plan, use these choices as implementation constraints:
 
-- [ ] Keep `client.chat.completions.create(...)` as the canonical chat API; update README/examples to match it before publishing.
-- [ ] Public endpoint methods return `!T`, not `ApiResult(T)`. HTTP/API failures map to typed errors; rich `ApiError` payloads are internal/diagnostic unless a later API deliberately exposes them.
-- [ ] Owning public response structs store their allocator/arena and expose `deinit(self)` only.
-- [ ] Prefer an arena per parsed response/chunk to avoid nested string/slice free logic.
-- [ ] Use lightweight embedded resource namespace structs; no heap allocation for namespaces.
-- [ ] Make the HTTP transport mockable from day one so unit tests do not require network access.
+- [x] Keep `client.chat.completions.create(...)` as the canonical chat API; update README/examples to match it before publishing.
+- [x] Public endpoint methods return `!T`, not `ApiResult(T)`. HTTP/API failures map to typed errors; rich `ApiError` payloads are internal/diagnostic unless a later API deliberately exposes them.
+- [x] Owning public response structs store their allocator/arena and expose `deinit(self)` only.
+- [x] Prefer an arena per parsed response/chunk to avoid nested string/slice free logic.
+- [x] Use lightweight embedded resource namespace structs; no heap allocation for namespaces.
+- [x] Make the HTTP transport mockable from day one so unit tests do not require network access.
 - [x] Compile-check the exact Zig `0.16.x` `std.Io`, `std.http.Client`, and `std.json` APIs before freezing signatures.
 
 ## Target Public API Shape
@@ -96,25 +96,25 @@ while (try stream.next()) |chunk| {
 
 ## Naming Policy
 
-- [ ] Use OpenRouter/Go SDK resource concepts where possible.
-- [ ] Use Zig naming style for symbols and fields.
+- [x] Use OpenRouter/Go SDK resource concepts where possible.
+- [x] Use Zig naming style for symbols and fields.
 - [ ] Prefer namespaced resources:
-  - [ ] `client.chat.completions.create(...)`
+  - [x] `client.chat.completions.create(...)`
   - [x] `client.chat.completions.stream(...)`
-  - [ ] `client.models.list(...)`
+  - [x] `client.models.list(...)`
   - [x] `client.embeddings.create(...)`
   - [ ] `client.credits.get(...)`
   - [ ] `client.providers.list(...)`
-- [ ] Keep request JSON fields aligned with OpenRouter API field names.
-- [ ] Avoid generated internal type names in public API.
+- [x] Keep request JSON fields aligned with OpenRouter API field names.
+- [x] Avoid generated internal type names in public API.
 
 ## Non-Goals
 
-- [ ] Do not directly port the generated Go SDK internals.
-- [ ] Do not copy Go pointer-helper optional patterns.
-- [ ] Do not expose Go-style variadic operation options.
-- [ ] Do not use panic-style config validation.
-- [ ] Do not implement the entire Go SDK surface in the first milestone.
+- [x] Do not directly port the generated Go SDK internals.
+- [x] Do not copy Go pointer-helper optional patterns.
+- [x] Do not expose Go-style variadic operation options.
+- [x] Do not use panic-style config validation.
+- [x] Do not implement the entire Go SDK surface in the first milestone.
 
 ---
 
@@ -210,9 +210,9 @@ pub const Client = struct {
 
 ## Resource Namespaces
 
-- [ ] `client.chat`
-- [ ] `client.chat.completions`
-- [ ] `client.models`
+- [x] `client.chat`
+- [x] `client.chat.completions`
+- [x] `client.models`
 - [x] `client.embeddings`
 - [ ] Later: `client.credits`, `client.providers`, `client.guardrails`, `client.api_keys`, `client.workspaces`
 
@@ -338,16 +338,16 @@ Concurrent app usage should be implemented by the application around the sync ca
 
 Future async/concurrency compatibility requirements:
 
-- [ ] Require caller-provided `std.Io` in `Client.init`.
-- [ ] Do not expose transport internals in endpoint APIs.
-- [ ] Keep request/response types independent of `std.http.Client`.
-- [ ] Return stream objects with explicit `deinit` so callers can cancel/close early.
+- [x] Require caller-provided `std.Io` in `Client.init`.
+- [x] Do not expose transport internals in endpoint APIs.
+- [x] Keep request/response types independent of `std.http.Client`.
+- [x] Return stream objects with explicit `deinit` so callers can cancel/close early.
 - [ ] Surface cancellation/closed-stream errors clearly where supported.
 - [ ] Propagate `error.Canceled` where the underlying I/O reports cancellation.
 - [ ] Use `std.testing.io` for I/O-oriented tests where possible.
 - [ ] Document `-fsingle-threaded` vs `-fno-single-threaded` behavior where relevant.
-- [ ] Prefer client-per-worker or externally synchronized usage until thread-safety is verified.
-- [ ] Add optional async/task wrappers only after the sync API is stable.
+- [x] Prefer client-per-worker or externally synchronized usage until thread-safety is verified.
+- [x] Add optional async/task wrappers only after the sync API is stable.
 
 ## Internal Types
 
@@ -954,8 +954,8 @@ Implement after `v0.1.0` core is stable.
 
 ## Unit Tests
 
-- [ ] Config validation.
-- [ ] Fake/mock HTTP transport behavior.
+- [x] Config validation.
+- [x] Fake/mock HTTP transport behavior.
 - [x] URL construction.
 - [x] Auth header construction.
 - [x] Optional headers.
@@ -966,24 +966,24 @@ Implement after `v0.1.0` core is stable.
 - [x] Error status mapping.
 - [x] Retry decision logic.
 - [x] Retry backoff calculation.
-- [ ] SSE parsing.
-- [ ] `[DONE]` stream termination.
-- [ ] Response `deinit` behavior.
-- [ ] Arena-backed response cleanup behavior.
+- [x] SSE parsing.
+- [x] `[DONE]` stream termination.
+- [x] Response `deinit` behavior.
+- [x] Arena-backed response cleanup behavior.
 
 ## Integration Tests
 
 Integration tests must be opt-in and require environment variables.
 
-- [ ] `OPENROUTER_API_KEY`
-- [ ] Optional `OPENROUTER_HTTP_REFERER`
-- [ ] Optional `OPENROUTER_APP_TITLE`
+- [x] `OPENROUTER_API_KEY`
+- [x] Optional `OPENROUTER_HTTP_REFERER`
+- [x] Optional `OPENROUTER_APP_TITLE`
 
 ## Acceptance Criteria
 
-- [ ] `zig build test` does not require network.
-- [ ] `zig build integration-test` may require credentials.
-- [ ] Tests do not print API keys.
+- [x] `zig build test` does not require network.
+- [x] `zig build integration-test` may require credentials.
+- [x] Tests do not print API keys.
 
 ---
 
@@ -998,20 +998,20 @@ Integration tests must be opt-in and require environment variables.
 
 ## Documentation
 
-- [ ] Update `README.md` to use the canonical `client.chat.completions.create(...)` API before publishing examples.
-- [ ] Document allocator ownership.
-- [ ] Document response deinit requirements.
-- [ ] Document streaming lifecycle.
-- [ ] Document `Client` thread-safety policy.
-- [ ] Document retry behavior.
-- [ ] Document error behavior.
-- [ ] Document supported endpoints.
+- [x] Update `README.md` to use the canonical `client.chat.completions.create(...)` API before publishing examples.
+- [x] Document allocator ownership.
+- [x] Document response deinit requirements.
+- [x] Document streaming lifecycle.
+- [x] Document `Client` thread-safety policy.
+- [x] Document retry behavior.
+- [x] Document error behavior.
+- [x] Document supported endpoints.
 
 ## Acceptance Criteria
 
-- [ ] Examples compile.
-- [ ] README examples match actual API.
-- [ ] Public API docs do not describe unimplemented features as complete.
+- [x] Examples compile.
+- [x] README examples match actual API.
+- [x] Public API docs do not describe unimplemented features as complete.
 
 ---
 
@@ -1019,20 +1019,20 @@ Integration tests must be opt-in and require environment variables.
 
 ## Required
 
-- [ ] Zig package builds on Zig `0.16.x`.
-- [ ] `Client.init` / `Client.deinit`.
-- [ ] Config with API key, base URL, timeout, referer, title.
-- [ ] Caller-provided `std.Io` support.
-- [ ] Request options.
-- [ ] Central HTTP layer.
-- [ ] JSON helpers.
-- [ ] Error handling.
-- [ ] Basic retry.
-- [ ] `client.models.list`.
-- [ ] `client.chat.completions.create`.
-- [ ] `client.chat.completions.stream`.
-- [ ] Unit tests.
-- [ ] Examples.
+- [x] Zig package builds on Zig `0.16.x`.
+- [x] `Client.init` / `Client.deinit`.
+- [x] Config with API key, base URL, timeout, referer, title.
+- [x] Caller-provided `std.Io` support.
+- [x] Request options.
+- [x] Central HTTP layer.
+- [x] JSON helpers.
+- [x] Error handling.
+- [x] Basic retry.
+- [x] `client.models.list`.
+- [x] `client.chat.completions.create`.
+- [x] `client.chat.completions.stream`.
+- [x] Unit tests.
+- [x] Examples.
 
 ## Deferred
 
@@ -1085,6 +1085,6 @@ Rules:
 - [x] `AGENT.md` exists.
 - [x] `.gitignore` exists.
 - [x] Zig package files exist.
-- [ ] Library implementation exists.
+- [x] Library implementation exists.
 - [x] Tests exist.
 - [x] Examples exist.
