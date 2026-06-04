@@ -80,6 +80,7 @@ Implemented endpoints:
 - `POST /api/v1/embeddings`
 - `GET /api/v1/credits` (requires a management API key)
 - `GET /api/v1/providers`
+- `GET /api/v1/generation`
 - Streaming chat completions
 - Typed request and response structs
 - Error mapping for OpenRouter API errors
@@ -94,6 +95,7 @@ Response values own arena-backed parsed data. Call `deinit()` on every response 
 - `ChatCompletionResponse.deinit()`
 - `EmbeddingsCreateResponse.deinit()`
 - `ChatCompletionChunk.deinit()`
+- `GenerationGetResponse.deinit()`
 
 Streaming responses use a pull iterator. Call `stream.deinit()` even if you stop reading before `[DONE]` so the HTTP request is closed.
 
@@ -122,6 +124,7 @@ zig build run-list-models
 zig build run-embeddings
 zig build run-credits
 zig build run-providers
+OPENROUTER_GENERATION_ID="gen-..." zig build run-generation
 ```
 
 ## Development

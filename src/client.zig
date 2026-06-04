@@ -5,6 +5,7 @@ const chat_mod = @import("chat.zig");
 const config_mod = @import("config.zig");
 const credits_mod = @import("credits.zig");
 const embeddings_mod = @import("embeddings.zig");
+const generation_mod = @import("generation.zig");
 const models_mod = @import("models.zig");
 const options_mod = @import("options.zig");
 const providers_mod = @import("providers.zig");
@@ -70,6 +71,16 @@ pub const ProvidersResource = struct {
         return providers_mod.list(client, request_options);
     }
 };
+pub const GenerationResource = struct {
+    pub fn get(
+        self: *GenerationResource,
+        request: generation_mod.GetRequest,
+        request_options: options_mod.RequestOptions,
+    ) !generation_mod.GetResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("generation", self));
+        return generation_mod.get(client, request, request_options);
+    }
+};
 
 /// Root OpenRouter client.
 ///
@@ -86,6 +97,7 @@ pub const Client = struct {
     embeddings: EmbeddingsResource,
     credits: CreditsResource,
     providers: ProvidersResource,
+    generation: GenerationResource,
 
     pub fn init(allocator: std.mem.Allocator, io: std.Io, config: Config) Error!Client {
         if (config.api_key.len == 0) return error.EmptyApiKey;
@@ -106,6 +118,7 @@ pub const Client = struct {
             .embeddings = .{},
             .credits = .{},
             .providers = .{},
+            .generation = .{},
         };
     }
 
@@ -205,4 +218,5 @@ test "client initializes resource namespaces" {
     _ = client.embeddings;
     _ = client.credits;
     _ = client.providers;
+    _ = client.generation;
 }
