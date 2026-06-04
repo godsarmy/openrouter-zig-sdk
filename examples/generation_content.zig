@@ -1,0 +1,31 @@
+const std = @import("std");
+const openrouter = @import("openrouter");
+
+pub fn main(init: std.process.Init) !void {
+    const allocator = init.gpa;
+    const api_key = init.minimal.environ.getAlloc(allocator, "OPENROUTER_API_KEY") catch return error.MissingApiKey;
+    defer allocator.free(api_key);
+    const generation_id = init.minimal.environ.getAlloc(allocator, "OPENROUTER_GENERATION_ID") catch return error.MissingGenerationId;
+    defer allocator.free(generation_id);
+
+    var client = try openrouter.Client.init(allocator, init.io, .{
+        .api_key = api_key,
+    });
+    defer client.deinit();
+
+    var response = try client.generation.content(.{ .id = generation_id }, .{});
+    defer response.deinit();
+
+    if (response.data.input.prompt) |prompt| {
+        std.debug.print("prompt: {s}\n", .{prompt});
+    } else if (response.data.input.messages) |messages| {
+        std.debug.print("messages: {d}\n", .{messages.len});
+    }
+
+    if (response.data.output.completion) |completion| {
+        std.debug.print("completion: {s}\n", .{completion});
+    }
+    if (response.data.output.reasoning) |reasoning| {
+        std.debug.print("reasoning: {s}\n", .{reasoning});
+    }
+}

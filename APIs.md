@@ -30,6 +30,7 @@ Status legend:
 | [x] | GET | `/credits` | `client.credits.get` | Gets remaining credits and usage. Requires a management API key. |
 | [x] | GET | `/providers` | `client.providers.list` | Lists available providers. |
 | [x] | GET | `/generation` | `client.generation.get` | Gets request and usage metadata for a generation. |
+| [x] | GET | `/generation/content` | `client.generation.content` | Gets stored prompt/completion content for a generation. |
 
 ## Core Inference Endpoints
 
@@ -66,7 +67,7 @@ Status legend:
 | [x] | GET | `/credits` | `getCredits` | Get remaining credits. | Implemented in `src/credits.zig`. Requires a management API key. |
 | [ ] | POST | `/credits/coinbase` | `createCoinbaseCharge` | Create a Coinbase Commerce charge. Deprecated. |  |
 | [x] | GET | `/generation` | `getGeneration` | Get request and usage metadata for a generation. | Implemented in `src/generation.zig`. |
-| [ ] | GET | `/generation/content` | `listGenerationContent` | Get stored prompt/completion content for a generation. |  |
+| [x] | GET | `/generation/content` | `listGenerationContent` | Get stored prompt/completion content for a generation. | Implemented in `src/generation.zig`. |
 | [ ] | GET | `/activity` | `getUserActivity` | Get user activity grouped by endpoint. |  |
 | [ ] | GET | `/datasets/rankings-daily` | `getRankingsDaily` | Get daily token totals for top models. |  |
 

@@ -80,6 +80,15 @@ pub const GenerationResource = struct {
         const client: *Client = @alignCast(@fieldParentPtr("generation", self));
         return generation_mod.get(client, request, request_options);
     }
+
+    pub fn content(
+        self: *GenerationResource,
+        request: generation_mod.ContentRequest,
+        request_options: options_mod.RequestOptions,
+    ) !generation_mod.ContentResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("generation", self));
+        return generation_mod.content(client, request, request_options);
+    }
 };
 
 /// Root OpenRouter client.

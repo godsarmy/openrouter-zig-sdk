@@ -22,6 +22,20 @@ pub const GetResponse = struct {
     }
 };
 
+pub const ContentRequest = struct {
+    id: []const u8,
+};
+
+pub const ContentResponse = struct {
+    arena: std.heap.ArenaAllocator,
+    data: GenerationContent,
+
+    pub fn deinit(self: *ContentResponse) void {
+        self.arena.deinit();
+        self.* = undefined;
+    }
+};
+
 pub const Generation = struct {
     api_type: ?[]const u8,
     app_id: ?u64,
@@ -78,8 +92,27 @@ pub const ProviderResponse = struct {
     status: ?f64,
 };
 
+pub const GenerationContent = struct {
+    input: ContentInput,
+    output: ContentOutput,
+};
+
+pub const ContentInput = struct {
+    prompt: ?[]const u8 = null,
+    messages: ?[]std.json.Value = null,
+};
+
+pub const ContentOutput = struct {
+    completion: ?[]const u8,
+    reasoning: ?[]const u8,
+};
+
 const WireGetResponse = struct {
     data: Generation,
+};
+
+const WireContentResponse = struct {
+    data: GenerationContent,
 };
 
 pub fn get(client: anytype, request: GetRequest, request_options: options_mod.RequestOptions) !GetResponse {
@@ -122,6 +155,46 @@ pub fn getWithTransport(
     return parseGetResponse(allocator, response);
 }
 
+pub fn content(client: anytype, request: ContentRequest, request_options: options_mod.RequestOptions) !ContentResponse {
+    const query = try queryString(client.allocator, .{ .id = request.id });
+    defer client.allocator.free(query);
+
+    var prepared = try http.prepareRequest(client.allocator, client.config, .{
+        .method = .GET,
+        .path = "/generation/content",
+        .query = query,
+    }, request_options);
+    defer prepared.deinit();
+
+    var response = try http.execute(client.allocator, &client.http_client, prepared);
+    defer response.deinit();
+
+    return parseContentResponse(client.allocator, response);
+}
+
+pub fn contentWithTransport(
+    allocator: std.mem.Allocator,
+    config: config_mod.Config,
+    transport: anytype,
+    request: ContentRequest,
+    request_options: options_mod.RequestOptions,
+) !ContentResponse {
+    const query = try queryString(allocator, .{ .id = request.id });
+    defer allocator.free(query);
+
+    var prepared = try http.prepareRequest(allocator, config, .{
+        .method = .GET,
+        .path = "/generation/content",
+        .query = query,
+    }, request_options);
+    defer prepared.deinit();
+
+    var response = try transport.execute(allocator, prepared);
+    defer response.deinit();
+
+    return parseContentResponse(allocator, response);
+}
+
 pub fn parseGetResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !GetResponse {
     if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
 
@@ -131,6 +204,21 @@ pub fn parseGetResponse(allocator: std.mem.Allocator, response: http.HttpRespons
 
     const owned_body = try arena_allocator.dupe(u8, response.body);
     const parsed = try json.parseResponseLeaky(WireGetResponse, arena_allocator, owned_body);
+    return .{
+        .arena = arena,
+        .data = parsed.data,
+    };
+}
+
+pub fn parseContentResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !ContentResponse {
+    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    errdefer arena.deinit();
+    const arena_allocator = arena.allocator();
+
+    const owned_body = try arena_allocator.dupe(u8, response.body);
+    const parsed = try json.parseResponseLeaky(WireContentResponse, arena_allocator, owned_body);
     return .{
         .arena = arena,
         .data = parsed.data,
@@ -241,6 +329,83 @@ test "generation get sends GET /generation with escaped id" {
 
 test "generation get maps error status to ApiError" {
     try std.testing.expectError(error.ApiError, getWithTransport(
+        std.testing.allocator,
+        config_mod.Config{ .api_key = "test-key" },
+        http.FakeTransport{ .status = .not_found, .body = "{\"error\":{\"message\":\"not found\"}}" },
+        .{ .id = "gen-missing" },
+        .{},
+    ));
+}
+
+test "generation content parses prompt response and ignores unknown fields" {
+    const body =
+        \\{
+        \\  "data": {
+        \\    "input": {
+        \\      "prompt": "Say hello.",
+        \\      "unknown": true
+        \\    },
+        \\    "output": {
+        \\      "completion": "Hello!",
+        \\      "reasoning": null,
+        \\      "unknown": true
+        \\    },
+        \\    "unknown": true
+        \\  }
+        \\}
+    ;
+
+    var result = try contentWithTransport(std.testing.allocator, config_mod.Config{ .api_key = "test-key" }, http.FakeTransport{ .body = body }, .{ .id = "gen-123" }, .{});
+    defer result.deinit();
+
+    try std.testing.expectEqualStrings("Say hello.", result.data.input.prompt.?);
+    try std.testing.expectEqual(null, result.data.input.messages);
+    try std.testing.expectEqualStrings("Hello!", result.data.output.completion.?);
+    try std.testing.expectEqual(null, result.data.output.reasoning);
+}
+
+test "generation content parses messages response" {
+    const body =
+        \\{
+        \\  "data": {
+        \\    "input": {
+        \\      "messages": [
+        \\        {"role": "user", "content": "Hi"}
+        \\      ]
+        \\    },
+        \\    "output": {
+        \\      "completion": null,
+        \\      "reasoning": "Because."
+        \\    }
+        \\  }
+        \\}
+    ;
+
+    var result = try contentWithTransport(std.testing.allocator, config_mod.Config{ .api_key = "test-key" }, http.FakeTransport{ .body = body }, .{ .id = "gen-123" }, .{});
+    defer result.deinit();
+
+    try std.testing.expectEqual(null, result.data.input.prompt);
+    try std.testing.expectEqual(@as(usize, 1), result.data.input.messages.?.len);
+    try std.testing.expectEqualStrings("Because.", result.data.output.reasoning.?);
+}
+
+test "generation content sends GET /generation/content with escaped id" {
+    const query = try queryString(std.testing.allocator, .{ .id = "gen 123/abc" });
+    defer std.testing.allocator.free(query);
+
+    var prepared = try http.prepareRequest(std.testing.allocator, .{ .api_key = "test-key" }, .{
+        .method = .GET,
+        .path = "/generation/content",
+        .query = query,
+    }, .{});
+    defer prepared.deinit();
+
+    try std.testing.expectEqual(std.http.Method.GET, prepared.method);
+    try std.testing.expectEqualStrings("https://openrouter.ai/api/v1/generation/content?id=gen%20123%2Fabc", prepared.url);
+}
+
+test "generation content maps error status to ApiError" {
+    try std.testing.expectError(error.ApiError, contentWithTransport(
         std.testing.allocator,
         config_mod.Config{ .api_key = "test-key" },
         http.FakeTransport{ .status = .not_found, .body = "{\"error\":{\"message\":\"not found\"}}" },
