@@ -1,6 +1,7 @@
 //! Root OpenRouter client.
 
 const std = @import("std");
+const activity_mod = @import("activity.zig");
 const chat_mod = @import("chat.zig");
 const config_mod = @import("config.zig");
 const credits_mod = @import("credits.zig");
@@ -90,6 +91,12 @@ pub const GenerationResource = struct {
         return generation_mod.content(client, request, request_options);
     }
 };
+pub const ActivityResource = struct {
+    pub fn get(self: *ActivityResource, request: activity_mod.GetRequest, request_options: options_mod.RequestOptions) !activity_mod.GetResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("activity", self));
+        return activity_mod.get(client, request, request_options);
+    }
+};
 
 /// Root OpenRouter client.
 ///
@@ -107,6 +114,7 @@ pub const Client = struct {
     credits: CreditsResource,
     providers: ProvidersResource,
     generation: GenerationResource,
+    activity: ActivityResource,
 
     pub fn init(allocator: std.mem.Allocator, io: std.Io, config: Config) Error!Client {
         if (config.api_key.len == 0) return error.EmptyApiKey;
@@ -128,6 +136,7 @@ pub const Client = struct {
             .credits = .{},
             .providers = .{},
             .generation = .{},
+            .activity = .{},
         };
     }
 
@@ -228,4 +237,5 @@ test "client initializes resource namespaces" {
     _ = client.credits;
     _ = client.providers;
     _ = client.generation;
+    _ = client.activity;
 }

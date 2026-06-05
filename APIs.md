@@ -31,6 +31,7 @@ Status legend:
 | [x] | GET | `/providers` | `client.providers.list` | Lists available providers. |
 | [x] | GET | `/generation` | `client.generation.get` | Gets request and usage metadata for a generation. |
 | [x] | GET | `/generation/content` | `client.generation.content` | Gets stored prompt/completion content for a generation. |
+| [x] | GET | `/activity` | `client.activity.get` | Gets user activity grouped by endpoint. Requires a management API key. |
 
 ## Core Inference Endpoints
 
@@ -68,7 +69,7 @@ Status legend:
 | [ ] | POST | `/credits/coinbase` | `createCoinbaseCharge` | Create a Coinbase Commerce charge. Deprecated. |  |
 | [x] | GET | `/generation` | `getGeneration` | Get request and usage metadata for a generation. | Implemented in `src/generation.zig`. |
 | [x] | GET | `/generation/content` | `listGenerationContent` | Get stored prompt/completion content for a generation. | Implemented in `src/generation.zig`. |
-| [ ] | GET | `/activity` | `getUserActivity` | Get user activity grouped by endpoint. |  |
+| [x] | GET | `/activity` | `getUserActivity` | Get user activity grouped by endpoint. | Implemented in `src/activity.zig`. Requires a management API key. |
 | [ ] | GET | `/datasets/rankings-daily` | `getRankingsDaily` | Get daily token totals for top models. |  |
 
 ## API Keys, Auth, and BYOK
