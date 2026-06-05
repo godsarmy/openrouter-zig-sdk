@@ -5,6 +5,7 @@ const activity_mod = @import("activity.zig");
 const chat_mod = @import("chat.zig");
 const config_mod = @import("config.zig");
 const credits_mod = @import("credits.zig");
+const datasets_mod = @import("datasets.zig");
 const embeddings_mod = @import("embeddings.zig");
 const generation_mod = @import("generation.zig");
 const models_mod = @import("models.zig");
@@ -97,6 +98,20 @@ pub const ActivityResource = struct {
         return activity_mod.get(client, request, request_options);
     }
 };
+pub const DatasetsResource = struct {
+    rankings_daily: RankingsDailyResource = .{},
+};
+pub const RankingsDailyResource = struct {
+    pub fn get(
+        self: *RankingsDailyResource,
+        request: datasets_mod.RankingsDailyGetRequest,
+        request_options: options_mod.RequestOptions,
+    ) !datasets_mod.RankingsDailyGetResponse {
+        const datasets: *DatasetsResource = @alignCast(@fieldParentPtr("rankings_daily", self));
+        const client: *Client = @alignCast(@fieldParentPtr("datasets", datasets));
+        return datasets_mod.getRankingsDaily(client, request, request_options);
+    }
+};
 
 /// Root OpenRouter client.
 ///
@@ -115,6 +130,7 @@ pub const Client = struct {
     providers: ProvidersResource,
     generation: GenerationResource,
     activity: ActivityResource,
+    datasets: DatasetsResource,
 
     pub fn init(allocator: std.mem.Allocator, io: std.Io, config: Config) Error!Client {
         if (config.api_key.len == 0) return error.EmptyApiKey;
@@ -137,6 +153,7 @@ pub const Client = struct {
             .providers = .{},
             .generation = .{},
             .activity = .{},
+            .datasets = .{},
         };
     }
 
@@ -238,4 +255,6 @@ test "client initializes resource namespaces" {
     _ = client.providers;
     _ = client.generation;
     _ = client.activity;
+    _ = client.datasets;
+    _ = client.datasets.rankings_daily;
 }

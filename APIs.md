@@ -32,6 +32,7 @@ Status legend:
 | [x] | GET | `/generation` | `client.generation.get` | Gets request and usage metadata for a generation. |
 | [x] | GET | `/generation/content` | `client.generation.content` | Gets stored prompt/completion content for a generation. |
 | [x] | GET | `/activity` | `client.activity.get` | Gets user activity grouped by endpoint. Requires a management API key. |
+| [x] | GET | `/datasets/rankings-daily` | `client.datasets.rankings_daily.get` | Gets daily token totals for top models. |
 
 ## Core Inference Endpoints
 
@@ -70,7 +71,7 @@ Status legend:
 | [x] | GET | `/generation` | `getGeneration` | Get request and usage metadata for a generation. | Implemented in `src/generation.zig`. |
 | [x] | GET | `/generation/content` | `listGenerationContent` | Get stored prompt/completion content for a generation. | Implemented in `src/generation.zig`. |
 | [x] | GET | `/activity` | `getUserActivity` | Get user activity grouped by endpoint. | Implemented in `src/activity.zig`. Requires a management API key. |
-| [ ] | GET | `/datasets/rankings-daily` | `getRankingsDaily` | Get daily token totals for top models. |  |
+| [x] | GET | `/datasets/rankings-daily` | `getRankingsDaily` | Get daily token totals for top models. | Implemented in `src/datasets.zig`. |
 
 ## API Keys, Auth, and BYOK
 

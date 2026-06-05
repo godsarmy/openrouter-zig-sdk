@@ -83,9 +83,12 @@ Implemented endpoints:
 - `GET /api/v1/generation`
 - `GET /api/v1/generation/content`
 - `GET /api/v1/activity` (requires a management API key)
+- `GET /api/v1/datasets/rankings-daily`
 - Streaming chat completions
 - Typed request and response structs
 - Error mapping for OpenRouter API errors
+
+`/datasets/rankings-daily` returns `total_tokens` as a decimal string and may include aggregated `other` rows.
 
 ## Ownership and Lifecycle
 
@@ -100,6 +103,7 @@ Response values own arena-backed parsed data. Call `deinit()` on every response 
 - `GenerationGetResponse.deinit()`
 - `GenerationContentResponse.deinit()`
 - `ActivityGetResponse.deinit()`
+- `RankingsDailyGetResponse.deinit()`
 
 Streaming responses use a pull iterator. Call `stream.deinit()` even if you stop reading before `[DONE]` so the HTTP request is closed.
 
@@ -131,6 +135,7 @@ zig build run-providers
 OPENROUTER_GENERATION_ID="gen-..." zig build run-generation
 OPENROUTER_GENERATION_ID="gen-..." zig build run-generation-content
 zig build run-activity # requires a management API key
+zig build run-rankings-daily
 ```
 
 ## Development
