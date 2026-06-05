@@ -7,6 +7,7 @@ const errors = @import("errors.zig");
 const http = @import("http.zig");
 const json = @import("json.zig");
 const options_mod = @import("options.zig");
+const query_mod = @import("query.zig");
 
 pub const GetRequest = struct {
     id: []const u8,
@@ -226,23 +227,7 @@ pub fn parseContentResponse(allocator: std.mem.Allocator, response: http.HttpRes
 }
 
 pub fn queryString(allocator: std.mem.Allocator, request: GetRequest) ![]u8 {
-    var query: std.ArrayList(u8) = .empty;
-    errdefer query.deinit(allocator);
-
-    try query.appendSlice(allocator, "id=");
-    try percentEncode(allocator, &query, request.id);
-    return try query.toOwnedSlice(allocator);
-}
-
-fn percentEncode(allocator: std.mem.Allocator, output: *std.ArrayList(u8), value: []const u8) !void {
-    const hex = "0123456789ABCDEF";
-    for (value) |byte| {
-        if (std.ascii.isAlphanumeric(byte) or byte == '-' or byte == '_' or byte == '.' or byte == '~') {
-            try output.append(allocator, byte);
-        } else {
-            try output.appendSlice(allocator, &.{ '%', hex[byte >> 4], hex[byte & 0x0F] });
-        }
-    }
+    return query_mod.single(allocator, "id", request.id);
 }
 
 test "generation get parses response and ignores unknown fields" {

@@ -7,6 +7,7 @@ const errors = @import("errors.zig");
 const http = @import("http.zig");
 const json = @import("json.zig");
 const options_mod = @import("options.zig");
+const query_mod = @import("query.zig");
 
 pub const RankingsDailyGetRequest = struct {
     start_date: ?[]const u8 = null,
@@ -99,32 +100,10 @@ pub fn parseRankingsDailyGetResponse(allocator: std.mem.Allocator, response: htt
 }
 
 pub fn rankingsDailyQueryString(allocator: std.mem.Allocator, request: RankingsDailyGetRequest) ![]u8 {
-    var query: std.ArrayList(u8) = .empty;
-    errdefer query.deinit(allocator);
-
-    try appendQueryParam(allocator, &query, "start_date", request.start_date);
-    try appendQueryParam(allocator, &query, "end_date", request.end_date);
-
-    return try query.toOwnedSlice(allocator);
-}
-
-fn appendQueryParam(allocator: std.mem.Allocator, query: *std.ArrayList(u8), name: []const u8, value: ?[]const u8) !void {
-    const payload = value orelse return;
-    if (query.items.len > 0) try query.append(allocator, '&');
-    try query.appendSlice(allocator, name);
-    try query.append(allocator, '=');
-    try percentEncode(allocator, query, payload);
-}
-
-fn percentEncode(allocator: std.mem.Allocator, output: *std.ArrayList(u8), value: []const u8) !void {
-    const hex = "0123456789ABCDEF";
-    for (value) |byte| {
-        if (std.ascii.isAlphanumeric(byte) or byte == '-' or byte == '_' or byte == '.' or byte == '~') {
-            try output.append(allocator, byte);
-        } else {
-            try output.appendSlice(allocator, &.{ '%', hex[byte >> 4], hex[byte & 0x0F] });
-        }
-    }
+    return query_mod.build(allocator, &.{
+        .{ .name = "start_date", .value = request.start_date },
+        .{ .name = "end_date", .value = request.end_date },
+    });
 }
 
 test "rankings daily get parses response and ignores unknown fields" {

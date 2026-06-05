@@ -7,6 +7,7 @@ const errors = @import("errors.zig");
 const http = @import("http.zig");
 const json = @import("json.zig");
 const options_mod = @import("options.zig");
+const query_mod = @import("query.zig");
 
 pub const GetRequest = struct {
     date: ?[]const u8 = null,
@@ -98,33 +99,11 @@ pub fn parseGetResponse(allocator: std.mem.Allocator, response: http.HttpRespons
 }
 
 pub fn queryString(allocator: std.mem.Allocator, request: GetRequest) ![]u8 {
-    var query: std.ArrayList(u8) = .empty;
-    errdefer query.deinit(allocator);
-
-    try appendQueryParam(allocator, &query, "date", request.date);
-    try appendQueryParam(allocator, &query, "api_key_hash", request.api_key_hash);
-    try appendQueryParam(allocator, &query, "user_id", request.user_id);
-
-    return try query.toOwnedSlice(allocator);
-}
-
-fn appendQueryParam(allocator: std.mem.Allocator, query: *std.ArrayList(u8), name: []const u8, value: ?[]const u8) !void {
-    const payload = value orelse return;
-    if (query.items.len > 0) try query.append(allocator, '&');
-    try query.appendSlice(allocator, name);
-    try query.append(allocator, '=');
-    try percentEncode(allocator, query, payload);
-}
-
-fn percentEncode(allocator: std.mem.Allocator, output: *std.ArrayList(u8), value: []const u8) !void {
-    const hex = "0123456789ABCDEF";
-    for (value) |byte| {
-        if (std.ascii.isAlphanumeric(byte) or byte == '-' or byte == '_' or byte == '.' or byte == '~') {
-            try output.append(allocator, byte);
-        } else {
-            try output.appendSlice(allocator, &.{ '%', hex[byte >> 4], hex[byte & 0x0F] });
-        }
-    }
+    return query_mod.build(allocator, &.{
+        .{ .name = "date", .value = request.date },
+        .{ .name = "api_key_hash", .value = request.api_key_hash },
+        .{ .name = "user_id", .value = request.user_id },
+    });
 }
 
 test "activity get parses response and ignores unknown fields" {

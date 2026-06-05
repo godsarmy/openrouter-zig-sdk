@@ -71,5 +71,6 @@ test {
     _ = @import("options.zig");
     _ = @import("pagination.zig");
     _ = @import("providers.zig");
+    _ = @import("query.zig");
     _ = @import("stream.zig");
 }
