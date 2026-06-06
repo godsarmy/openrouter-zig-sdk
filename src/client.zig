@@ -5,6 +5,7 @@ const activity_mod = @import("activity.zig");
 const chat_mod = @import("chat.zig");
 const config_mod = @import("config.zig");
 const credits_mod = @import("credits.zig");
+const auth_keys_mod = @import("auth_keys.zig");
 const datasets_mod = @import("datasets.zig");
 const embeddings_mod = @import("embeddings.zig");
 const generation_mod = @import("generation.zig");
@@ -76,6 +77,21 @@ pub const CreditsResource = struct {
     pub fn get(self: *CreditsResource, request_options: options_mod.RequestOptions) !credits_mod.GetResponse {
         const client: *Client = @alignCast(@fieldParentPtr("credits", self));
         return credits_mod.get(client, request_options);
+    }
+};
+pub const AuthKeysResource = struct {
+    code: AuthKeysCodeResource = .{},
+
+    pub fn exchange(self: *AuthKeysResource, request: auth_keys_mod.ExchangeRequest, request_options: options_mod.RequestOptions) !auth_keys_mod.ExchangeResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("auth", self));
+        return auth_keys_mod.exchange(client, request, request_options);
+    }
+};
+pub const AuthKeysCodeResource = struct {
+    pub fn create(self: *AuthKeysCodeResource, request: auth_keys_mod.CreateCodeRequest, request_options: options_mod.RequestOptions) !auth_keys_mod.CreateCodeResponse {
+        const auth: *AuthKeysResource = @alignCast(@fieldParentPtr("code", self));
+        const client: *Client = @alignCast(@fieldParentPtr("auth", auth));
+        return auth_keys_mod.createCode(client, request, request_options);
     }
 };
 pub const KeyResource = struct {
@@ -166,6 +182,7 @@ pub const Client = struct {
     models: ModelsResource,
     embeddings: EmbeddingsResource,
     credits: CreditsResource,
+    auth: AuthKeysResource,
     key: KeyResource,
     keys: KeysResource,
     providers: ProvidersResource,
@@ -191,6 +208,7 @@ pub const Client = struct {
             .models = .{},
             .embeddings = .{},
             .credits = .{},
+            .auth = .{},
             .key = .{},
             .keys = .{},
             .providers = .{},
@@ -256,6 +274,16 @@ test "client stores optional attribution headers" {
 
     try std.testing.expectEqualStrings("https://example.com", client.config.http_referer.?);
     try std.testing.expectEqualStrings("openrouter-zig-test", client.config.x_title.?);
+}
+
+test "client exposes auth keys resource" {
+    var threaded: std.Io.Threaded = .init_single_threaded;
+    defer threaded.deinit();
+
+    var client = try Client.init(std.testing.allocator, threaded.io(), .{ .api_key = "test-key" });
+    defer client.deinit();
+
+    _ = &client.auth.code;
 }
 
 test "client rejects invalid base URL" {
