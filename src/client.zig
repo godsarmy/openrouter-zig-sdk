@@ -49,6 +49,8 @@ pub const ChatCompletionsResource = struct {
     }
 };
 pub const ModelsResource = struct {
+    user: ModelsUserResource = .{},
+
     pub fn list(self: *ModelsResource, request_options: options_mod.RequestOptions) !models_mod.ListResponse {
         const client: *Client = @alignCast(@fieldParentPtr("models", self));
         return models_mod.list(client, request_options);
@@ -61,6 +63,13 @@ pub const ModelsResource = struct {
     ) !models_mod.CountResponse {
         const client: *Client = @alignCast(@fieldParentPtr("models", self));
         return models_mod.count(client, request, request_options);
+    }
+};
+pub const ModelsUserResource = struct {
+    pub fn list(self: *ModelsUserResource, request_options: options_mod.RequestOptions) !models_mod.UserListResponse {
+        const models: *ModelsResource = @alignCast(@fieldParentPtr("user", self));
+        const client: *Client = @alignCast(@fieldParentPtr("models", models));
+        return models_mod.listUser(client, request_options);
     }
 };
 pub const EmbeddingsResource = struct {
@@ -330,6 +339,7 @@ test "client initializes resource namespaces" {
     _ = client.chat;
     _ = client.chat.completions;
     _ = client.models;
+    _ = client.models.user;
     _ = client.embeddings;
     _ = client.embeddings.models;
     _ = client.credits;

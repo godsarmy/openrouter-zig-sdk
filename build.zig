@@ -13,6 +13,7 @@ pub fn build(b: *std.Build) void {
     addExample(b, examples_step, target, optimize, openrouter, "chat", "examples/chat.zig", "run-chat", "Run chat example");
     addExample(b, examples_step, target, optimize, openrouter, "stream", "examples/stream.zig", "run-stream", "Run stream example");
     addExample(b, examples_step, target, optimize, openrouter, "list_models", "examples/list_models.zig", "run-list-models", "Run list models example");
+    addExample(b, examples_step, target, optimize, openrouter, "list_user_models", "examples/list_user_models.zig", "run-list-user-models", "Run list user models example");
     addExample(b, examples_step, target, optimize, openrouter, "models_count", "examples/models_count.zig", "run-models-count", "Run models count example");
     addExample(b, examples_step, target, optimize, openrouter, "embeddings", "examples/embeddings.zig", "run-embeddings", "Run embeddings example");
     addExample(b, examples_step, target, optimize, openrouter, "embeddings_models", "examples/embeddings_models.zig", "run-embeddings-models", "Run embeddings models example");

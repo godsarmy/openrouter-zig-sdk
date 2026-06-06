@@ -33,6 +33,8 @@ pub const CountResponse = struct {
     }
 };
 
+pub const UserListResponse = ListResponse;
+
 pub const Model = struct {
     id: []const u8,
     name: ?[]const u8 = null,
@@ -83,6 +85,28 @@ pub fn listWithTransport(
     var prepared = try http.prepareRequest(allocator, config, .{
         .method = .GET,
         .path = "/models",
+    }, request_options);
+    defer prepared.deinit();
+
+    var response = try transport.execute(allocator, prepared);
+    defer response.deinit();
+
+    return parseListResponse(allocator, response);
+}
+
+pub fn listUser(client: anytype, request_options: options_mod.RequestOptions) !UserListResponse {
+    return listUserWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, request_options);
+}
+
+pub fn listUserWithTransport(
+    allocator: std.mem.Allocator,
+    config: config_mod.Config,
+    transport: anytype,
+    request_options: options_mod.RequestOptions,
+) !UserListResponse {
+    var prepared = try http.prepareRequest(allocator, config, .{
+        .method = .GET,
+        .path = "/models/user",
     }, request_options);
     defer prepared.deinit();
 
@@ -198,6 +222,55 @@ test "models list sends GET /models" {
 
 test "models list maps error status to ApiError" {
     try std.testing.expectError(error.ApiError, listWithTransport(
+        std.testing.allocator,
+        config_mod.Config{ .api_key = "test-key" },
+        http.FakeTransport{ .status = .unauthorized, .body = "{\"error\":{\"message\":\"bad key\"}}" },
+        .{},
+    ));
+}
+
+test "models user list parses response and ignores unknown fields" {
+    const body =
+        \\{
+        \\  "data": [
+        \\    {
+        \\      "id": "openai/gpt-4",
+        \\      "name": "GPT-4",
+        \\      "description": "User-visible model",
+        \\      "context_length": 8192,
+        \\      "pricing": {
+        \\        "prompt": "0.00003",
+        \\        "completion": "0.00006"
+        \\      },
+        \\      "unknown": true
+        \\    }
+        \\  ]
+        \\}
+    ;
+
+    var result = try listUserWithTransport(std.testing.allocator, config_mod.Config{ .api_key = "test-key" }, http.FakeTransport{ .body = body }, .{});
+    defer result.deinit();
+
+    try std.testing.expectEqual(@as(usize, 1), result.data.len);
+    try std.testing.expectEqualStrings("openai/gpt-4", result.data[0].id);
+    try std.testing.expectEqualStrings("GPT-4", result.data[0].name.?);
+    try std.testing.expectEqual(@as(?u32, 8192), result.data[0].context_length);
+    try std.testing.expectEqualStrings("0.00003", result.data[0].pricing.?.prompt.?);
+}
+
+test "models user list sends GET /models/user" {
+    var prepared = try http.prepareRequest(std.testing.allocator, .{ .api_key = "test-key" }, .{
+        .method = .GET,
+        .path = "/models/user",
+    }, .{});
+    defer prepared.deinit();
+
+    try std.testing.expectEqual(std.http.Method.GET, prepared.method);
+    try std.testing.expectEqualStrings("https://openrouter.ai/api/v1/models/user", prepared.url);
+}
+
+test "models user list maps error status to ApiError" {
+    try std.testing.expectError(error.ApiError, listUserWithTransport(
         std.testing.allocator,
         config_mod.Config{ .api_key = "test-key" },
         http.FakeTransport{ .status = .unauthorized, .body = "{\"error\":{\"message\":\"bad key\"}}" },

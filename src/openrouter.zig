@@ -61,6 +61,7 @@ pub const ModelsCount = @import("models.zig").Count;
 pub const ModelsCountRequest = @import("models.zig").CountRequest;
 pub const ModelsCountResponse = @import("models.zig").CountResponse;
 pub const ModelsListResponse = @import("models.zig").ListResponse;
+pub const ModelsUserListResponse = @import("models.zig").UserListResponse;
 pub const OffsetLimit = @import("pagination.zig").OffsetLimit;
 pub const Pager = @import("pagination.zig").Pager;
 pub const Provider = @import("providers.zig").Provider;

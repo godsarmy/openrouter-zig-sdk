@@ -83,6 +83,7 @@ pub fn main() !void {
 Implemented endpoints:
 
 - `GET /api/v1/models`
+- `GET /api/v1/models/user`
 - `GET /api/v1/models/count`
 - `POST /api/v1/chat/completions`
 - `POST /api/v1/embeddings`
@@ -108,6 +109,7 @@ The caller provides the allocator and `std.Io` used by `Client.init`. The client
 Response values own arena-backed parsed data. Call `deinit()` on every response or stream chunk when finished:
 
 - `ModelsListResponse.deinit()`
+- `ModelsUserListResponse.deinit()`
 - `ModelsCountResponse.deinit()`
 - `ChatCompletionResponse.deinit()`
 - `EmbeddingsCreateResponse.deinit()`
@@ -143,6 +145,7 @@ Run individual examples:
 zig build run-chat
 zig build run-stream
 zig build run-list-models
+zig build run-list-user-models
 zig build run-models-count
 zig build run-embeddings
 zig build run-embeddings-models
@@ -182,7 +185,7 @@ zig fmt .
 
 ## Project Status
 
-The SDK includes typed APIs for chat completions, streaming chat completions, embeddings, embedding model discovery, models, providers, credits, current key metadata, generation metadata/content, activity, and rankings datasets. Public APIs may change between minor releases while the SDK is pre-1.0.
+The SDK includes typed APIs for chat completions, streaming chat completions, embeddings, embedding model discovery, models, user model discovery, providers, credits, current key metadata, generation metadata/content, activity, and rankings datasets. Public APIs may change between minor releases while the SDK is pre-1.0.
 
 ## License
 
