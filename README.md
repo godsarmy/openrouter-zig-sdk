@@ -2,7 +2,7 @@
 
 A Zig 0.16 client for the [OpenRouter API](https://openrouter.ai/docs).
 
-This project aims to provide a small, idiomatic Zig wrapper around OpenRouter's HTTP API, starting with chat completions, embeddings, and model listing.
+This project aims to provide a small, idiomatic Zig wrapper around OpenRouter's HTTP API, including chat completions, streaming, embeddings, discovery, usage, and dataset endpoints.
 
 ## Requirements
 
@@ -20,7 +20,7 @@ zig version
 Add this package to your Zig project:
 
 ```sh
-zig fetch --save https://github.com/godsarmy/openrouter-zig-sdk/archive/refs/tags/v0.1.0.tar.gz
+zig fetch --save https://github.com/godsarmy/openrouter-zig-sdk/archive/refs/tags/v0.2.0.tar.gz
 ```
 
 Then import it from your `build.zig` dependency graph.
@@ -173,7 +173,7 @@ zig fmt .
 
 ## Project Status
 
-The core SDK APIs are implemented for models, chat completions, streaming chat completions, and embeddings. Public APIs may change until the first tagged release.
+The SDK includes typed APIs for chat completions, streaming chat completions, embeddings, models, providers, credits, generation metadata/content, activity, and rankings datasets. Public APIs may change between minor releases while the SDK is pre-1.0.
 
 ## License
 
