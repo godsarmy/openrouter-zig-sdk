@@ -83,6 +83,7 @@ pub fn main() !void {
 Implemented endpoints:
 
 - `GET /api/v1/models`
+- `GET /api/v1/models/count`
 - `POST /api/v1/chat/completions`
 - `POST /api/v1/embeddings`
 - `GET /api/v1/credits` (requires a management API key)
@@ -96,6 +97,7 @@ Implemented endpoints:
 - Error mapping for OpenRouter API errors
 
 `/datasets/rankings-daily` returns `total_tokens` as a decimal string and may include aggregated `other` rows.
+`/models/count` accepts optional `output_modalities` values such as `text`, `image`, `audio`, `embeddings`, comma-separated combinations, or `all`; OpenRouter defaults to `text`.
 
 ## Ownership and Lifecycle
 
@@ -104,6 +106,7 @@ The caller provides the allocator and `std.Io` used by `Client.init`. The client
 Response values own arena-backed parsed data. Call `deinit()` on every response or stream chunk when finished:
 
 - `ModelsListResponse.deinit()`
+- `ModelsCountResponse.deinit()`
 - `ChatCompletionResponse.deinit()`
 - `EmbeddingsCreateResponse.deinit()`
 - `ChatCompletionChunk.deinit()`
@@ -136,6 +139,7 @@ Run individual examples:
 zig build run-chat
 zig build run-stream
 zig build run-list-models
+zig build run-models-count
 zig build run-embeddings
 zig build run-credits
 zig build run-providers

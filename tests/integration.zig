@@ -15,6 +15,20 @@ test "list models integration" {
     try std.testing.expect(response.data.len > 0);
 }
 
+test "models count integration" {
+    var threaded: std.Io.Threaded = .init_single_threaded;
+    defer threaded.deinit();
+
+    const maybe_client = try initPublicClient(&threaded);
+    var client = maybe_client orelse return;
+    defer client.deinit();
+
+    var response = try client.models.count(.{}, .{});
+    defer response.deinit();
+
+    try std.testing.expect(response.data.count > 0);
+}
+
 test "providers list integration" {
     var threaded: std.Io.Threaded = .init_single_threaded;
     defer threaded.deinit();

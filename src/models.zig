@@ -7,12 +7,27 @@ const config_mod = @import("config.zig");
 const http = @import("http.zig");
 const json = @import("json.zig");
 const options_mod = @import("options.zig");
+const query_mod = @import("query.zig");
 
 pub const ListResponse = struct {
     arena: std.heap.ArenaAllocator,
     data: []Model,
 
     pub fn deinit(self: *ListResponse) void {
+        self.arena.deinit();
+        self.* = undefined;
+    }
+};
+
+pub const CountRequest = struct {
+    output_modalities: ?[]const u8 = null,
+};
+
+pub const CountResponse = struct {
+    arena: std.heap.ArenaAllocator,
+    data: Count,
+
+    pub fn deinit(self: *CountResponse) void {
         self.arena.deinit();
         self.* = undefined;
     }
@@ -43,8 +58,16 @@ pub const Pricing = struct {
     discount: ?f64 = null,
 };
 
+pub const Count = struct {
+    count: u64,
+};
+
 const WireListResponse = struct {
     data: []Model,
+};
+
+const WireCountResponse = struct {
+    data: Count,
 };
 
 pub fn list(client: anytype, request_options: options_mod.RequestOptions) !ListResponse {
@@ -78,6 +101,46 @@ pub fn listWithTransport(
     return parseListResponse(allocator, response);
 }
 
+pub fn count(client: anytype, request: CountRequest, request_options: options_mod.RequestOptions) !CountResponse {
+    const query = try countQueryString(client.allocator, request);
+    defer client.allocator.free(query);
+
+    var prepared = try http.prepareRequest(client.allocator, client.config, .{
+        .method = .GET,
+        .path = "/models/count",
+        .query = query,
+    }, request_options);
+    defer prepared.deinit();
+
+    var response = try http.execute(client.allocator, &client.http_client, prepared);
+    defer response.deinit();
+
+    return parseCountResponse(client.allocator, response);
+}
+
+pub fn countWithTransport(
+    allocator: std.mem.Allocator,
+    config: config_mod.Config,
+    transport: anytype,
+    request: CountRequest,
+    request_options: options_mod.RequestOptions,
+) !CountResponse {
+    const query = try countQueryString(allocator, request);
+    defer allocator.free(query);
+
+    var prepared = try http.prepareRequest(allocator, config, .{
+        .method = .GET,
+        .path = "/models/count",
+        .query = query,
+    }, request_options);
+    defer prepared.deinit();
+
+    var response = try transport.execute(allocator, prepared);
+    defer response.deinit();
+
+    return parseCountResponse(allocator, response);
+}
+
 pub fn parseListResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !ListResponse {
     if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
 
@@ -91,6 +154,25 @@ pub fn parseListResponse(allocator: std.mem.Allocator, response: http.HttpRespon
         .arena = arena,
         .data = parsed.data,
     };
+}
+
+pub fn parseCountResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !CountResponse {
+    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    errdefer arena.deinit();
+    const arena_allocator = arena.allocator();
+
+    const owned_body = try arena_allocator.dupe(u8, response.body);
+    const parsed = try json.parseResponseLeaky(WireCountResponse, arena_allocator, owned_body);
+    return .{
+        .arena = arena,
+        .data = parsed.data,
+    };
+}
+
+pub fn countQueryString(allocator: std.mem.Allocator, request: CountRequest) ![]u8 {
+    return query_mod.build(allocator, &.{.{ .name = "output_modalities", .value = request.output_modalities }});
 }
 
 test "models list parses response and ignores unknown fields" {
@@ -141,6 +223,70 @@ test "models list maps error status to ApiError" {
         std.testing.allocator,
         config_mod.Config{ .api_key = "test-key" },
         http.FakeTransport{ .status = .unauthorized, .body = "{\"error\":{\"message\":\"bad key\"}}" },
+        .{},
+    ));
+}
+
+test "models count parses response and ignores unknown fields" {
+    const body =
+        \\{
+        \\  "data": {
+        \\    "count": 150,
+        \\    "unknown": true
+        \\  },
+        \\  "unknown": true
+        \\}
+    ;
+
+    var result = try countWithTransport(std.testing.allocator, config_mod.Config{ .api_key = "test-key" }, http.FakeTransport{ .body = body }, .{}, .{});
+    defer result.deinit();
+
+    try std.testing.expectEqual(@as(u64, 150), result.data.count);
+}
+
+test "models count sends GET /models/count without query" {
+    const query = try countQueryString(std.testing.allocator, .{});
+    defer std.testing.allocator.free(query);
+
+    var prepared = try http.prepareRequest(std.testing.allocator, .{ .api_key = "test-key" }, .{
+        .method = .GET,
+        .path = "/models/count",
+        .query = query,
+    }, .{});
+    defer prepared.deinit();
+
+    try std.testing.expectEqual(std.http.Method.GET, prepared.method);
+    try std.testing.expectEqualStrings("https://openrouter.ai/api/v1/models/count", prepared.url);
+}
+
+test "models count sends escaped output modalities query" {
+    const query = try countQueryString(std.testing.allocator, .{ .output_modalities = "text,image" });
+    defer std.testing.allocator.free(query);
+
+    var prepared = try http.prepareRequest(std.testing.allocator, .{ .api_key = "test-key" }, .{
+        .method = .GET,
+        .path = "/models/count",
+        .query = query,
+    }, .{});
+    defer prepared.deinit();
+
+    try std.testing.expectEqual(std.http.Method.GET, prepared.method);
+    try std.testing.expectEqualStrings("https://openrouter.ai/api/v1/models/count?output_modalities=text%2Cimage", prepared.url);
+}
+
+test "models count supports all output modalities" {
+    const query = try countQueryString(std.testing.allocator, .{ .output_modalities = "all" });
+    defer std.testing.allocator.free(query);
+
+    try std.testing.expectEqualStrings("output_modalities=all", query);
+}
+
+test "models count maps error status to ApiError" {
+    try std.testing.expectError(error.ApiError, countWithTransport(
+        std.testing.allocator,
+        config_mod.Config{ .api_key = "test-key" },
+        http.FakeTransport{ .status = .bad_request, .body = "{\"error\":{\"message\":\"bad modalities\"}}" },
+        .{},
         .{},
     ));
 }

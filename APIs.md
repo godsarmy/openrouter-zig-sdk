@@ -27,6 +27,7 @@ Status legend:
 | [x] | POST | `/chat/completions` | `client.chat.completions.create`, `client.chat.completions.stream` | Non-streaming and SSE streaming chat completions. |
 | [x] | POST | `/embeddings` | `client.embeddings.create` | Text embedding requests. |
 | [x] | GET | `/models` | `client.models.list` | Lists available models. |
+| [x] | GET | `/models/count` | `client.models.count` | Gets the total count of available models. |
 | [x] | GET | `/credits` | `client.credits.get` | Gets remaining credits and usage. Requires a management API key. |
 | [x] | GET | `/providers` | `client.providers.list` | Lists available providers. |
 | [x] | GET | `/generation` | `client.generation.get` | Gets request and usage metadata for a generation. |
@@ -56,7 +57,7 @@ Status legend:
 | Status | Method | Path | Operation | Description | SDK notes |
 |---|---|---|---|---|---|
 | [x] | GET | `/models` | `getModels` | List all models and their properties. | Implemented in `src/models.zig`. |
-| [ ] | GET | `/models/count` | `listModelsCount` | Get the total count of available models. |  |
+| [x] | GET | `/models/count` | `listModelsCount` | Get the total count of available models. | Implemented in `src/models.zig`. |
 | [ ] | GET | `/models/user` | `listModelsUser` | List models filtered by user preferences, privacy, or guardrails. |  |
 | [ ] | GET | `/models/{author}/{slug}/endpoints` | `listEndpoints` | List endpoints for a specific model. |  |
 | [x] | GET | `/providers` | `listProviders` | List all providers. | Implemented in `src/providers.zig`. |

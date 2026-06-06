@@ -50,6 +50,15 @@ pub const ModelsResource = struct {
         const client: *Client = @alignCast(@fieldParentPtr("models", self));
         return models_mod.list(client, request_options);
     }
+
+    pub fn count(
+        self: *ModelsResource,
+        request: models_mod.CountRequest,
+        request_options: options_mod.RequestOptions,
+    ) !models_mod.CountResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("models", self));
+        return models_mod.count(client, request, request_options);
+    }
 };
 pub const EmbeddingsResource = struct {
     pub fn create(
