@@ -6,6 +6,7 @@ Source reviewed:
 
 - API reference overview: <https://openrouter.ai/docs/api/reference/overview>
 - OpenAPI spec: <https://openrouter.ai/openapi.json>
+- Audio API announcement: <https://openrouter.ai/blog/announcing-audio-apis>
 
 Base URL:
 
@@ -53,8 +54,8 @@ Status legend:
 | [ ] | POST | `/messages` | `createMessages` | Create a message. |  |
 | [x] | POST | `/embeddings` | `createEmbeddings` | Submit an embedding request. | Implemented in `src/embeddings.zig`. |
 | [ ] | POST | `/rerank` | `createRerank` | Submit a rerank request. |  |
-| [ ] | POST | `/audio/speech` | `createAudioSpeech` | Create speech from text. |  |
-| [ ] | POST | `/audio/transcriptions` | `createAudioTranscriptions` | Create a transcription from audio. |  |
+| [ ] | POST | `/audio/speech` | `createAudioSpeech` | Create speech from text. | New audio API. Returns raw audio bytes such as MP3/PCM. |
+| [ ] | POST | `/audio/transcriptions` | `createAudioTranscriptions` | Create a transcription from audio. | New audio API. Accepts base64 audio and returns text. |
 | [x] | POST | `/videos` | `createVideos` | Submit a video generation request. | Implemented in `src/videos.zig`. |
 | [x] | GET | `/videos/{jobId}` | `getVideos` | Poll video generation job status. | Implemented in `src/videos.zig`. |
 | [x] | GET | `/videos/{jobId}/content` | `listVideosContent` | Download generated video content. | Implemented in `src/videos.zig`. |
