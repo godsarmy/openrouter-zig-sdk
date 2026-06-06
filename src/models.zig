@@ -23,11 +23,26 @@ pub const CountRequest = struct {
     output_modalities: ?[]const u8 = null,
 };
 
+pub const EndpointsListRequest = struct {
+    author: []const u8,
+    slug: []const u8,
+};
+
 pub const CountResponse = struct {
     arena: std.heap.ArenaAllocator,
     data: Count,
 
     pub fn deinit(self: *CountResponse) void {
+        self.arena.deinit();
+        self.* = undefined;
+    }
+};
+
+pub const EndpointsListResponse = struct {
+    arena: std.heap.ArenaAllocator,
+    data: ModelEndpoints,
+
+    pub fn deinit(self: *EndpointsListResponse) void {
         self.arena.deinit();
         self.* = undefined;
     }
@@ -60,6 +75,50 @@ pub const Pricing = struct {
     discount: ?f64 = null,
 };
 
+pub const Architecture = struct {
+    input_modalities: []const []const u8,
+    instruct_type: ?[]const u8 = null,
+    modality: ?[]const u8 = null,
+    output_modalities: []const []const u8,
+    tokenizer: ?[]const u8 = null,
+};
+
+pub const LatencyStats = struct {
+    p50: ?f64 = null,
+    p75: ?f64 = null,
+    p90: ?f64 = null,
+    p99: ?f64 = null,
+};
+
+pub const PublicEndpoint = struct {
+    context_length: u32,
+    latency_last_30m: ?LatencyStats = null,
+    max_completion_tokens: ?u32 = null,
+    max_prompt_tokens: ?u32 = null,
+    model_id: []const u8,
+    model_name: []const u8,
+    name: []const u8,
+    pricing: Pricing,
+    provider_name: []const u8,
+    quantization: ?[]const u8 = null,
+    supported_parameters: []const []const u8,
+    supports_implicit_caching: bool,
+    tag: []const u8,
+    throughput_last_30m: ?LatencyStats = null,
+    uptime_last_1d: ?f64 = null,
+    uptime_last_30m: ?f64 = null,
+    uptime_last_5m: ?f64 = null,
+};
+
+pub const ModelEndpoints = struct {
+    architecture: Architecture,
+    created: i64,
+    description: []const u8,
+    endpoints: []PublicEndpoint,
+    id: []const u8,
+    name: []const u8,
+};
+
 pub const Count = struct {
     count: u64,
 };
@@ -70,6 +129,10 @@ const WireListResponse = struct {
 
 const WireCountResponse = struct {
     data: Count,
+};
+
+const WireEndpointsListResponse = struct {
+    data: ModelEndpoints,
 };
 
 pub fn list(client: anytype, request_options: options_mod.RequestOptions) !ListResponse {
@@ -118,6 +181,32 @@ pub fn listUserWithTransport(
 
 pub fn count(client: anytype, request: CountRequest, request_options: options_mod.RequestOptions) !CountResponse {
     return countWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, request, request_options);
+}
+
+pub fn listEndpoints(client: anytype, request: EndpointsListRequest, request_options: options_mod.RequestOptions) !EndpointsListResponse {
+    return listEndpointsWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, request, request_options);
+}
+
+pub fn listEndpointsWithTransport(
+    allocator: std.mem.Allocator,
+    config: config_mod.Config,
+    transport: anytype,
+    request: EndpointsListRequest,
+    request_options: options_mod.RequestOptions,
+) !EndpointsListResponse {
+    const path = try endpointsPath(allocator, request);
+    defer allocator.free(path);
+
+    var prepared = try http.prepareRequest(allocator, config, .{
+        .method = .GET,
+        .path = path,
+    }, request_options);
+    defer prepared.deinit();
+
+    var response = try transport.execute(allocator, prepared);
+    defer response.deinit();
+
+    return parseEndpointsListResponse(allocator, response);
 }
 
 pub fn countWithTransport(
@@ -173,8 +262,47 @@ pub fn parseCountResponse(allocator: std.mem.Allocator, response: http.HttpRespo
     };
 }
 
+pub fn parseEndpointsListResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !EndpointsListResponse {
+    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    errdefer arena.deinit();
+    const arena_allocator = arena.allocator();
+
+    const owned_body = try arena_allocator.dupe(u8, response.body);
+    const parsed = try json.parseResponseLeaky(WireEndpointsListResponse, arena_allocator, owned_body);
+    return .{
+        .arena = arena,
+        .data = parsed.data,
+    };
+}
+
 pub fn countQueryString(allocator: std.mem.Allocator, request: CountRequest) ![]u8 {
     return query_mod.build(allocator, &.{.{ .name = "output_modalities", .value = request.output_modalities }});
+}
+
+pub fn endpointsPath(allocator: std.mem.Allocator, request: EndpointsListRequest) ![]u8 {
+    var path: std.ArrayList(u8) = .empty;
+    errdefer path.deinit(allocator);
+
+    try path.appendSlice(allocator, "/models/");
+    try appendPathSegment(allocator, &path, request.author);
+    try path.append(allocator, '/');
+    try appendPathSegment(allocator, &path, request.slug);
+    try path.appendSlice(allocator, "/endpoints");
+
+    return path.toOwnedSlice(allocator);
+}
+
+fn appendPathSegment(allocator: std.mem.Allocator, output: *std.ArrayList(u8), value: []const u8) !void {
+    const hex = "0123456789ABCDEF";
+    for (value) |byte| {
+        if (std.ascii.isAlphanumeric(byte) or byte == '-' or byte == '_' or byte == '.' or byte == '~') {
+            try output.append(allocator, byte);
+        } else {
+            try output.appendSlice(allocator, &.{ '%', hex[byte >> 4], hex[byte & 0x0F] });
+        }
+    }
 }
 
 test "models list parses response and ignores unknown fields" {
@@ -274,6 +402,94 @@ test "models user list maps error status to ApiError" {
         std.testing.allocator,
         config_mod.Config{ .api_key = "test-key" },
         http.FakeTransport{ .status = .unauthorized, .body = "{\"error\":{\"message\":\"bad key\"}}" },
+        .{},
+    ));
+}
+
+test "models endpoints list parses response and ignores unknown fields" {
+    const body =
+        \\{
+        \\  "data": {
+        \\    "id": "openai/gpt-4",
+        \\    "name": "GPT-4",
+        \\    "description": "GPT-4 endpoints",
+        \\    "created": 1692901234,
+        \\    "architecture": {
+        \\      "input_modalities": ["text"],
+        \\      "modality": "text->text",
+        \\      "output_modalities": ["text"],
+        \\      "tokenizer": "GPT"
+        \\    },
+        \\    "endpoints": [
+        \\      {
+        \\        "name": "GPT-4 on OpenAI",
+        \\        "provider_name": "OpenAI",
+        \\        "model_id": "openai/gpt-4",
+        \\        "model_name": "GPT-4",
+        \\        "context_length": 8192,
+        \\        "max_completion_tokens": 4096,
+        \\        "pricing": {
+        \\          "prompt": "0.00003",
+        \\          "completion": "0.00006"
+        \\        },
+        \\        "latency_last_30m": { "p50": 120, "p75": 150, "p90": 180, "p99": 250 },
+        \\        "supported_parameters": ["temperature", "top_p"],
+        \\        "supports_implicit_caching": true,
+        \\        "tag": "default",
+        \\        "unknown": true
+        \\      }
+        \\    ],
+        \\    "unknown": true
+        \\  }
+        \\}
+    ;
+
+    var result = try listEndpointsWithTransport(std.testing.allocator, config_mod.Config{ .api_key = "test-key" }, http.FakeTransport{ .body = body }, .{
+        .author = "openai",
+        .slug = "gpt-4",
+    }, .{});
+    defer result.deinit();
+
+    try std.testing.expectEqualStrings("openai/gpt-4", result.data.id);
+    try std.testing.expectEqual(@as(i64, 1692901234), result.data.created);
+    try std.testing.expectEqualStrings("text", result.data.architecture.input_modalities[0]);
+    try std.testing.expectEqual(@as(usize, 1), result.data.endpoints.len);
+    try std.testing.expectEqualStrings("GPT-4 on OpenAI", result.data.endpoints[0].name);
+    try std.testing.expectEqualStrings("OpenAI", result.data.endpoints[0].provider_name);
+    try std.testing.expectEqual(@as(u32, 8192), result.data.endpoints[0].context_length);
+    try std.testing.expectEqualStrings("0.00003", result.data.endpoints[0].pricing.prompt.?);
+    try std.testing.expectEqual(@as(?f64, 120), result.data.endpoints[0].latency_last_30m.?.p50);
+    try std.testing.expect(result.data.endpoints[0].supports_implicit_caching);
+    try std.testing.expectEqualStrings("default", result.data.endpoints[0].tag);
+}
+
+test "models endpoints list sends GET /models/{author}/{slug}/endpoints" {
+    const path = try endpointsPath(std.testing.allocator, .{ .author = "openai", .slug = "gpt-4" });
+    defer std.testing.allocator.free(path);
+
+    var prepared = try http.prepareRequest(std.testing.allocator, .{ .api_key = "test-key" }, .{
+        .method = .GET,
+        .path = path,
+    }, .{});
+    defer prepared.deinit();
+
+    try std.testing.expectEqual(std.http.Method.GET, prepared.method);
+    try std.testing.expectEqualStrings("https://openrouter.ai/api/v1/models/openai/gpt-4/endpoints", prepared.url);
+}
+
+test "models endpoints path escapes path segments" {
+    const path = try endpointsPath(std.testing.allocator, .{ .author = "author name", .slug = "model/slug" });
+    defer std.testing.allocator.free(path);
+
+    try std.testing.expectEqualStrings("/models/author%20name/model%2Fslug/endpoints", path);
+}
+
+test "models endpoints list maps error status to ApiError" {
+    try std.testing.expectError(error.ApiError, listEndpointsWithTransport(
+        std.testing.allocator,
+        config_mod.Config{ .api_key = "test-key" },
+        http.FakeTransport{ .status = .not_found, .body = "{\"error\":{\"message\":\"not found\"}}" },
+        .{ .author = "openai", .slug = "missing" },
         .{},
     ));
 }
