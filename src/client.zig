@@ -64,6 +64,8 @@ pub const ModelsResource = struct {
     }
 };
 pub const EmbeddingsResource = struct {
+    models: EmbeddingsModelsResource = .{},
+
     pub fn create(
         self: *EmbeddingsResource,
         request: embeddings_mod.CreateRequest,
@@ -71,6 +73,13 @@ pub const EmbeddingsResource = struct {
     ) !embeddings_mod.CreateResponse {
         const client: *Client = @alignCast(@fieldParentPtr("embeddings", self));
         return embeddings_mod.create(client, request, request_options);
+    }
+};
+pub const EmbeddingsModelsResource = struct {
+    pub fn list(self: *EmbeddingsModelsResource, request_options: options_mod.RequestOptions) !embeddings_mod.ModelsListResponse {
+        const embeddings: *EmbeddingsResource = @alignCast(@fieldParentPtr("models", self));
+        const client: *Client = @alignCast(@fieldParentPtr("embeddings", embeddings));
+        return embeddings_mod.listModels(client, request_options);
     }
 };
 pub const CreditsResource = struct {
@@ -322,6 +331,7 @@ test "client initializes resource namespaces" {
     _ = client.chat.completions;
     _ = client.models;
     _ = client.embeddings;
+    _ = client.embeddings.models;
     _ = client.credits;
     _ = client.key;
     _ = client.keys;

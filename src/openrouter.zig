@@ -31,6 +31,7 @@ pub const Embedding = @import("embeddings.zig").Embedding;
 pub const EmbeddingInput = @import("embeddings.zig").Input;
 pub const EmbeddingsCreateRequest = @import("embeddings.zig").CreateRequest;
 pub const EmbeddingsCreateResponse = @import("embeddings.zig").CreateResponse;
+pub const EmbeddingsModelsListResponse = @import("embeddings.zig").ModelsListResponse;
 pub const Header = @import("options.zig").Header;
 pub const Generation = @import("generation.zig").Generation;
 pub const GenerationContent = @import("generation.zig").GenerationContent;

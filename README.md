@@ -86,6 +86,7 @@ Implemented endpoints:
 - `GET /api/v1/models/count`
 - `POST /api/v1/chat/completions`
 - `POST /api/v1/embeddings`
+- `GET /api/v1/embeddings/models`
 - `GET /api/v1/credits` (requires a management API key)
 - `GET /api/v1/key`
 - `GET /api/v1/providers`
@@ -110,6 +111,7 @@ Response values own arena-backed parsed data. Call `deinit()` on every response 
 - `ModelsCountResponse.deinit()`
 - `ChatCompletionResponse.deinit()`
 - `EmbeddingsCreateResponse.deinit()`
+- `EmbeddingsModelsListResponse.deinit()`
 - `ChatCompletionChunk.deinit()`
 - `GenerationGetResponse.deinit()`
 - `GenerationContentResponse.deinit()`
@@ -143,6 +145,7 @@ zig build run-stream
 zig build run-list-models
 zig build run-models-count
 zig build run-embeddings
+zig build run-embeddings-models
 zig build run-credits
 zig build run-providers
 OPENROUTER_GENERATION_ID="gen-..." zig build run-generation
@@ -179,7 +182,7 @@ zig fmt .
 
 ## Project Status
 
-The SDK includes typed APIs for chat completions, streaming chat completions, embeddings, models, providers, credits, current key metadata, generation metadata/content, activity, and rankings datasets. Public APIs may change between minor releases while the SDK is pre-1.0.
+The SDK includes typed APIs for chat completions, streaming chat completions, embeddings, embedding model discovery, models, providers, credits, current key metadata, generation metadata/content, activity, and rankings datasets. Public APIs may change between minor releases while the SDK is pre-1.0.
 
 ## License
 

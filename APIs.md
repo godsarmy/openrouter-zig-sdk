@@ -26,6 +26,7 @@ Status legend:
 |---|---|---|---|---|
 | [x] | POST | `/chat/completions` | `client.chat.completions.create`, `client.chat.completions.stream` | Non-streaming and SSE streaming chat completions. |
 | [x] | POST | `/embeddings` | `client.embeddings.create` | Text embedding requests. |
+| [x] | GET | `/embeddings/models` | `client.embeddings.models.list` | Lists embedding models. |
 | [x] | GET | `/models` | `client.models.list` | Lists available models. |
 | [x] | GET | `/models/count` | `client.models.count` | Gets the total count of available models. |
 | [x] | GET | `/credits` | `client.credits.get` | Gets remaining credits and usage. Requires a management API key. |
@@ -51,7 +52,7 @@ Status legend:
 | [ ] | GET | `/videos/{jobId}` | `getVideos` | Poll video generation job status. |  |
 | [ ] | GET | `/videos/{jobId}/content` | `listVideosContent` | Download generated video content. |  |
 | [ ] | GET | `/videos/models` | `listVideosModels` | List video generation models. |  |
-| [ ] | GET | `/embeddings/models` | `listEmbeddingsModels` | List embedding models. |  |
+| [x] | GET | `/embeddings/models` | `listEmbeddingsModels` | List embedding models. | Implemented in `src/embeddings.zig`. |
 
 ## Models, Providers, and Routing Discovery
 
