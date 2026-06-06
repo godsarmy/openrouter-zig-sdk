@@ -37,6 +37,7 @@ Status legend:
 | [x] | GET | `/videos/{jobId}` | `client.videos.get` | Polls video generation job status. |
 | [x] | GET | `/videos/{jobId}/content` | `client.videos.content` | Downloads generated video content. |
 | [x] | GET | `/videos/models` | `client.videos.models.list` | Lists video generation models. |
+| [x] | POST | `/presets/{slug}/chat/completions` | `client.presets.chat.completions.create` | Creates a preset from a chat completions request body. |
 | [x] | GET | `/credits` | `client.credits.get` | Gets remaining credits and usage. Requires a management API key. |
 | [x] | GET | `/providers` | `client.providers.list` | Lists available providers. |
 | [x] | GET | `/generation` | `client.generation.get` | Gets request and usage metadata for a generation. |
@@ -147,7 +148,7 @@ Status legend:
 
 | Status | Method | Path | Operation | Description | SDK notes |
 |---|---|---|---|---|---|
-| [ ] | POST | `/presets/{slug}/chat/completions` | `createPresetsChatCompletions` | Create a preset from a chat completions request body. |  |
+| [x] | POST | `/presets/{slug}/chat/completions` | `createPresetsChatCompletions` | Create a preset from a chat completions request body. | Implemented in `src/presets.zig`. |
 | [ ] | POST | `/presets/{slug}/messages` | `createPresetsMessages` | Create a preset from a messages request body. |  |
 | [ ] | POST | `/presets/{slug}/responses` | `createPresetsResponses` | Create a preset from a responses request body. |  |
 

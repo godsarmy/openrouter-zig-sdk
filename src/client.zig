@@ -14,6 +14,7 @@ const key_mod = @import("key.zig");
 const keys_mod = @import("keys.zig");
 const models_mod = @import("models.zig");
 const options_mod = @import("options.zig");
+const presets_mod = @import("presets.zig");
 const providers_mod = @import("providers.zig");
 const stream_mod = @import("stream.zig");
 const videos_mod = @import("videos.zig");
@@ -140,6 +141,24 @@ pub const VideosModelsResource = struct {
         return videos_mod.listModels(client, request_options);
     }
 };
+pub const PresetsResource = struct {
+    chat: PresetsChatResource = .{},
+};
+pub const PresetsChatResource = struct {
+    completions: PresetsChatCompletionsResource = .{},
+};
+pub const PresetsChatCompletionsResource = struct {
+    pub fn create(
+        self: *PresetsChatCompletionsResource,
+        request: presets_mod.ChatCompletionsCreateRequest,
+        request_options: options_mod.RequestOptions,
+    ) !presets_mod.ChatCompletionsCreateResponse {
+        const chat: *PresetsChatResource = @alignCast(@fieldParentPtr("completions", self));
+        const presets: *PresetsResource = @alignCast(@fieldParentPtr("chat", chat));
+        const client: *Client = @alignCast(@fieldParentPtr("presets", presets));
+        return presets_mod.createChatCompletion(client, request, request_options);
+    }
+};
 pub const CreditsResource = struct {
     pub fn get(self: *CreditsResource, request_options: options_mod.RequestOptions) !credits_mod.GetResponse {
         const client: *Client = @alignCast(@fieldParentPtr("credits", self));
@@ -250,6 +269,7 @@ pub const Client = struct {
     embeddings: EmbeddingsResource,
     endpoints: EndpointsResource,
     videos: VideosResource,
+    presets: PresetsResource,
     credits: CreditsResource,
     auth: AuthKeysResource,
     key: KeyResource,
@@ -278,6 +298,7 @@ pub const Client = struct {
             .embeddings = .{},
             .endpoints = .{},
             .videos = .{},
+            .presets = .{},
             .credits = .{},
             .auth = .{},
             .key = .{},
@@ -400,6 +421,9 @@ test "client initializes resource namespaces" {
     _ = client.endpoints.zdr;
     _ = client.videos;
     _ = client.videos.models;
+    _ = client.presets;
+    _ = client.presets.chat;
+    _ = client.presets.chat.completions;
     _ = client.credits;
     _ = client.key;
     _ = client.keys;

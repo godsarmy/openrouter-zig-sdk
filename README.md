@@ -91,6 +91,7 @@ Implemented endpoints:
 - `GET /api/v1/videos/{jobId}`
 - `GET /api/v1/videos/{jobId}/content`
 - `GET /api/v1/videos/models`
+- `POST /api/v1/presets/{slug}/chat/completions`
 - `POST /api/v1/chat/completions`
 - `POST /api/v1/embeddings`
 - `GET /api/v1/embeddings/models`
@@ -122,6 +123,7 @@ Response values own arena-backed parsed data. Call `deinit()` on every response 
 - `VideoJobResponse.deinit()`
 - `VideoContentResponse.deinit()`
 - `VideoModelsListResponse.deinit()`
+- `PresetChatCompletionsCreateResponse.deinit()`
 - `ChatCompletionResponse.deinit()`
 - `EmbeddingsCreateResponse.deinit()`
 - `EmbeddingsModelsListResponse.deinit()`
@@ -162,6 +164,7 @@ zig build run-endpoints-zdr
 zig build run-models-count
 zig build run-videos
 zig build run-video-models
+zig build run-preset-chat-completions
 zig build run-embeddings
 zig build run-embeddings-models
 zig build run-credits
@@ -200,7 +203,7 @@ zig fmt .
 
 ## Project Status
 
-The SDK includes typed APIs for chat completions, streaming chat completions, embeddings, embedding model discovery, video generation, models, user model discovery, model endpoint discovery, ZDR endpoint discovery, providers, credits, current key metadata, generation metadata/content, activity, and rankings datasets. Public APIs may change between minor releases while the SDK is pre-1.0.
+The SDK includes typed APIs for chat completions, streaming chat completions, preset chat completion creation, embeddings, embedding model discovery, video generation, models, user model discovery, model endpoint discovery, ZDR endpoint discovery, providers, credits, current key metadata, generation metadata/content, activity, and rankings datasets. Public APIs may change between minor releases while the SDK is pre-1.0.
 
 ## License
 
