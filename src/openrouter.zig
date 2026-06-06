@@ -32,6 +32,7 @@ pub const EmbeddingInput = @import("embeddings.zig").Input;
 pub const EmbeddingsCreateRequest = @import("embeddings.zig").CreateRequest;
 pub const EmbeddingsCreateResponse = @import("embeddings.zig").CreateResponse;
 pub const EmbeddingsModelsListResponse = @import("embeddings.zig").ModelsListResponse;
+pub const EndpointsZdrListResponse = @import("endpoints.zig").ZdrListResponse;
 pub const Header = @import("options.zig").Header;
 pub const Generation = @import("generation.zig").Generation;
 pub const GenerationContent = @import("generation.zig").GenerationContent;
@@ -92,6 +93,7 @@ test {
     _ = @import("credits.zig");
     _ = @import("datasets.zig");
     _ = @import("embeddings.zig");
+    _ = @import("endpoints.zig");
     _ = @import("errors.zig");
     _ = @import("generation.zig");
     _ = @import("http.zig");

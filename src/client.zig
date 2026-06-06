@@ -8,6 +8,7 @@ const credits_mod = @import("credits.zig");
 const auth_keys_mod = @import("auth_keys.zig");
 const datasets_mod = @import("datasets.zig");
 const embeddings_mod = @import("embeddings.zig");
+const endpoints_mod = @import("endpoints.zig");
 const generation_mod = @import("generation.zig");
 const key_mod = @import("key.zig");
 const keys_mod = @import("keys.zig");
@@ -101,6 +102,16 @@ pub const EmbeddingsModelsResource = struct {
         const embeddings: *EmbeddingsResource = @alignCast(@fieldParentPtr("models", self));
         const client: *Client = @alignCast(@fieldParentPtr("embeddings", embeddings));
         return embeddings_mod.listModels(client, request_options);
+    }
+};
+pub const EndpointsResource = struct {
+    zdr: EndpointsZdrResource = .{},
+};
+pub const EndpointsZdrResource = struct {
+    pub fn list(self: *EndpointsZdrResource, request_options: options_mod.RequestOptions) !endpoints_mod.ZdrListResponse {
+        const endpoints: *EndpointsResource = @alignCast(@fieldParentPtr("zdr", self));
+        const client: *Client = @alignCast(@fieldParentPtr("endpoints", endpoints));
+        return endpoints_mod.listZdr(client, request_options);
     }
 };
 pub const CreditsResource = struct {
@@ -211,6 +222,7 @@ pub const Client = struct {
     chat: ChatResource,
     models: ModelsResource,
     embeddings: EmbeddingsResource,
+    endpoints: EndpointsResource,
     credits: CreditsResource,
     auth: AuthKeysResource,
     key: KeyResource,
@@ -237,6 +249,7 @@ pub const Client = struct {
             .chat = .{},
             .models = .{},
             .embeddings = .{},
+            .endpoints = .{},
             .credits = .{},
             .auth = .{},
             .key = .{},
@@ -355,6 +368,8 @@ test "client initializes resource namespaces" {
     _ = client.models.endpoints;
     _ = client.embeddings;
     _ = client.embeddings.models;
+    _ = client.endpoints;
+    _ = client.endpoints.zdr;
     _ = client.credits;
     _ = client.key;
     _ = client.keys;

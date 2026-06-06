@@ -30,6 +30,7 @@ Status legend:
 | [x] | GET | `/models` | `client.models.list` | Lists available models. |
 | [x] | GET | `/models/user` | `client.models.user.list` | Lists models available to the current user. |
 | [x] | GET | `/models/{author}/{slug}/endpoints` | `client.models.endpoints.list` | Lists endpoints for a specific model. |
+| [x] | GET | `/endpoints/zdr` | `client.endpoints.zdr.list` | Previews Zero Data Retention endpoint availability. |
 | [x] | GET | `/models/count` | `client.models.count` | Gets the total count of available models. |
 | [x] | GET | `/credits` | `client.credits.get` | Gets remaining credits and usage. Requires a management API key. |
 | [x] | GET | `/providers` | `client.providers.list` | Lists available providers. |
@@ -65,7 +66,7 @@ Status legend:
 | [x] | GET | `/models/user` | `listModelsUser` | List models filtered by user preferences, privacy, or guardrails. | Implemented in `src/models.zig`. |
 | [x] | GET | `/models/{author}/{slug}/endpoints` | `listEndpoints` | List endpoints for a specific model. | Implemented in `src/models.zig`. |
 | [x] | GET | `/providers` | `listProviders` | List all providers. | Implemented in `src/providers.zig`. |
-| [ ] | GET | `/endpoints/zdr` | `listEndpointsZdr` | Preview Zero Data Retention impact on available endpoints. |  |
+| [x] | GET | `/endpoints/zdr` | `listEndpointsZdr` | Preview Zero Data Retention impact on available endpoints. | Implemented in `src/endpoints.zig`. |
 
 ## Usage, Billing, and Generation Metadata
 
