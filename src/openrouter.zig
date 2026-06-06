@@ -75,6 +75,18 @@ pub const Provider = @import("providers.zig").Provider;
 pub const ProvidersListResponse = @import("providers.zig").ListResponse;
 pub const RequestOptions = @import("options.zig").RequestOptions;
 pub const RetryConfig = @import("retry.zig").RetryConfig;
+pub const VideoContentRequest = @import("videos.zig").ContentRequest;
+pub const VideoContentResponse = @import("videos.zig").ContentResponse;
+pub const VideoCreateRequest = @import("videos.zig").CreateRequest;
+pub const VideoFrameImage = @import("videos.zig").FrameImage;
+pub const VideoGetRequest = @import("videos.zig").GetRequest;
+pub const VideoInputReference = @import("videos.zig").InputReference;
+pub const VideoJobResponse = @import("videos.zig").JobResponse;
+pub const VideoModel = @import("videos.zig").VideoModel;
+pub const VideoModelsListResponse = @import("videos.zig").ModelsListResponse;
+pub const VideoStatus = @import("videos.zig").Status;
+pub const VideoUrlReference = @import("videos.zig").UrlReference;
+pub const VideoUsage = @import("videos.zig").Usage;
 pub const json = @import("json.zig");
 pub const pagination = @import("pagination.zig");
 pub const stream = @import("stream.zig");
@@ -106,4 +118,5 @@ test {
     _ = @import("providers.zig");
     _ = @import("query.zig");
     _ = @import("stream.zig");
+    _ = @import("videos.zig");
 }

@@ -16,6 +16,7 @@ const models_mod = @import("models.zig");
 const options_mod = @import("options.zig");
 const providers_mod = @import("providers.zig");
 const stream_mod = @import("stream.zig");
+const videos_mod = @import("videos.zig");
 
 pub const Config = config_mod.Config;
 
@@ -112,6 +113,31 @@ pub const EndpointsZdrResource = struct {
         const endpoints: *EndpointsResource = @alignCast(@fieldParentPtr("zdr", self));
         const client: *Client = @alignCast(@fieldParentPtr("endpoints", endpoints));
         return endpoints_mod.listZdr(client, request_options);
+    }
+};
+pub const VideosResource = struct {
+    models: VideosModelsResource = .{},
+
+    pub fn create(self: *VideosResource, request: videos_mod.CreateRequest, request_options: options_mod.RequestOptions) !videos_mod.JobResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("videos", self));
+        return videos_mod.create(client, request, request_options);
+    }
+
+    pub fn get(self: *VideosResource, request: videos_mod.GetRequest, request_options: options_mod.RequestOptions) !videos_mod.JobResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("videos", self));
+        return videos_mod.get(client, request, request_options);
+    }
+
+    pub fn content(self: *VideosResource, request: videos_mod.ContentRequest, request_options: options_mod.RequestOptions) !videos_mod.ContentResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("videos", self));
+        return videos_mod.content(client, request, request_options);
+    }
+};
+pub const VideosModelsResource = struct {
+    pub fn list(self: *VideosModelsResource, request_options: options_mod.RequestOptions) !videos_mod.ModelsListResponse {
+        const videos: *VideosResource = @alignCast(@fieldParentPtr("models", self));
+        const client: *Client = @alignCast(@fieldParentPtr("videos", videos));
+        return videos_mod.listModels(client, request_options);
     }
 };
 pub const CreditsResource = struct {
@@ -223,6 +249,7 @@ pub const Client = struct {
     models: ModelsResource,
     embeddings: EmbeddingsResource,
     endpoints: EndpointsResource,
+    videos: VideosResource,
     credits: CreditsResource,
     auth: AuthKeysResource,
     key: KeyResource,
@@ -250,6 +277,7 @@ pub const Client = struct {
             .models = .{},
             .embeddings = .{},
             .endpoints = .{},
+            .videos = .{},
             .credits = .{},
             .auth = .{},
             .key = .{},
@@ -370,6 +398,8 @@ test "client initializes resource namespaces" {
     _ = client.embeddings.models;
     _ = client.endpoints;
     _ = client.endpoints.zdr;
+    _ = client.videos;
+    _ = client.videos.models;
     _ = client.credits;
     _ = client.key;
     _ = client.keys;

@@ -32,6 +32,10 @@ Status legend:
 | [x] | GET | `/models/{author}/{slug}/endpoints` | `client.models.endpoints.list` | Lists endpoints for a specific model. |
 | [x] | GET | `/endpoints/zdr` | `client.endpoints.zdr.list` | Previews Zero Data Retention endpoint availability. |
 | [x] | GET | `/models/count` | `client.models.count` | Gets the total count of available models. |
+| [x] | POST | `/videos` | `client.videos.create` | Creates a video generation job. |
+| [x] | GET | `/videos/{jobId}` | `client.videos.get` | Polls video generation job status. |
+| [x] | GET | `/videos/{jobId}/content` | `client.videos.content` | Downloads generated video content. |
+| [x] | GET | `/videos/models` | `client.videos.models.list` | Lists video generation models. |
 | [x] | GET | `/credits` | `client.credits.get` | Gets remaining credits and usage. Requires a management API key. |
 | [x] | GET | `/providers` | `client.providers.list` | Lists available providers. |
 | [x] | GET | `/generation` | `client.generation.get` | Gets request and usage metadata for a generation. |
@@ -51,10 +55,10 @@ Status legend:
 | [ ] | POST | `/rerank` | `createRerank` | Submit a rerank request. |  |
 | [ ] | POST | `/audio/speech` | `createAudioSpeech` | Create speech from text. |  |
 | [ ] | POST | `/audio/transcriptions` | `createAudioTranscriptions` | Create a transcription from audio. |  |
-| [ ] | POST | `/videos` | `createVideos` | Submit a video generation request. |  |
-| [ ] | GET | `/videos/{jobId}` | `getVideos` | Poll video generation job status. |  |
-| [ ] | GET | `/videos/{jobId}/content` | `listVideosContent` | Download generated video content. |  |
-| [ ] | GET | `/videos/models` | `listVideosModels` | List video generation models. |  |
+| [x] | POST | `/videos` | `createVideos` | Submit a video generation request. | Implemented in `src/videos.zig`. |
+| [x] | GET | `/videos/{jobId}` | `getVideos` | Poll video generation job status. | Implemented in `src/videos.zig`. |
+| [x] | GET | `/videos/{jobId}/content` | `listVideosContent` | Download generated video content. | Implemented in `src/videos.zig`. |
+| [x] | GET | `/videos/models` | `listVideosModels` | List video generation models. | Implemented in `src/videos.zig`. |
 | [x] | GET | `/embeddings/models` | `listEmbeddingsModels` | List embedding models. | Implemented in `src/embeddings.zig`. |
 
 ## Models, Providers, and Routing Discovery
