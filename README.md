@@ -40,6 +40,13 @@ export OPENROUTER_HTTP_REFERER="https://your-site.example"
 export OPENROUTER_APP_TITLE="Your App"
 ```
 
+Optional integration-test inputs:
+
+```sh
+export OPENROUTER_GENERATION_ID="gen-..." # for generation / generation-content tests
+export OPENROUTER_MANAGEMENT_API_KEY="sk-or-v1-..." # for credits / activity tests
+```
+
 ## Usage
 
 ```zig
@@ -152,7 +159,7 @@ Run tests:
 zig build test
 ```
 
-Run opt-in integration tests against OpenRouter. Without `OPENROUTER_API_KEY`, these tests do nothing:
+Run opt-in integration tests against OpenRouter. Without `OPENROUTER_API_KEY`, these tests do nothing. Some tests also require `OPENROUTER_GENERATION_ID` or `OPENROUTER_MANAGEMENT_API_KEY`:
 
 ```sh
 zig build integration-test
