@@ -50,20 +50,7 @@ const WireCreateResponse = struct {
 };
 
 pub fn create(client: anytype, request: CreateRequest, request_options: options_mod.RequestOptions) !CreateResponse {
-    const body = try json.stringifyRequest(client.allocator, request);
-    defer client.allocator.free(body);
-
-    var prepared = try http.prepareRequest(client.allocator, client.config, .{
-        .method = .POST,
-        .path = "/embeddings",
-        .body = body,
-    }, request_options);
-    defer prepared.deinit();
-
-    var response = try http.execute(client.allocator, &client.http_client, prepared);
-    defer response.deinit();
-
-    return parseCreateResponse(client.allocator, response);
+    return createWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, request, request_options);
 }
 
 pub fn createWithTransport(

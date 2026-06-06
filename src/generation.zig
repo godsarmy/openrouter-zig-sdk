@@ -117,20 +117,7 @@ const WireContentResponse = struct {
 };
 
 pub fn get(client: anytype, request: GetRequest, request_options: options_mod.RequestOptions) !GetResponse {
-    const query = try queryString(client.allocator, request);
-    defer client.allocator.free(query);
-
-    var prepared = try http.prepareRequest(client.allocator, client.config, .{
-        .method = .GET,
-        .path = "/generation",
-        .query = query,
-    }, request_options);
-    defer prepared.deinit();
-
-    var response = try http.execute(client.allocator, &client.http_client, prepared);
-    defer response.deinit();
-
-    return parseGetResponse(client.allocator, response);
+    return getWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, request, request_options);
 }
 
 pub fn getWithTransport(
@@ -157,20 +144,7 @@ pub fn getWithTransport(
 }
 
 pub fn content(client: anytype, request: ContentRequest, request_options: options_mod.RequestOptions) !ContentResponse {
-    const query = try queryString(client.allocator, .{ .id = request.id });
-    defer client.allocator.free(query);
-
-    var prepared = try http.prepareRequest(client.allocator, client.config, .{
-        .method = .GET,
-        .path = "/generation/content",
-        .query = query,
-    }, request_options);
-    defer prepared.deinit();
-
-    var response = try http.execute(client.allocator, &client.http_client, prepared);
-    defer response.deinit();
-
-    return parseContentResponse(client.allocator, response);
+    return contentWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, request, request_options);
 }
 
 pub fn contentWithTransport(

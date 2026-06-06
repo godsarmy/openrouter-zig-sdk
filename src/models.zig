@@ -71,16 +71,7 @@ const WireCountResponse = struct {
 };
 
 pub fn list(client: anytype, request_options: options_mod.RequestOptions) !ListResponse {
-    var prepared = try http.prepareRequest(client.allocator, client.config, .{
-        .method = .GET,
-        .path = "/models",
-    }, request_options);
-    defer prepared.deinit();
-
-    var response = try http.execute(client.allocator, &client.http_client, prepared);
-    defer response.deinit();
-
-    return parseListResponse(client.allocator, response);
+    return listWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, request_options);
 }
 
 pub fn listWithTransport(
@@ -102,20 +93,7 @@ pub fn listWithTransport(
 }
 
 pub fn count(client: anytype, request: CountRequest, request_options: options_mod.RequestOptions) !CountResponse {
-    const query = try countQueryString(client.allocator, request);
-    defer client.allocator.free(query);
-
-    var prepared = try http.prepareRequest(client.allocator, client.config, .{
-        .method = .GET,
-        .path = "/models/count",
-        .query = query,
-    }, request_options);
-    defer prepared.deinit();
-
-    var response = try http.execute(client.allocator, &client.http_client, prepared);
-    defer response.deinit();
-
-    return parseCountResponse(client.allocator, response);
+    return countWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, request, request_options);
 }
 
 pub fn countWithTransport(

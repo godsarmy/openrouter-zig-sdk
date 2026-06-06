@@ -44,20 +44,7 @@ const WireRankingsDailyGetResponse = struct {
 };
 
 pub fn getRankingsDaily(client: anytype, request: RankingsDailyGetRequest, request_options: options_mod.RequestOptions) !RankingsDailyGetResponse {
-    const query = try rankingsDailyQueryString(client.allocator, request);
-    defer client.allocator.free(query);
-
-    var prepared = try http.prepareRequest(client.allocator, client.config, .{
-        .method = .GET,
-        .path = "/datasets/rankings-daily",
-        .query = query,
-    }, request_options);
-    defer prepared.deinit();
-
-    var response = try http.execute(client.allocator, &client.http_client, prepared);
-    defer response.deinit();
-
-    return parseRankingsDailyGetResponse(client.allocator, response);
+    return getRankingsDailyWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, request, request_options);
 }
 
 pub fn getRankingsDailyWithTransport(

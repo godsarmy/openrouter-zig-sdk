@@ -33,16 +33,7 @@ const WireListResponse = struct {
 };
 
 pub fn list(client: anytype, request_options: options_mod.RequestOptions) !ListResponse {
-    var prepared = try http.prepareRequest(client.allocator, client.config, .{
-        .method = .GET,
-        .path = "/providers",
-    }, request_options);
-    defer prepared.deinit();
-
-    var response = try http.execute(client.allocator, &client.http_client, prepared);
-    defer response.deinit();
-
-    return parseListResponse(client.allocator, response);
+    return listWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, request_options);
 }
 
 pub fn listWithTransport(

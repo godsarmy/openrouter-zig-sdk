@@ -116,13 +116,7 @@ const WireUpdateResponse = struct { data: ManagedApiKey };
 const WireDeleteResponse = struct { deleted: bool };
 
 pub fn list(client: anytype, request: ListRequest, request_options: options_mod.RequestOptions) !ListResponse {
-    const query = try listQueryString(client.allocator, request);
-    defer client.allocator.free(query);
-    var prepared = try http.prepareRequest(client.allocator, client.config, .{ .method = .GET, .path = "/keys", .query = query }, request_options);
-    defer prepared.deinit();
-    var response = try http.execute(client.allocator, &client.http_client, prepared);
-    defer response.deinit();
-    return parseListResponse(client.allocator, response);
+    return listWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, request, request_options);
 }
 
 pub fn listWithTransport(allocator: std.mem.Allocator, config: config_mod.Config, transport: anytype, request: ListRequest, request_options: options_mod.RequestOptions) !ListResponse {
@@ -136,13 +130,7 @@ pub fn listWithTransport(allocator: std.mem.Allocator, config: config_mod.Config
 }
 
 pub fn create(client: anytype, request: CreateRequest, request_options: options_mod.RequestOptions) !CreateResponse {
-    const body = try json.stringifyRequest(client.allocator, request);
-    defer client.allocator.free(body);
-    var prepared = try http.prepareRequest(client.allocator, client.config, .{ .method = .POST, .path = "/keys", .body = body }, request_options);
-    defer prepared.deinit();
-    var response = try http.execute(client.allocator, &client.http_client, prepared);
-    defer response.deinit();
-    return parseCreateResponse(client.allocator, response);
+    return createWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, request, request_options);
 }
 
 pub fn createWithTransport(allocator: std.mem.Allocator, config: config_mod.Config, transport: anytype, request: CreateRequest, request_options: options_mod.RequestOptions) !CreateResponse {
@@ -156,13 +144,7 @@ pub fn createWithTransport(allocator: std.mem.Allocator, config: config_mod.Conf
 }
 
 pub fn get(client: anytype, hash: []const u8, request_options: options_mod.RequestOptions) !GetResponse {
-    const path = try std.fmt.allocPrint(client.allocator, "/keys/{s}", .{hash});
-    defer client.allocator.free(path);
-    var prepared = try http.prepareRequest(client.allocator, client.config, .{ .method = .GET, .path = path }, request_options);
-    defer prepared.deinit();
-    var response = try http.execute(client.allocator, &client.http_client, prepared);
-    defer response.deinit();
-    return parseGetResponse(client.allocator, response);
+    return getWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, hash, request_options);
 }
 pub fn getWithTransport(allocator: std.mem.Allocator, config: config_mod.Config, transport: anytype, hash: []const u8, request_options: options_mod.RequestOptions) !GetResponse {
     const path = try std.fmt.allocPrint(allocator, "/keys/{s}", .{hash});
@@ -175,15 +157,7 @@ pub fn getWithTransport(allocator: std.mem.Allocator, config: config_mod.Config,
 }
 
 pub fn update(client: anytype, hash: []const u8, request: UpdateRequest, request_options: options_mod.RequestOptions) !UpdateResponse {
-    const body = try json.stringifyRequest(client.allocator, request);
-    defer client.allocator.free(body);
-    const path = try std.fmt.allocPrint(client.allocator, "/keys/{s}", .{hash});
-    defer client.allocator.free(path);
-    var prepared = try http.prepareRequest(client.allocator, client.config, .{ .method = .PATCH, .path = path, .body = body }, request_options);
-    defer prepared.deinit();
-    var response = try http.execute(client.allocator, &client.http_client, prepared);
-    defer response.deinit();
-    return parseUpdateResponse(client.allocator, response);
+    return updateWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, hash, request, request_options);
 }
 pub fn updateWithTransport(allocator: std.mem.Allocator, config: config_mod.Config, transport: anytype, hash: []const u8, request: UpdateRequest, request_options: options_mod.RequestOptions) !UpdateResponse {
     const body = try json.stringifyRequest(allocator, request);
@@ -198,13 +172,7 @@ pub fn updateWithTransport(allocator: std.mem.Allocator, config: config_mod.Conf
 }
 
 pub fn delete(client: anytype, hash: []const u8, request_options: options_mod.RequestOptions) !DeleteResponse {
-    const path = try std.fmt.allocPrint(client.allocator, "/keys/{s}", .{hash});
-    defer client.allocator.free(path);
-    var prepared = try http.prepareRequest(client.allocator, client.config, .{ .method = .DELETE, .path = path }, request_options);
-    defer prepared.deinit();
-    var response = try http.execute(client.allocator, &client.http_client, prepared);
-    defer response.deinit();
-    return parseDeleteResponse(client.allocator, response);
+    return deleteWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, hash, request_options);
 }
 pub fn deleteWithTransport(allocator: std.mem.Allocator, config: config_mod.Config, transport: anytype, hash: []const u8, request_options: options_mod.RequestOptions) !DeleteResponse {
     const path = try std.fmt.allocPrint(allocator, "/keys/{s}", .{hash});

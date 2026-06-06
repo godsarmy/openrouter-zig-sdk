@@ -52,13 +52,7 @@ const WireCreateCodeResponse = struct { data: AuthorizationCode };
 const WireExchangeResponse = struct { key: []const u8, user_id: []const u8 };
 
 pub fn createCode(client: anytype, request: CreateCodeRequest, request_options: options_mod.RequestOptions) !CreateCodeResponse {
-    const body = try json.stringifyRequest(client.allocator, request);
-    defer client.allocator.free(body);
-    var prepared = try http.prepareRequest(client.allocator, client.config, .{ .method = .POST, .path = "/auth/keys/code", .body = body }, request_options);
-    defer prepared.deinit();
-    var response = try http.execute(client.allocator, &client.http_client, prepared);
-    defer response.deinit();
-    return parseCreateCodeResponse(client.allocator, response);
+    return createCodeWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, request, request_options);
 }
 
 pub fn createCodeWithTransport(allocator: std.mem.Allocator, config: config_mod.Config, transport: anytype, request: CreateCodeRequest, request_options: options_mod.RequestOptions) !CreateCodeResponse {
@@ -72,13 +66,7 @@ pub fn createCodeWithTransport(allocator: std.mem.Allocator, config: config_mod.
 }
 
 pub fn exchange(client: anytype, request: ExchangeRequest, request_options: options_mod.RequestOptions) !ExchangeResponse {
-    const body = try json.stringifyRequest(client.allocator, request);
-    defer client.allocator.free(body);
-    var prepared = try http.prepareRequest(client.allocator, client.config, .{ .method = .POST, .path = "/auth/keys", .body = body }, request_options);
-    defer prepared.deinit();
-    var response = try http.execute(client.allocator, &client.http_client, prepared);
-    defer response.deinit();
-    return parseExchangeResponse(client.allocator, response);
+    return exchangeWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, request, request_options);
 }
 
 pub fn exchangeWithTransport(allocator: std.mem.Allocator, config: config_mod.Config, transport: anytype, request: ExchangeRequest, request_options: options_mod.RequestOptions) !ExchangeResponse {

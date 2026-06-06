@@ -28,16 +28,7 @@ const WireGetResponse = struct {
 };
 
 pub fn get(client: anytype, request_options: options_mod.RequestOptions) !GetResponse {
-    var prepared = try http.prepareRequest(client.allocator, client.config, .{
-        .method = .GET,
-        .path = "/credits",
-    }, request_options);
-    defer prepared.deinit();
-
-    var response = try http.execute(client.allocator, &client.http_client, prepared);
-    defer response.deinit();
-
-    return parseGetResponse(client.allocator, response);
+    return getWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, request_options);
 }
 
 pub fn getWithTransport(

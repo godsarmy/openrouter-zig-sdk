@@ -157,6 +157,18 @@ pub fn execute(
     };
 }
 
+pub const RealTransport = struct {
+    client: *std.http.Client,
+
+    pub fn execute(self: RealTransport, allocator: std.mem.Allocator, prepared: PreparedRequest) !HttpResponse {
+        return executeRealTransport(allocator, self.client, prepared);
+    }
+};
+
+fn executeRealTransport(allocator: std.mem.Allocator, client: *std.http.Client, prepared: PreparedRequest) !HttpResponse {
+    return execute(allocator, client, prepared);
+}
+
 pub const FakeTransport = struct {
     status: std.http.Status = .ok,
     body: []const u8 = "",

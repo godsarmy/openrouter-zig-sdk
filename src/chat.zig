@@ -190,20 +190,7 @@ const WireCompletionResponse = struct {
 };
 
 pub fn create(client: anytype, request: CompletionRequest, request_options: options_mod.RequestOptions) !CompletionResponse {
-    const body = try json.stringifyRequest(client.allocator, forceNonStreaming(request));
-    defer client.allocator.free(body);
-
-    var prepared = try http.prepareRequest(client.allocator, client.config, .{
-        .method = .POST,
-        .path = "/chat/completions",
-        .body = body,
-    }, request_options);
-    defer prepared.deinit();
-
-    var response = try http.execute(client.allocator, &client.http_client, prepared);
-    defer response.deinit();
-
-    return parseCompletionResponse(client.allocator, response);
+    return createWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, request, request_options);
 }
 
 pub fn createWithTransport(
