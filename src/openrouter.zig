@@ -38,6 +38,9 @@ pub const GenerationGetResponse = @import("generation.zig").GetResponse;
 pub const GenerationProviderResponse = @import("generation.zig").ProviderResponse;
 pub const HttpRequest = @import("http.zig").HttpRequest;
 pub const HttpResponse = @import("http.zig").HttpResponse;
+pub const Key = @import("key.zig").ApiKey;
+pub const KeyGetResponse = @import("key.zig").GetResponse;
+pub const KeyRateLimit = @import("key.zig").RateLimit;
 pub const Model = @import("models.zig").Model;
 pub const ModelsCount = @import("models.zig").Count;
 pub const ModelsCountRequest = @import("models.zig").CountRequest;
@@ -70,6 +73,7 @@ test {
     _ = @import("generation.zig");
     _ = @import("http.zig");
     _ = @import("json.zig");
+    _ = @import("key.zig");
     _ = @import("models.zig");
     _ = @import("options.zig");
     _ = @import("pagination.zig");

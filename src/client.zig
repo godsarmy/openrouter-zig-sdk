@@ -8,6 +8,7 @@ const credits_mod = @import("credits.zig");
 const datasets_mod = @import("datasets.zig");
 const embeddings_mod = @import("embeddings.zig");
 const generation_mod = @import("generation.zig");
+const key_mod = @import("key.zig");
 const models_mod = @import("models.zig");
 const options_mod = @import("options.zig");
 const providers_mod = @import("providers.zig");
@@ -76,6 +77,12 @@ pub const CreditsResource = struct {
         return credits_mod.get(client, request_options);
     }
 };
+pub const KeyResource = struct {
+    pub fn get(self: *KeyResource, request_options: options_mod.RequestOptions) !key_mod.GetResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("key", self));
+        return key_mod.get(client, request_options);
+    }
+};
 pub const ProvidersResource = struct {
     pub fn list(self: *ProvidersResource, request_options: options_mod.RequestOptions) !providers_mod.ListResponse {
         const client: *Client = @alignCast(@fieldParentPtr("providers", self));
@@ -136,6 +143,7 @@ pub const Client = struct {
     models: ModelsResource,
     embeddings: EmbeddingsResource,
     credits: CreditsResource,
+    key: KeyResource,
     providers: ProvidersResource,
     generation: GenerationResource,
     activity: ActivityResource,
@@ -159,6 +167,7 @@ pub const Client = struct {
             .models = .{},
             .embeddings = .{},
             .credits = .{},
+            .key = .{},
             .providers = .{},
             .generation = .{},
             .activity = .{},
@@ -261,6 +270,7 @@ test "client initializes resource namespaces" {
     _ = client.models;
     _ = client.embeddings;
     _ = client.credits;
+    _ = client.key;
     _ = client.providers;
     _ = client.generation;
     _ = client.activity;

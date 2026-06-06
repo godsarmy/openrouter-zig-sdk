@@ -34,6 +34,7 @@ Status legend:
 | [x] | GET | `/generation/content` | `client.generation.content` | Gets stored prompt/completion content for a generation. |
 | [x] | GET | `/activity` | `client.activity.get` | Gets user activity grouped by endpoint. Requires a management API key. |
 | [x] | GET | `/datasets/rankings-daily` | `client.datasets.rankings_daily.get` | Gets daily token totals for top models. |
+| [x] | GET | `/key` | `client.key.get` | Gets metadata for the current API key. |
 
 ## Core Inference Endpoints
 
@@ -78,7 +79,7 @@ Status legend:
 
 | Status | Method | Path | Operation | Description | SDK notes |
 |---|---|---|---|---|---|
-| [ ] | GET | `/key` | `getCurrentKey` | Get the current API key. |  |
+| [x] | GET | `/key` | `getCurrentKey` | Get the current API key. | Implemented in `src/key.zig`. |
 | [ ] | GET | `/keys` | `list` | List API keys. |  |
 | [ ] | POST | `/keys` | `createKeys` | Create a new API key. |  |
 | [ ] | GET | `/keys/{hash}` | `getKey` | Get a single API key. |  |

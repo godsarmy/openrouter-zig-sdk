@@ -87,6 +87,7 @@ Implemented endpoints:
 - `POST /api/v1/chat/completions`
 - `POST /api/v1/embeddings`
 - `GET /api/v1/credits` (requires a management API key)
+- `GET /api/v1/key`
 - `GET /api/v1/providers`
 - `GET /api/v1/generation`
 - `GET /api/v1/generation/content`
@@ -113,6 +114,7 @@ Response values own arena-backed parsed data. Call `deinit()` on every response 
 - `GenerationGetResponse.deinit()`
 - `GenerationContentResponse.deinit()`
 - `ActivityGetResponse.deinit()`
+- `KeyGetResponse.deinit()`
 - `RankingsDailyGetResponse.deinit()`
 
 Streaming responses use a pull iterator. Call `stream.deinit()` even if you stop reading before `[DONE]` so the HTTP request is closed.
@@ -177,7 +179,7 @@ zig fmt .
 
 ## Project Status
 
-The SDK includes typed APIs for chat completions, streaming chat completions, embeddings, models, providers, credits, generation metadata/content, activity, and rankings datasets. Public APIs may change between minor releases while the SDK is pre-1.0.
+The SDK includes typed APIs for chat completions, streaming chat completions, embeddings, models, providers, credits, current key metadata, generation metadata/content, activity, and rankings datasets. Public APIs may change between minor releases while the SDK is pre-1.0.
 
 ## License
 
