@@ -9,6 +9,7 @@ const datasets_mod = @import("datasets.zig");
 const embeddings_mod = @import("embeddings.zig");
 const generation_mod = @import("generation.zig");
 const key_mod = @import("key.zig");
+const keys_mod = @import("keys.zig");
 const models_mod = @import("models.zig");
 const options_mod = @import("options.zig");
 const providers_mod = @import("providers.zig");
@@ -83,6 +84,28 @@ pub const KeyResource = struct {
         return key_mod.get(client, request_options);
     }
 };
+pub const KeysResource = struct {
+    pub fn list(self: *KeysResource, request: keys_mod.ListRequest, request_options: options_mod.RequestOptions) !keys_mod.ListResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("keys", self));
+        return keys_mod.list(client, request, request_options);
+    }
+    pub fn create(self: *KeysResource, request: keys_mod.CreateRequest, request_options: options_mod.RequestOptions) !keys_mod.CreateResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("keys", self));
+        return keys_mod.create(client, request, request_options);
+    }
+    pub fn get(self: *KeysResource, hash: []const u8, request_options: options_mod.RequestOptions) !keys_mod.GetResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("keys", self));
+        return keys_mod.get(client, hash, request_options);
+    }
+    pub fn update(self: *KeysResource, hash: []const u8, request: keys_mod.UpdateRequest, request_options: options_mod.RequestOptions) !keys_mod.UpdateResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("keys", self));
+        return keys_mod.update(client, hash, request, request_options);
+    }
+    pub fn delete(self: *KeysResource, hash: []const u8, request_options: options_mod.RequestOptions) !keys_mod.DeleteResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("keys", self));
+        return keys_mod.delete(client, hash, request_options);
+    }
+};
 pub const ProvidersResource = struct {
     pub fn list(self: *ProvidersResource, request_options: options_mod.RequestOptions) !providers_mod.ListResponse {
         const client: *Client = @alignCast(@fieldParentPtr("providers", self));
@@ -144,6 +167,7 @@ pub const Client = struct {
     embeddings: EmbeddingsResource,
     credits: CreditsResource,
     key: KeyResource,
+    keys: KeysResource,
     providers: ProvidersResource,
     generation: GenerationResource,
     activity: ActivityResource,
@@ -168,6 +192,7 @@ pub const Client = struct {
             .embeddings = .{},
             .credits = .{},
             .key = .{},
+            .keys = .{},
             .providers = .{},
             .generation = .{},
             .activity = .{},
@@ -271,6 +296,7 @@ test "client initializes resource namespaces" {
     _ = client.embeddings;
     _ = client.credits;
     _ = client.key;
+    _ = client.keys;
     _ = client.providers;
     _ = client.generation;
     _ = client.activity;

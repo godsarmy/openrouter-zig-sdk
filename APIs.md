@@ -80,11 +80,11 @@ Status legend:
 | Status | Method | Path | Operation | Description | SDK notes |
 |---|---|---|---|---|---|
 | [x] | GET | `/key` | `getCurrentKey` | Get the current API key. | Implemented in `src/key.zig`. |
-| [ ] | GET | `/keys` | `list` | List API keys. |  |
-| [ ] | POST | `/keys` | `createKeys` | Create a new API key. |  |
-| [ ] | GET | `/keys/{hash}` | `getKey` | Get a single API key. |  |
-| [ ] | PATCH | `/keys/{hash}` | `updateKeys` | Update an API key. |  |
-| [ ] | DELETE | `/keys/{hash}` | `deleteKeys` | Delete an API key. |  |
+| [x] | GET | `/keys` | `list` | List API keys. | Implemented in `src/keys.zig` as `client.keys.list`. |
+| [x] | POST | `/keys` | `create` | Create a new API key. | Implemented in `src/keys.zig` as `client.keys.create`. |
+| [x] | GET | `/keys/{hash}` | `get` | Get a single API key. | Implemented in `src/keys.zig` as `client.keys.get`. |
+| [x] | PATCH | `/keys/{hash}` | `update` | Update an API key. | Implemented in `src/keys.zig` as `client.keys.update`. |
+| [x] | DELETE | `/keys/{hash}` | `delete` | Delete an API key. | Implemented in `src/keys.zig` as `client.keys.delete`. |
 | [ ] | POST | `/auth/keys/code` | `createAuthKeysCode` | Create an authorization code. |  |
 | [ ] | POST | `/auth/keys` | `exchangeAuthCodeForAPIKey` | Exchange an authorization code for an API key. |  |
 | [ ] | GET | `/byok` | `listBYOKKeys` | List BYOK provider credentials. |  |
