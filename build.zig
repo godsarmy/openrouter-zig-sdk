@@ -21,6 +21,8 @@ pub fn build(b: *std.Build) void {
     addExample(b, examples_step, target, optimize, openrouter, "video_models", "examples/video_models.zig", "run-video-models", "Run video models example");
     addExample(b, examples_step, target, optimize, openrouter, "preset_chat_completions", "examples/preset_chat_completions.zig", "run-preset-chat-completions", "Run preset chat completions example");
     addExample(b, examples_step, target, optimize, openrouter, "rerank", "examples/rerank.zig", "run-rerank", "Run rerank example");
+    addExample(b, examples_step, target, optimize, openrouter, "audio_speech", "examples/audio_speech.zig", "run-audio-speech", "Run audio speech example");
+    addExample(b, examples_step, target, optimize, openrouter, "audio_transcriptions", "examples/audio_transcriptions.zig", "run-audio-transcriptions", "Run audio transcriptions example");
     addExample(b, examples_step, target, optimize, openrouter, "embeddings", "examples/embeddings.zig", "run-embeddings", "Run embeddings example");
     addExample(b, examples_step, target, optimize, openrouter, "embeddings_models", "examples/embeddings_models.zig", "run-embeddings-models", "Run embeddings models example");
     addExample(b, examples_step, target, optimize, openrouter, "credits", "examples/credits.zig", "run-credits", "Run credits example");

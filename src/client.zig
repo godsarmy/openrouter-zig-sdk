@@ -2,6 +2,7 @@
 
 const std = @import("std");
 const activity_mod = @import("activity.zig");
+const audio_mod = @import("audio.zig");
 const chat_mod = @import("chat.zig");
 const config_mod = @import("config.zig");
 const credits_mod = @import("credits.zig");
@@ -50,6 +51,24 @@ pub const ChatCompletionsResource = struct {
         const chat: *ChatResource = @alignCast(@fieldParentPtr("completions", self));
         const client: *Client = @alignCast(@fieldParentPtr("chat", chat));
         return stream_mod.stream(client, request, request_options);
+    }
+};
+pub const AudioResource = struct {
+    speech: AudioSpeechResource = .{},
+    transcriptions: AudioTranscriptionsResource = .{},
+};
+pub const AudioSpeechResource = struct {
+    pub fn create(self: *AudioSpeechResource, request: audio_mod.SpeechCreateRequest, request_options: options_mod.RequestOptions) !audio_mod.SpeechCreateResponse {
+        const audio: *AudioResource = @alignCast(@fieldParentPtr("speech", self));
+        const client: *Client = @alignCast(@fieldParentPtr("audio", audio));
+        return audio_mod.createSpeech(client, request, request_options);
+    }
+};
+pub const AudioTranscriptionsResource = struct {
+    pub fn create(self: *AudioTranscriptionsResource, request: audio_mod.TranscriptionsCreateRequest, request_options: options_mod.RequestOptions) !audio_mod.TranscriptionsCreateResponse {
+        const audio: *AudioResource = @alignCast(@fieldParentPtr("transcriptions", self));
+        const client: *Client = @alignCast(@fieldParentPtr("audio", audio));
+        return audio_mod.createTranscription(client, request, request_options);
     }
 };
 pub const ModelsResource = struct {
@@ -272,6 +291,7 @@ pub const Client = struct {
     base_uri: std.Uri,
     http_client: std.http.Client,
     chat: ChatResource,
+    audio: AudioResource,
     models: ModelsResource,
     embeddings: EmbeddingsResource,
     endpoints: EndpointsResource,
@@ -302,6 +322,7 @@ pub const Client = struct {
                 .io = io,
             },
             .chat = .{},
+            .audio = .{},
             .models = .{},
             .embeddings = .{},
             .endpoints = .{},
@@ -421,6 +442,9 @@ test "client initializes resource namespaces" {
 
     _ = client.chat;
     _ = client.chat.completions;
+    _ = client.audio;
+    _ = client.audio.speech;
+    _ = client.audio.transcriptions;
     _ = client.models;
     _ = client.models.user;
     _ = client.models.endpoints;

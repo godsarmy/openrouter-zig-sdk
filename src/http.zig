@@ -40,6 +40,7 @@ pub const HttpResponse = struct {
     status: std.http.Status,
     body: []u8,
     content_type: ?[]const u8 = null,
+    generation_id: ?[]const u8 = null,
     request_id: ?[]const u8 = null,
     rate_limit_remaining: ?[]const u8 = null,
     rate_limit_reset: ?[]const u8 = null,
@@ -47,6 +48,7 @@ pub const HttpResponse = struct {
     pub fn deinit(self: *HttpResponse) void {
         self.allocator.free(self.body);
         if (self.content_type) |value| self.allocator.free(value);
+        if (self.generation_id) |value| self.allocator.free(value);
         if (self.request_id) |value| self.allocator.free(value);
         if (self.rate_limit_remaining) |value| self.allocator.free(value);
         if (self.rate_limit_reset) |value| self.allocator.free(value);
@@ -56,12 +58,14 @@ pub const HttpResponse = struct {
 
 const ResponseMetadata = struct {
     content_type: ?[]const u8 = null,
+    generation_id: ?[]const u8 = null,
     request_id: ?[]const u8 = null,
     rate_limit_remaining: ?[]const u8 = null,
     rate_limit_reset: ?[]const u8 = null,
 
     fn deinit(self: *ResponseMetadata, allocator: std.mem.Allocator) void {
         if (self.content_type) |value| allocator.free(value);
+        if (self.generation_id) |value| allocator.free(value);
         if (self.request_id) |value| allocator.free(value);
         if (self.rate_limit_remaining) |value| allocator.free(value);
         if (self.rate_limit_reset) |value| allocator.free(value);
@@ -151,6 +155,7 @@ pub fn execute(
         .status = response.head.status,
         .body = try response_body.toOwnedSlice(),
         .content_type = metadata.content_type,
+        .generation_id = metadata.generation_id,
         .request_id = metadata.request_id,
         .rate_limit_remaining = metadata.rate_limit_remaining,
         .rate_limit_reset = metadata.rate_limit_reset,
@@ -184,6 +189,7 @@ pub const FakeTransport = struct {
             .status = self.status,
             .body = try allocator.dupe(u8, self.body),
             .content_type = metadata.content_type,
+            .generation_id = metadata.generation_id,
             .request_id = metadata.request_id,
             .rate_limit_remaining = metadata.rate_limit_remaining,
             .rate_limit_reset = metadata.rate_limit_reset,
@@ -233,6 +239,8 @@ fn captureMetadataHeader(
 ) !void {
     if (std.ascii.eqlIgnoreCase(name, "content-type")) {
         try setOnce(allocator, &metadata.content_type, value);
+    } else if (std.ascii.eqlIgnoreCase(name, "x-generation-id") or std.ascii.eqlIgnoreCase(name, "generation-id")) {
+        try setOnce(allocator, &metadata.generation_id, value);
     } else if (std.ascii.eqlIgnoreCase(name, "x-request-id") or std.ascii.eqlIgnoreCase(name, "request-id")) {
         try setOnce(allocator, &metadata.request_id, value);
     } else if (std.ascii.eqlIgnoreCase(name, "x-ratelimit-remaining") or std.ascii.eqlIgnoreCase(name, "ratelimit-remaining")) {

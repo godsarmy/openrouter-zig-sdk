@@ -26,6 +26,8 @@ Status legend:
 | Status | Method | Path | SDK API | Notes |
 |---|---|---|---|---|
 | [x] | POST | `/chat/completions` | `client.chat.completions.create`, `client.chat.completions.stream` | Non-streaming and SSE streaming chat completions. |
+| [x] | POST | `/audio/speech` | `client.audio.speech.create` | Creates raw audio bytes from text. |
+| [x] | POST | `/audio/transcriptions` | `client.audio.transcriptions.create` | Transcribes base64-encoded audio to text. |
 | [x] | POST | `/rerank` | `client.rerank.create` | Reranks documents for a query. |
 | [x] | POST | `/embeddings` | `client.embeddings.create` | Text embedding requests. |
 | [x] | GET | `/embeddings/models` | `client.embeddings.models.list` | Lists embedding models. |
@@ -56,8 +58,8 @@ Status legend:
 | [ ] | POST | `/messages` | `createMessages` | Create a message. |  |
 | [x] | POST | `/embeddings` | `createEmbeddings` | Submit an embedding request. | Implemented in `src/embeddings.zig`. |
 | [x] | POST | `/rerank` | `createRerank` | Submit a rerank request. | Implemented in `src/rerank.zig`. |
-| [ ] | POST | `/audio/speech` | `createAudioSpeech` | Create speech from text. | New audio API. Returns raw audio bytes such as MP3/PCM. |
-| [ ] | POST | `/audio/transcriptions` | `createAudioTranscriptions` | Create a transcription from audio. | New audio API. Accepts base64 audio and returns text. |
+| [x] | POST | `/audio/speech` | `createAudioSpeech` | Create speech from text. | Implemented in `src/audio.zig`. Returns raw audio bytes such as MP3/PCM. |
+| [x] | POST | `/audio/transcriptions` | `createAudioTranscriptions` | Create a transcription from audio. | Implemented in `src/audio.zig`. Accepts base64 audio and returns text. |
 | [x] | POST | `/videos` | `createVideos` | Submit a video generation request. | Implemented in `src/videos.zig`. |
 | [x] | GET | `/videos/{jobId}` | `getVideos` | Poll video generation job status. | Implemented in `src/videos.zig`. |
 | [x] | GET | `/videos/{jobId}/content` | `listVideosContent` | Download generated video content. | Implemented in `src/videos.zig`. |

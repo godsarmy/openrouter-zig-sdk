@@ -7,6 +7,13 @@ pub const Config = @import("config.zig").Config;
 pub const ActivityGetRequest = @import("activity.zig").GetRequest;
 pub const ActivityGetResponse = @import("activity.zig").GetResponse;
 pub const ActivityItem = @import("activity.zig").ActivityItem;
+pub const AudioInputAudio = @import("audio.zig").InputAudio;
+pub const AudioSpeechCreateRequest = @import("audio.zig").SpeechCreateRequest;
+pub const AudioSpeechCreateResponse = @import("audio.zig").SpeechCreateResponse;
+pub const AudioSpeechFormat = @import("audio.zig").SpeechFormat;
+pub const AudioTranscriptionUsage = @import("audio.zig").TranscriptionUsage;
+pub const AudioTranscriptionsCreateRequest = @import("audio.zig").TranscriptionsCreateRequest;
+pub const AudioTranscriptionsCreateResponse = @import("audio.zig").TranscriptionsCreateResponse;
 pub const ApiError = @import("errors.zig").ApiError;
 pub const ChatCompletionResponse = @import("chat.zig").CompletionResponse;
 pub const ChatCompletionChunk = @import("stream.zig").CompletionChunk;
@@ -108,6 +115,7 @@ test "openrouter module exposes package version" {
 
 test {
     _ = @import("activity.zig");
+    _ = @import("audio.zig");
     _ = @import("chat.zig");
     _ = @import("client.zig");
     _ = @import("auth_keys.zig");

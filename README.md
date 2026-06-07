@@ -82,6 +82,8 @@ pub fn main() !void {
 
 Implemented endpoints:
 
+- `POST /api/v1/audio/speech`
+- `POST /api/v1/audio/transcriptions`
 - `GET /api/v1/models`
 - `GET /api/v1/models/user`
 - `GET /api/v1/models/{author}/{slug}/endpoints`
@@ -114,8 +116,10 @@ Implemented endpoints:
 
 The caller provides the allocator and `std.Io` used by `Client.init`. The client owns its internal HTTP client and must be closed with `client.deinit()`.
 
-Response values own arena-backed parsed data. Call `deinit()` on every response or stream chunk when finished:
+Response values own their parsed JSON data or buffered raw bytes. Call `deinit()` on every response or stream chunk when finished:
 
+- `AudioSpeechCreateResponse.deinit()`
+- `AudioTranscriptionsCreateResponse.deinit()`
 - `ModelsListResponse.deinit()`
 - `ModelsUserListResponse.deinit()`
 - `ModelsEndpointsListResponse.deinit()`
@@ -168,6 +172,8 @@ zig build run-videos
 zig build run-video-models
 zig build run-preset-chat-completions
 zig build run-rerank
+zig build run-audio-speech
+zig build run-audio-transcriptions
 zig build run-embeddings
 zig build run-embeddings-models
 zig build run-credits
@@ -206,7 +212,7 @@ zig fmt .
 
 ## Project Status
 
-The SDK includes typed APIs for chat completions, streaming chat completions, preset chat completion creation, reranking, embeddings, embedding model discovery, video generation, models, user model discovery, model endpoint discovery, ZDR endpoint discovery, providers, credits, current key metadata, generation metadata/content, activity, and rankings datasets. Public APIs may change between minor releases while the SDK is pre-1.0.
+The SDK includes typed APIs for chat completions, streaming chat completions, preset chat completion creation, audio speech, audio transcriptions, reranking, embeddings, embedding model discovery, video generation, models, user model discovery, model endpoint discovery, ZDR endpoint discovery, providers, credits, current key metadata, generation metadata/content, activity, and rankings datasets. Public APIs may change between minor releases while the SDK is pre-1.0.
 
 ## License
 
