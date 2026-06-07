@@ -78,6 +78,11 @@ pub const PresetChatCompletionsCreateRequest = @import("presets.zig").ChatComple
 pub const PresetChatCompletionsCreateResponse = @import("presets.zig").ChatCompletionsCreateResponse;
 pub const PresetVersion = @import("presets.zig").PresetVersion;
 pub const RequestOptions = @import("options.zig").RequestOptions;
+pub const RerankCreateRequest = @import("rerank.zig").CreateRequest;
+pub const RerankCreateResponse = @import("rerank.zig").CreateResponse;
+pub const RerankDocument = @import("rerank.zig").Document;
+pub const RerankResult = @import("rerank.zig").Result;
+pub const RerankUsage = @import("rerank.zig").Usage;
 pub const RetryConfig = @import("retry.zig").RetryConfig;
 pub const VideoContentRequest = @import("videos.zig").ContentRequest;
 pub const VideoContentResponse = @import("videos.zig").ContentResponse;
@@ -122,6 +127,7 @@ test {
     _ = @import("presets.zig");
     _ = @import("providers.zig");
     _ = @import("query.zig");
+    _ = @import("rerank.zig");
     _ = @import("stream.zig");
     _ = @import("videos.zig");
 }

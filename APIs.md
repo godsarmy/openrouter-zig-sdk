@@ -26,6 +26,7 @@ Status legend:
 | Status | Method | Path | SDK API | Notes |
 |---|---|---|---|---|
 | [x] | POST | `/chat/completions` | `client.chat.completions.create`, `client.chat.completions.stream` | Non-streaming and SSE streaming chat completions. |
+| [x] | POST | `/rerank` | `client.rerank.create` | Reranks documents for a query. |
 | [x] | POST | `/embeddings` | `client.embeddings.create` | Text embedding requests. |
 | [x] | GET | `/embeddings/models` | `client.embeddings.models.list` | Lists embedding models. |
 | [x] | GET | `/models` | `client.models.list` | Lists available models. |
@@ -54,7 +55,7 @@ Status legend:
 | [ ] | POST | `/responses` | `createResponses` | Create a response using the Responses API style. |  |
 | [ ] | POST | `/messages` | `createMessages` | Create a message. |  |
 | [x] | POST | `/embeddings` | `createEmbeddings` | Submit an embedding request. | Implemented in `src/embeddings.zig`. |
-| [ ] | POST | `/rerank` | `createRerank` | Submit a rerank request. |  |
+| [x] | POST | `/rerank` | `createRerank` | Submit a rerank request. | Implemented in `src/rerank.zig`. |
 | [ ] | POST | `/audio/speech` | `createAudioSpeech` | Create speech from text. | New audio API. Returns raw audio bytes such as MP3/PCM. |
 | [ ] | POST | `/audio/transcriptions` | `createAudioTranscriptions` | Create a transcription from audio. | New audio API. Accepts base64 audio and returns text. |
 | [x] | POST | `/videos` | `createVideos` | Submit a video generation request. | Implemented in `src/videos.zig`. |
