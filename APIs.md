@@ -26,6 +26,7 @@ Status legend:
 | Status | Method | Path | SDK API | Notes |
 |---|---|---|---|---|
 | [x] | POST | `/chat/completions` | `client.chat.completions.create`, `client.chat.completions.stream` | Non-streaming and SSE streaming chat completions. |
+| [x] | POST | `/responses` | `client.responses.create` | OpenAI-compatible Responses API. |
 | [x] | POST | `/audio/speech` | `client.audio.speech.create` | Creates raw audio bytes from text. |
 | [x] | POST | `/audio/transcriptions` | `client.audio.transcriptions.create` | Transcribes base64-encoded audio to text. |
 | [x] | POST | `/rerank` | `client.rerank.create` | Reranks documents for a query. |
@@ -54,7 +55,7 @@ Status legend:
 | Status | Method | Path | Operation | Description | SDK notes |
 |---|---|---|---|---|---|
 | [x] | POST | `/chat/completions` | `sendChatCompletionRequest` | Create a chat completion. | Implemented in `src/chat.zig` and `src/stream.zig`. |
-| [ ] | POST | `/responses` | `createResponses` | Create a response using the Responses API style. |  |
+| [x] | POST | `/responses` | `createResponses` | Create a response using the Responses API style. | Implemented in `src/responses.zig`. Non-streaming only; do not pass `stream: true`. |
 | [ ] | POST | `/messages` | `createMessages` | Create a message. |  |
 | [x] | POST | `/embeddings` | `createEmbeddings` | Submit an embedding request. | Implemented in `src/embeddings.zig`. |
 | [x] | POST | `/rerank` | `createRerank` | Submit a rerank request. | Implemented in `src/rerank.zig`. |

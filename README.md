@@ -84,6 +84,7 @@ Implemented endpoints:
 
 - `POST /api/v1/audio/speech`
 - `POST /api/v1/audio/transcriptions`
+- `POST /api/v1/responses`
 - `GET /api/v1/models`
 - `GET /api/v1/models/user`
 - `GET /api/v1/models/{author}/{slug}/endpoints`
@@ -111,6 +112,7 @@ Implemented endpoints:
 
 `/datasets/rankings-daily` returns `total_tokens` as a decimal string and may include aggregated `other` rows.
 `/models/count` accepts optional `output_modalities` values such as `text`, `image`, `audio`, `embeddings`, comma-separated combinations, or `all`; OpenRouter defaults to `text`.
+`client.responses.create` implements non-streaming `/responses`; use `RequestOptions.extra_headers` with `X-OpenRouter-Experimental-Metadata: enabled` to receive `openrouter_metadata` when OpenRouter provides it.
 
 ## Ownership and Lifecycle
 
@@ -120,6 +122,7 @@ Response values own their parsed JSON data or buffered raw bytes. Call `deinit()
 
 - `AudioSpeechCreateResponse.deinit()`
 - `AudioTranscriptionsCreateResponse.deinit()`
+- `ResponsesCreateResponse.deinit()`
 - `ModelsListResponse.deinit()`
 - `ModelsUserListResponse.deinit()`
 - `ModelsEndpointsListResponse.deinit()`
@@ -174,6 +177,7 @@ zig build run-preset-chat-completions
 zig build run-rerank
 zig build run-audio-speech
 zig build run-audio-transcriptions
+zig build run-responses
 zig build run-embeddings
 zig build run-embeddings-models
 zig build run-credits
@@ -212,7 +216,7 @@ zig fmt .
 
 ## Project Status
 
-The SDK includes typed APIs for chat completions, streaming chat completions, preset chat completion creation, audio speech, audio transcriptions, reranking, embeddings, embedding model discovery, video generation, models, user model discovery, model endpoint discovery, ZDR endpoint discovery, providers, credits, current key metadata, generation metadata/content, activity, and rankings datasets. Public APIs may change between minor releases while the SDK is pre-1.0.
+The SDK includes typed APIs for chat completions, streaming chat completions, Responses API creation, preset chat completion creation, audio speech, audio transcriptions, reranking, embeddings, embedding model discovery, video generation, models, user model discovery, model endpoint discovery, ZDR endpoint discovery, providers, credits, current key metadata, generation metadata/content, activity, and rankings datasets. Public APIs may change between minor releases while the SDK is pre-1.0.
 
 ## License
 

@@ -90,6 +90,10 @@ pub const RerankCreateResponse = @import("rerank.zig").CreateResponse;
 pub const RerankDocument = @import("rerank.zig").Document;
 pub const RerankResult = @import("rerank.zig").Result;
 pub const RerankUsage = @import("rerank.zig").Usage;
+pub const ResponsesCreateRequest = @import("responses.zig").CreateRequest;
+pub const ResponsesCreateResponse = @import("responses.zig").CreateResponse;
+pub const ResponsesInput = @import("responses.zig").Input;
+pub const ResponsesUsage = @import("responses.zig").Usage;
 pub const RetryConfig = @import("retry.zig").RetryConfig;
 pub const VideoContentRequest = @import("videos.zig").ContentRequest;
 pub const VideoContentResponse = @import("videos.zig").ContentResponse;
@@ -136,6 +140,7 @@ test {
     _ = @import("providers.zig");
     _ = @import("query.zig");
     _ = @import("rerank.zig");
+    _ = @import("responses.zig");
     _ = @import("stream.zig");
     _ = @import("videos.zig");
 }
