@@ -13,6 +13,7 @@ const endpoints_mod = @import("endpoints.zig");
 const generation_mod = @import("generation.zig");
 const key_mod = @import("key.zig");
 const keys_mod = @import("keys.zig");
+const messages_mod = @import("messages.zig");
 const models_mod = @import("models.zig");
 const options_mod = @import("options.zig");
 const presets_mod = @import("presets.zig");
@@ -192,6 +193,12 @@ pub const ResponsesResource = struct {
         return responses_mod.create(client, request, request_options);
     }
 };
+pub const MessagesResource = struct {
+    pub fn create(self: *MessagesResource, request: messages_mod.CreateRequest, request_options: options_mod.RequestOptions) !messages_mod.CreateResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("messages", self));
+        return messages_mod.create(client, request, request_options);
+    }
+};
 pub const CreditsResource = struct {
     pub fn get(self: *CreditsResource, request_options: options_mod.RequestOptions) !credits_mod.GetResponse {
         const client: *Client = @alignCast(@fieldParentPtr("credits", self));
@@ -306,6 +313,7 @@ pub const Client = struct {
     presets: PresetsResource,
     rerank: RerankResource,
     responses: ResponsesResource,
+    messages: MessagesResource,
     credits: CreditsResource,
     auth: AuthKeysResource,
     key: KeyResource,
@@ -338,6 +346,7 @@ pub const Client = struct {
             .presets = .{},
             .rerank = .{},
             .responses = .{},
+            .messages = .{},
             .credits = .{},
             .auth = .{},
             .key = .{},
@@ -468,6 +477,7 @@ test "client initializes resource namespaces" {
     _ = client.presets.chat.completions;
     _ = client.rerank;
     _ = client.responses;
+    _ = client.messages;
     _ = client.credits;
     _ = client.key;
     _ = client.keys;

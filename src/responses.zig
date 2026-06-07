@@ -53,6 +53,7 @@ pub const CreateRequest = struct {
             .object => |object| {
                 var it = object.iterator();
                 while (it.next()) |entry| {
+                    if (std.mem.eql(u8, entry.key_ptr.*, "stream")) continue;
                     try jws.objectField(entry.key_ptr.*);
                     try jws.write(entry.value_ptr.*);
                 }
@@ -189,6 +190,21 @@ test "responses create merges extra body" {
     defer std.testing.allocator.free(body);
 
     try std.testing.expect(std.mem.indexOf(u8, body, "\"parallel_tool_calls\":false") != null);
+}
+
+test "responses create ignores stream from extra body" {
+    var object: std.json.ObjectMap = .empty;
+    defer object.deinit(std.testing.allocator);
+    try object.put(std.testing.allocator, "stream", .{ .bool = true });
+
+    const body = try json.stringifyRequest(std.testing.allocator, CreateRequest{
+        .model = "openai/o4-mini",
+        .input = .{ .text = "Hello" },
+        .extra_body = .{ .object = object },
+    });
+    defer std.testing.allocator.free(body);
+
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"stream\"") == null);
 }
 
 test "responses create parses response and ignores unknown fields" {
