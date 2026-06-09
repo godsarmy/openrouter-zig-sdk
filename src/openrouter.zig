@@ -118,10 +118,10 @@ pub const json = @import("json.zig");
 pub const pagination = @import("pagination.zig");
 pub const stream = @import("stream.zig");
 
-pub const version = "0.4.0-dev";
+pub const version = "0.4.0";
 
 test "openrouter module exposes package version" {
-    try std.testing.expectEqualStrings("0.4.0-dev", version);
+    try std.testing.expectEqualStrings("0.4.0", version);
 }
 
 test {

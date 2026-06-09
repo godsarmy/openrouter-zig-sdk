@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.4.0 - 2026-06-08
+
+- Added audio speech and transcription APIs.
+- Added non-streaming Responses and Anthropic-compatible Messages APIs.
+- Added rerank, video generation, model endpoints, endpoint ZDR, user models, and embedding models APIs.
+- Added preset chat completions support.
+- Added examples for the new endpoint groups.
+- Documented remaining API scope, including unsupported Messages streaming.
+
 ## v0.3.0 - 2026-06-06
 
 - Added current API key metadata via `client.key.get` for `GET /key`.
