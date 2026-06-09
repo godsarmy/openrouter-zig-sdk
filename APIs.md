@@ -57,7 +57,7 @@ Status legend:
 |---|---|---|---|---|---|
 | [x] | POST | `/chat/completions` | `sendChatCompletionRequest` | Create a chat completion. | Implemented in `src/chat.zig` and `src/stream.zig`. |
 | [x] | POST | `/responses` | `createResponses` | Create a response using the Responses API style. | Implemented in `src/responses.zig`. Non-streaming only; do not pass `stream: true`. |
-| [x] | POST | `/messages` | `createMessages` | Create a message. | Implemented in `src/messages.zig`. Non-streaming only; do not pass `stream: true`. |
+| [x] | POST | `/messages` | `createMessages` | Create a message. | Implemented in `src/messages.zig`, including `client.messages.stream` for SSE events. |
 | [x] | POST | `/embeddings` | `createEmbeddings` | Submit an embedding request. | Implemented in `src/embeddings.zig`. |
 | [x] | POST | `/rerank` | `createRerank` | Submit a rerank request. | Implemented in `src/rerank.zig`. |
 | [x] | POST | `/audio/speech` | `createAudioSpeech` | Create speech from text. | Implemented in `src/audio.zig`. Returns raw audio bytes such as MP3/PCM. |

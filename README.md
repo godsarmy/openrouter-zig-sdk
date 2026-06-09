@@ -108,13 +108,14 @@ Implemented endpoints:
 - `GET /api/v1/activity` (requires a management API key)
 - `GET /api/v1/datasets/rankings-daily`
 - Streaming chat completions
+- Streaming Messages events
 - Typed request and response structs
 - Error mapping for OpenRouter API errors
 
 `/datasets/rankings-daily` returns `total_tokens` as a decimal string and may include aggregated `other` rows.
 `/models/count` accepts optional `output_modalities` values such as `text`, `image`, `audio`, `embeddings`, comma-separated combinations, or `all`; OpenRouter defaults to `text`.
 `client.responses.create` implements non-streaming `/responses`; use `RequestOptions.extra_headers` with `X-OpenRouter-Experimental-Metadata: enabled` to receive `openrouter_metadata` when OpenRouter provides it.
-`client.messages.create` implements non-streaming Anthropic-compatible `/messages`; use `RequestOptions.extra_headers` with `X-OpenRouter-Experimental-Metadata: enabled` to receive `openrouter_metadata` when OpenRouter provides it. Less common provider/model-specific fields can be sent through `extra_body`; `stream` is ignored because streaming messages are not implemented yet.
+`client.messages.create` implements non-streaming Anthropic-compatible `/messages`; `client.messages.stream` forces `stream: true` and returns parsed SSE events. Use `RequestOptions.extra_headers` with `X-OpenRouter-Experimental-Metadata: enabled` to receive `openrouter_metadata` when OpenRouter provides it. Less common provider/model-specific fields can be sent through `extra_body`; `stream` in `extra_body` is ignored so the SDK method controls streaming behavior.
 
 ## Ownership and Lifecycle
 
@@ -126,6 +127,7 @@ Response values own their parsed JSON data or buffered raw bytes. Call `deinit()
 - `AudioTranscriptionsCreateResponse.deinit()`
 - `ResponsesCreateResponse.deinit()`
 - `MessagesCreateResponse.deinit()`
+- `MessagesStreamEvent.deinit()`
 - `ModelsListResponse.deinit()`
 - `ModelsUserListResponse.deinit()`
 - `ModelsEndpointsListResponse.deinit()`
@@ -182,6 +184,7 @@ zig build run-audio-speech
 zig build run-audio-transcriptions
 zig build run-responses
 zig build run-messages
+zig build run-messages-stream
 zig build run-embeddings
 zig build run-embeddings-models
 zig build run-credits

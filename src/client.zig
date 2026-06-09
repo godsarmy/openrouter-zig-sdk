@@ -198,6 +198,11 @@ pub const MessagesResource = struct {
         const client: *Client = @alignCast(@fieldParentPtr("messages", self));
         return messages_mod.create(client, request, request_options);
     }
+
+    pub fn stream(self: *MessagesResource, request: messages_mod.CreateRequest, request_options: options_mod.RequestOptions) !messages_mod.MessageStream {
+        const client: *Client = @alignCast(@fieldParentPtr("messages", self));
+        return messages_mod.stream(client, request, request_options);
+    }
 };
 pub const CreditsResource = struct {
     pub fn get(self: *CreditsResource, request_options: options_mod.RequestOptions) !credits_mod.GetResponse {
