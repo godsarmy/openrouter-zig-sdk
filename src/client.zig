@@ -12,6 +12,7 @@ const datasets_mod = @import("datasets.zig");
 const embeddings_mod = @import("embeddings.zig");
 const endpoints_mod = @import("endpoints.zig");
 const generation_mod = @import("generation.zig");
+const guardrails_mod = @import("guardrails.zig");
 const key_mod = @import("key.zig");
 const keys_mod = @import("keys.zig");
 const messages_mod = @import("messages.zig");
@@ -233,6 +234,60 @@ pub const ByokResource = struct {
         return byok_mod.delete(client, id, request_options);
     }
 };
+pub const GuardrailsResource = struct {
+    pub fn list(self: *GuardrailsResource, request: guardrails_mod.ListRequest, request_options: options_mod.RequestOptions) !guardrails_mod.ListResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("guardrails", self));
+        return guardrails_mod.list(client, request, request_options);
+    }
+    pub fn create(self: *GuardrailsResource, request: guardrails_mod.CreateRequest, request_options: options_mod.RequestOptions) !guardrails_mod.CreateResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("guardrails", self));
+        return guardrails_mod.create(client, request, request_options);
+    }
+    pub fn get(self: *GuardrailsResource, id: []const u8, request_options: options_mod.RequestOptions) !guardrails_mod.GetResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("guardrails", self));
+        return guardrails_mod.get(client, id, request_options);
+    }
+    pub fn update(self: *GuardrailsResource, id: []const u8, request: guardrails_mod.UpdateRequest, request_options: options_mod.RequestOptions) !guardrails_mod.UpdateResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("guardrails", self));
+        return guardrails_mod.update(client, id, request, request_options);
+    }
+    pub fn delete(self: *GuardrailsResource, id: []const u8, request_options: options_mod.RequestOptions) !guardrails_mod.DeleteResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("guardrails", self));
+        return guardrails_mod.delete(client, id, request_options);
+    }
+    pub fn listKeyAssignments(self: *GuardrailsResource, request: guardrails_mod.AssignmentListRequest, request_options: options_mod.RequestOptions) !guardrails_mod.KeyAssignmentsListResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("guardrails", self));
+        return guardrails_mod.listKeyAssignments(client, request, request_options);
+    }
+    pub fn listGuardrailKeyAssignments(self: *GuardrailsResource, id: []const u8, request: guardrails_mod.AssignmentListRequest, request_options: options_mod.RequestOptions) !guardrails_mod.KeyAssignmentsListResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("guardrails", self));
+        return guardrails_mod.listGuardrailKeyAssignments(client, id, request, request_options);
+    }
+    pub fn bulkAssignKeys(self: *GuardrailsResource, id: []const u8, request: guardrails_mod.BulkKeyAssignmentRequest, request_options: options_mod.RequestOptions) !guardrails_mod.BulkAssignResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("guardrails", self));
+        return guardrails_mod.bulkAssignKeys(client, id, request, request_options);
+    }
+    pub fn bulkUnassignKeys(self: *GuardrailsResource, id: []const u8, request: guardrails_mod.BulkKeyAssignmentRequest, request_options: options_mod.RequestOptions) !guardrails_mod.BulkUnassignResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("guardrails", self));
+        return guardrails_mod.bulkUnassignKeys(client, id, request, request_options);
+    }
+    pub fn listMemberAssignments(self: *GuardrailsResource, request: guardrails_mod.AssignmentListRequest, request_options: options_mod.RequestOptions) !guardrails_mod.MemberAssignmentsListResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("guardrails", self));
+        return guardrails_mod.listMemberAssignments(client, request, request_options);
+    }
+    pub fn listGuardrailMemberAssignments(self: *GuardrailsResource, id: []const u8, request: guardrails_mod.AssignmentListRequest, request_options: options_mod.RequestOptions) !guardrails_mod.MemberAssignmentsListResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("guardrails", self));
+        return guardrails_mod.listGuardrailMemberAssignments(client, id, request, request_options);
+    }
+    pub fn bulkAssignMembers(self: *GuardrailsResource, id: []const u8, request: guardrails_mod.BulkMemberAssignmentRequest, request_options: options_mod.RequestOptions) !guardrails_mod.BulkAssignResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("guardrails", self));
+        return guardrails_mod.bulkAssignMembers(client, id, request, request_options);
+    }
+    pub fn bulkUnassignMembers(self: *GuardrailsResource, id: []const u8, request: guardrails_mod.BulkMemberAssignmentRequest, request_options: options_mod.RequestOptions) !guardrails_mod.BulkUnassignResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("guardrails", self));
+        return guardrails_mod.bulkUnassignMembers(client, id, request, request_options);
+    }
+};
 pub const AuthKeysResource = struct {
     code: AuthKeysCodeResource = .{},
 
@@ -344,6 +399,7 @@ pub const Client = struct {
     messages: MessagesResource,
     credits: CreditsResource,
     byok: ByokResource,
+    guardrails: GuardrailsResource,
     auth: AuthKeysResource,
     key: KeyResource,
     keys: KeysResource,
@@ -378,6 +434,7 @@ pub const Client = struct {
             .messages = .{},
             .credits = .{},
             .byok = .{},
+            .guardrails = .{},
             .auth = .{},
             .key = .{},
             .keys = .{},
@@ -510,6 +567,7 @@ test "client initializes resource namespaces" {
     _ = client.messages;
     _ = client.credits;
     _ = client.byok;
+    _ = client.guardrails;
     _ = client.key;
     _ = client.keys;
     _ = client.providers;

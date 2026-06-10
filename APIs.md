@@ -112,19 +112,19 @@ Status legend:
 
 | Status | Method | Path | Operation | Description | SDK notes |
 |---|---|---|---|---|---|
-| [ ] | GET | `/guardrails` | `listGuardrails` | List guardrails. |  |
-| [ ] | POST | `/guardrails` | `createGuardrail` | Create a guardrail. |  |
-| [ ] | GET | `/guardrails/{id}` | `getGuardrail` | Get a guardrail. |  |
-| [ ] | PATCH | `/guardrails/{id}` | `updateGuardrail` | Update a guardrail. |  |
-| [ ] | DELETE | `/guardrails/{id}` | `deleteGuardrail` | Delete a guardrail. |  |
-| [ ] | GET | `/guardrails/{id}/assignments/keys` | `listGuardrailKeyAssignments` | List key assignments for a guardrail. |  |
-| [ ] | POST | `/guardrails/{id}/assignments/keys` | `bulkAssignKeysToGuardrail` | Bulk assign keys to a guardrail. |  |
-| [ ] | POST | `/guardrails/{id}/assignments/keys/remove` | `bulkUnassignKeysFromGuardrail` | Bulk unassign keys from a guardrail. |  |
-| [ ] | GET | `/guardrails/{id}/assignments/members` | `listGuardrailMemberAssignments` | List member assignments for a guardrail. |  |
-| [ ] | POST | `/guardrails/{id}/assignments/members` | `bulkAssignMembersToGuardrail` | Bulk assign members to a guardrail. |  |
-| [ ] | POST | `/guardrails/{id}/assignments/members/remove` | `bulkUnassignMembersFromGuardrail` | Bulk unassign members from a guardrail. |  |
-| [ ] | GET | `/guardrails/assignments/keys` | `listKeyAssignments` | List all key assignments. |  |
-| [ ] | GET | `/guardrails/assignments/members` | `listMemberAssignments` | List all member assignments. |  |
+| [x] | GET | `/guardrails` | `listGuardrails` | List guardrails. | Implemented in `src/guardrails.zig`. Requires management auth. |
+| [x] | POST | `/guardrails` | `createGuardrail` | Create a guardrail. | Implemented in `src/guardrails.zig`. |
+| [x] | GET | `/guardrails/{id}` | `getGuardrail` | Get a guardrail. | Implemented in `src/guardrails.zig`. |
+| [x] | PATCH | `/guardrails/{id}` | `updateGuardrail` | Update a guardrail. | Implemented in `src/guardrails.zig`. |
+| [x] | DELETE | `/guardrails/{id}` | `deleteGuardrail` | Delete a guardrail. | Implemented in `src/guardrails.zig`. |
+| [x] | GET | `/guardrails/{id}/assignments/keys` | `listGuardrailKeyAssignments` | List key assignments for a guardrail. | Implemented in `src/guardrails.zig`. |
+| [x] | POST | `/guardrails/{id}/assignments/keys` | `bulkAssignKeysToGuardrail` | Bulk assign keys to a guardrail. | Implemented in `src/guardrails.zig`. |
+| [x] | POST | `/guardrails/{id}/assignments/keys/remove` | `bulkUnassignKeysFromGuardrail` | Bulk unassign keys from a guardrail. | Implemented in `src/guardrails.zig`. |
+| [x] | GET | `/guardrails/{id}/assignments/members` | `listGuardrailMemberAssignments` | List member assignments for a guardrail. | Implemented in `src/guardrails.zig`. |
+| [x] | POST | `/guardrails/{id}/assignments/members` | `bulkAssignMembersToGuardrail` | Bulk assign members to a guardrail. | Implemented in `src/guardrails.zig`. |
+| [x] | POST | `/guardrails/{id}/assignments/members/remove` | `bulkUnassignMembersFromGuardrail` | Bulk unassign members from a guardrail. | Implemented in `src/guardrails.zig`. |
+| [x] | GET | `/guardrails/assignments/keys` | `listKeyAssignments` | List all key assignments. | Implemented in `src/guardrails.zig`. |
+| [x] | GET | `/guardrails/assignments/members` | `listMemberAssignments` | List all member assignments. | Implemented in `src/guardrails.zig`. |
 
 ## Workspaces and Organization
 
