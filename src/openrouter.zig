@@ -15,6 +15,16 @@ pub const AudioTranscriptionUsage = @import("audio.zig").TranscriptionUsage;
 pub const AudioTranscriptionsCreateRequest = @import("audio.zig").TranscriptionsCreateRequest;
 pub const AudioTranscriptionsCreateResponse = @import("audio.zig").TranscriptionsCreateResponse;
 pub const ApiError = @import("errors.zig").ApiError;
+pub const ByokCreateRequest = @import("byok.zig").CreateRequest;
+pub const ByokCreateResponse = @import("byok.zig").CreateResponse;
+pub const ByokDeleteResponse = @import("byok.zig").DeleteResponse;
+pub const ByokGetResponse = @import("byok.zig").GetResponse;
+pub const ByokKey = @import("byok.zig").ByokKey;
+pub const ByokListRequest = @import("byok.zig").ListRequest;
+pub const ByokListResponse = @import("byok.zig").ListResponse;
+pub const ByokStringList = @import("byok.zig").StringList;
+pub const ByokUpdateRequest = @import("byok.zig").UpdateRequest;
+pub const ByokUpdateResponse = @import("byok.zig").UpdateResponse;
 pub const ChatCompletionResponse = @import("chat.zig").CompletionResponse;
 pub const ChatCompletionChunk = @import("stream.zig").CompletionChunk;
 pub const ChatCompletionStream = @import("stream.zig").CompletionStream;
@@ -130,6 +140,7 @@ test "openrouter module exposes package version" {
 test {
     _ = @import("activity.zig");
     _ = @import("audio.zig");
+    _ = @import("byok.zig");
     _ = @import("chat.zig");
     _ = @import("client.zig");
     _ = @import("auth_keys.zig");

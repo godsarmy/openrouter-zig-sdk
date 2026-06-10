@@ -3,6 +3,7 @@
 const std = @import("std");
 const activity_mod = @import("activity.zig");
 const audio_mod = @import("audio.zig");
+const byok_mod = @import("byok.zig");
 const chat_mod = @import("chat.zig");
 const config_mod = @import("config.zig");
 const credits_mod = @import("credits.zig");
@@ -210,6 +211,28 @@ pub const CreditsResource = struct {
         return credits_mod.get(client, request_options);
     }
 };
+pub const ByokResource = struct {
+    pub fn list(self: *ByokResource, request: byok_mod.ListRequest, request_options: options_mod.RequestOptions) !byok_mod.ListResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("byok", self));
+        return byok_mod.list(client, request, request_options);
+    }
+    pub fn create(self: *ByokResource, request: byok_mod.CreateRequest, request_options: options_mod.RequestOptions) !byok_mod.CreateResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("byok", self));
+        return byok_mod.create(client, request, request_options);
+    }
+    pub fn get(self: *ByokResource, id: []const u8, request_options: options_mod.RequestOptions) !byok_mod.GetResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("byok", self));
+        return byok_mod.get(client, id, request_options);
+    }
+    pub fn update(self: *ByokResource, id: []const u8, request: byok_mod.UpdateRequest, request_options: options_mod.RequestOptions) !byok_mod.UpdateResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("byok", self));
+        return byok_mod.update(client, id, request, request_options);
+    }
+    pub fn delete(self: *ByokResource, id: []const u8, request_options: options_mod.RequestOptions) !byok_mod.DeleteResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("byok", self));
+        return byok_mod.delete(client, id, request_options);
+    }
+};
 pub const AuthKeysResource = struct {
     code: AuthKeysCodeResource = .{},
 
@@ -320,6 +343,7 @@ pub const Client = struct {
     responses: ResponsesResource,
     messages: MessagesResource,
     credits: CreditsResource,
+    byok: ByokResource,
     auth: AuthKeysResource,
     key: KeyResource,
     keys: KeysResource,
@@ -353,6 +377,7 @@ pub const Client = struct {
             .responses = .{},
             .messages = .{},
             .credits = .{},
+            .byok = .{},
             .auth = .{},
             .key = .{},
             .keys = .{},
@@ -484,6 +509,7 @@ test "client initializes resource namespaces" {
     _ = client.responses;
     _ = client.messages;
     _ = client.credits;
+    _ = client.byok;
     _ = client.key;
     _ = client.keys;
     _ = client.providers;
