@@ -232,7 +232,7 @@ pub const MessageStream = struct {
         const data = try self.state.nextDataEvent() orelse return null;
         defer self.state.allocator.free(data);
 
-        return parseStreamEvent(self.state.allocator, data);
+        return try parseStreamEvent(self.state.allocator, data);
     }
 
     pub fn deinit(self: *MessageStream) void {
