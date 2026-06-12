@@ -87,6 +87,32 @@ test "generation content integration" {
     try std.testing.expect(response.data.input.prompt != null or response.data.input.messages != null);
 }
 
+test "messages streaming integration" {
+    var threaded: std.Io.Threaded = .init_single_threaded;
+    defer threaded.deinit();
+
+    const maybe_client = try initPublicClient(&threaded);
+    var client = maybe_client orelse return;
+    defer client.deinit();
+
+    var response = try client.messages.stream(.{
+        .model = env("OPENROUTER_MESSAGES_MODEL") orelse "anthropic/claude-3.5-haiku",
+        .messages = &.{.{
+            .role = .user,
+            .content = .{ .text = "Reply with one word." },
+        }},
+        .max_tokens = 1,
+    }, .{});
+    defer response.deinit();
+
+    var events_seen: usize = 0;
+    while (events_seen < 10) : (events_seen += 1) {
+        var event = (try response.next()) orelse break;
+        defer event.deinit();
+        try std.testing.expect(event.type != null or event.message != null or event.delta != null);
+    }
+}
+
 test "credits integration with management key" {
     var threaded: std.Io.Threaded = .init_single_threaded;
     defer threaded.deinit();
@@ -99,6 +125,62 @@ test "credits integration with management key" {
     defer response.deinit();
 
     try std.testing.expect(response.data.total_credits >= 0);
+}
+
+test "BYOK list integration with management key" {
+    var threaded: std.Io.Threaded = .init_single_threaded;
+    defer threaded.deinit();
+
+    const maybe_client = try initManagementClient(&threaded);
+    var client = maybe_client orelse return;
+    defer client.deinit();
+
+    var response = try client.byok.list(.{ .limit = 10 }, .{});
+    defer response.deinit();
+
+    try std.testing.expect(response.data.len == 0 or response.data[0].id != null);
+}
+
+test "guardrails list integration with management key" {
+    var threaded: std.Io.Threaded = .init_single_threaded;
+    defer threaded.deinit();
+
+    const maybe_client = try initManagementClient(&threaded);
+    var client = maybe_client orelse return;
+    defer client.deinit();
+
+    var response = try client.guardrails.list(.{ .limit = 10 }, .{});
+    defer response.deinit();
+
+    try std.testing.expect(response.data.len == 0 or response.data[0].id != null);
+}
+
+test "workspaces list integration with management key" {
+    var threaded: std.Io.Threaded = .init_single_threaded;
+    defer threaded.deinit();
+
+    const maybe_client = try initManagementClient(&threaded);
+    var client = maybe_client orelse return;
+    defer client.deinit();
+
+    var response = try client.workspaces.list(.{ .limit = 10 }, .{});
+    defer response.deinit();
+
+    try std.testing.expect(response.data.len == 0 or response.data[0].id != null);
+}
+
+test "organization members list integration with management key" {
+    var threaded: std.Io.Threaded = .init_single_threaded;
+    defer threaded.deinit();
+
+    const maybe_client = try initManagementClient(&threaded);
+    var client = maybe_client orelse return;
+    defer client.deinit();
+
+    var response = try client.organization.members.list(.{ .limit = 10 }, .{});
+    defer response.deinit();
+
+    try std.testing.expect(response.data.len == 0 or response.data[0].id != null);
 }
 
 test "activity integration with management key" {
