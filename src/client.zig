@@ -17,6 +17,7 @@ const key_mod = @import("key.zig");
 const keys_mod = @import("keys.zig");
 const messages_mod = @import("messages.zig");
 const models_mod = @import("models.zig");
+const observability_mod = @import("observability.zig");
 const options_mod = @import("options.zig");
 const organization_mod = @import("organization.zig");
 const presets_mod = @import("presets.zig");
@@ -320,6 +321,36 @@ pub const WorkspacesResource = struct {
         return workspaces_mod.bulkRemoveMembers(client, id, request, request_options);
     }
 };
+pub const ObservabilityResource = struct {
+    destinations: ObservabilityDestinationsResource = .{},
+};
+pub const ObservabilityDestinationsResource = struct {
+    pub fn list(self: *ObservabilityDestinationsResource, request: observability_mod.ListRequest, request_options: options_mod.RequestOptions) !observability_mod.ListResponse {
+        const observability: *ObservabilityResource = @alignCast(@fieldParentPtr("destinations", self));
+        const client: *Client = @alignCast(@fieldParentPtr("observability", observability));
+        return observability_mod.list(client, request, request_options);
+    }
+    pub fn create(self: *ObservabilityDestinationsResource, request: observability_mod.CreateRequest, request_options: options_mod.RequestOptions) !observability_mod.CreateResponse {
+        const observability: *ObservabilityResource = @alignCast(@fieldParentPtr("destinations", self));
+        const client: *Client = @alignCast(@fieldParentPtr("observability", observability));
+        return observability_mod.create(client, request, request_options);
+    }
+    pub fn get(self: *ObservabilityDestinationsResource, id: []const u8, request_options: options_mod.RequestOptions) !observability_mod.GetResponse {
+        const observability: *ObservabilityResource = @alignCast(@fieldParentPtr("destinations", self));
+        const client: *Client = @alignCast(@fieldParentPtr("observability", observability));
+        return observability_mod.get(client, id, request_options);
+    }
+    pub fn update(self: *ObservabilityDestinationsResource, id: []const u8, request: observability_mod.UpdateRequest, request_options: options_mod.RequestOptions) !observability_mod.UpdateResponse {
+        const observability: *ObservabilityResource = @alignCast(@fieldParentPtr("destinations", self));
+        const client: *Client = @alignCast(@fieldParentPtr("observability", observability));
+        return observability_mod.update(client, id, request, request_options);
+    }
+    pub fn delete(self: *ObservabilityDestinationsResource, id: []const u8, request_options: options_mod.RequestOptions) !observability_mod.DeleteResponse {
+        const observability: *ObservabilityResource = @alignCast(@fieldParentPtr("destinations", self));
+        const client: *Client = @alignCast(@fieldParentPtr("observability", observability));
+        return observability_mod.delete(client, id, request_options);
+    }
+};
 pub const OrganizationResource = struct {
     members: OrganizationMembersResource = .{},
 };
@@ -443,6 +474,7 @@ pub const Client = struct {
     byok: ByokResource,
     guardrails: GuardrailsResource,
     workspaces: WorkspacesResource,
+    observability: ObservabilityResource,
     organization: OrganizationResource,
     auth: AuthKeysResource,
     key: KeyResource,
@@ -480,6 +512,7 @@ pub const Client = struct {
             .byok = .{},
             .guardrails = .{},
             .workspaces = .{},
+            .observability = .{},
             .organization = .{},
             .auth = .{},
             .key = .{},

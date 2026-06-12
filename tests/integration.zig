@@ -169,6 +169,20 @@ test "workspaces list integration with management key" {
     try std.testing.expect(response.data.len == 0 or response.data[0].id != null);
 }
 
+test "observability destinations list integration with management key" {
+    var threaded: std.Io.Threaded = .init_single_threaded;
+    defer threaded.deinit();
+
+    const maybe_client = try initManagementClient(&threaded);
+    var client = maybe_client orelse return;
+    defer client.deinit();
+
+    var response = try client.observability.destinations.list(.{ .limit = 10 }, .{});
+    defer response.deinit();
+
+    try std.testing.expect(response.data.len == 0 or response.data[0].id != null);
+}
+
 test "organization members list integration with management key" {
     var threaded: std.Io.Threaded = .init_single_threaded;
     defer threaded.deinit();

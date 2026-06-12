@@ -112,6 +112,7 @@ Implemented endpoints:
 - `DELETE /api/v1/guardrails/{id}` (requires a management API key)
 - Guardrail key and member assignment endpoints (requires a management API key)
 - Workspace CRUD and member endpoints (requires a management API key)
+- Observability destinations CRUD (requires a management API key)
 - `GET /api/v1/organization/members` (requires a management API key)
 - `GET /api/v1/credits` (requires a management API key)
 - `GET /api/v1/key`
@@ -160,6 +161,7 @@ Response values own their parsed JSON data or buffered raw bytes. Call `deinit()
 - `ActivityGetResponse.deinit()`
 - `KeyGetResponse.deinit()`
 - `RankingsDailyGetResponse.deinit()`
+- Observability destination list/create/get/update/delete response `deinit()` methods
 
 Streaming responses use a pull iterator. Call `stream.deinit()` even if you stop reading before `[DONE]` so the HTTP request is closed.
 
@@ -203,6 +205,7 @@ zig build run-embeddings-models
 zig build run-byok # requires a management API key
 zig build run-guardrails # requires a management API key
 zig build run-workspaces # requires a management API key
+zig build run-observability-destinations # requires a management API key
 zig build run-organization-members # requires a management API key
 zig build run-credits
 zig build run-providers

@@ -143,11 +143,11 @@ Status legend:
 
 | Status | Method | Path | Operation | Description | SDK notes |
 |---|---|---|---|---|---|
-| [ ] | GET | `/observability/destinations` | `listObservabilityDestinations` | List observability destinations. |  |
-| [ ] | POST | `/observability/destinations` | `createObservabilityDestination` | Create an observability destination. |  |
-| [ ] | GET | `/observability/destinations/{id}` | `getObservabilityDestination` | Get an observability destination. |  |
-| [ ] | PATCH | `/observability/destinations/{id}` | `updateObservabilityDestination` | Update an observability destination. |  |
-| [ ] | DELETE | `/observability/destinations/{id}` | `deleteObservabilityDestination` | Delete an observability destination. |  |
+| [x] | GET | `/observability/destinations` | `listObservabilityDestinations` | List observability destinations. | Implemented in `src/observability.zig`. Requires management auth. |
+| [x] | POST | `/observability/destinations` | `createObservabilityDestination` | Create an observability destination. | Implemented in `src/observability.zig`. Requires management auth. |
+| [x] | GET | `/observability/destinations/{id}` | `getObservabilityDestination` | Get an observability destination. | Implemented in `src/observability.zig`. Requires management auth. |
+| [x] | PATCH | `/observability/destinations/{id}` | `updateObservabilityDestination` | Update an observability destination. | Implemented in `src/observability.zig`. Requires management auth. |
+| [x] | DELETE | `/observability/destinations/{id}` | `deleteObservabilityDestination` | Delete an observability destination. | Implemented in `src/observability.zig`. Requires management auth. |
 
 ## Preset-based Inference Endpoints
 
