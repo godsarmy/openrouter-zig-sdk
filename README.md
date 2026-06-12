@@ -111,6 +111,8 @@ Implemented endpoints:
 - `PATCH /api/v1/guardrails/{id}` (requires a management API key)
 - `DELETE /api/v1/guardrails/{id}` (requires a management API key)
 - Guardrail key and member assignment endpoints (requires a management API key)
+- Workspace CRUD and member endpoints (requires a management API key)
+- `GET /api/v1/organization/members` (requires a management API key)
 - `GET /api/v1/credits` (requires a management API key)
 - `GET /api/v1/key`
 - `GET /api/v1/providers`
@@ -200,6 +202,8 @@ zig build run-embeddings
 zig build run-embeddings-models
 zig build run-byok # requires a management API key
 zig build run-guardrails # requires a management API key
+zig build run-workspaces # requires a management API key
+zig build run-organization-members # requires a management API key
 zig build run-credits
 zig build run-providers
 OPENROUTER_GENERATION_ID="gen-..." zig build run-generation

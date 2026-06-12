@@ -30,6 +30,8 @@ pub fn build(b: *std.Build) void {
     addExample(b, examples_step, target, optimize, openrouter, "embeddings_models", "examples/embeddings_models.zig", "run-embeddings-models", "Run embeddings models example");
     addExample(b, examples_step, target, optimize, openrouter, "byok", "examples/byok.zig", "run-byok", "Run BYOK example");
     addExample(b, examples_step, target, optimize, openrouter, "guardrails", "examples/guardrails.zig", "run-guardrails", "Run guardrails example");
+    addExample(b, examples_step, target, optimize, openrouter, "workspaces", "examples/workspaces.zig", "run-workspaces", "Run workspaces example");
+    addExample(b, examples_step, target, optimize, openrouter, "organization_members", "examples/organization_members.zig", "run-organization-members", "Run organization members example");
     addExample(b, examples_step, target, optimize, openrouter, "credits", "examples/credits.zig", "run-credits", "Run credits example");
     addExample(b, examples_step, target, optimize, openrouter, "providers", "examples/providers.zig", "run-providers", "Run providers example");
     addExample(b, examples_step, target, optimize, openrouter, "generation", "examples/generation.zig", "run-generation", "Run generation metadata example");

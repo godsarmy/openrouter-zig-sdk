@@ -130,14 +130,14 @@ Status legend:
 
 | Status | Method | Path | Operation | Description | SDK notes |
 |---|---|---|---|---|---|
-| [ ] | GET | `/workspaces` | `listWorkspaces` | List workspaces. |  |
-| [ ] | POST | `/workspaces` | `createWorkspace` | Create a workspace. |  |
-| [ ] | GET | `/workspaces/{id}` | `getWorkspace` | Get a workspace. |  |
-| [ ] | PATCH | `/workspaces/{id}` | `updateWorkspace` | Update a workspace. |  |
-| [ ] | DELETE | `/workspaces/{id}` | `deleteWorkspace` | Delete a workspace. |  |
-| [ ] | POST | `/workspaces/{id}/members/add` | `bulkAddWorkspaceMembers` | Bulk add members to a workspace. |  |
-| [ ] | POST | `/workspaces/{id}/members/remove` | `bulkRemoveWorkspaceMembers` | Bulk remove members from a workspace. |  |
-| [ ] | GET | `/organization/members` | `listOrganizationMembers` | List organization members. |  |
+| [x] | GET | `/workspaces` | `listWorkspaces` | List workspaces. | Implemented in `src/workspaces.zig`. Requires management auth. |
+| [x] | POST | `/workspaces` | `createWorkspace` | Create a workspace. | Implemented in `src/workspaces.zig`. |
+| [x] | GET | `/workspaces/{id}` | `getWorkspace` | Get a workspace. | Implemented in `src/workspaces.zig`. |
+| [x] | PATCH | `/workspaces/{id}` | `updateWorkspace` | Update a workspace. | Implemented in `src/workspaces.zig`. |
+| [x] | DELETE | `/workspaces/{id}` | `deleteWorkspace` | Delete a workspace. | Implemented in `src/workspaces.zig`. |
+| [x] | POST | `/workspaces/{id}/members/add` | `bulkAddWorkspaceMembers` | Bulk add members to a workspace. | Implemented in `src/workspaces.zig`. |
+| [x] | POST | `/workspaces/{id}/members/remove` | `bulkRemoveWorkspaceMembers` | Bulk remove members from a workspace. | Implemented in `src/workspaces.zig`. |
+| [x] | GET | `/organization/members` | `listOrganizationMembers` | List organization members. | Implemented in `src/organization.zig`. Requires management auth. |
 
 ## Observability
 

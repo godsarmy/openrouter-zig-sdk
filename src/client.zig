@@ -18,12 +18,14 @@ const keys_mod = @import("keys.zig");
 const messages_mod = @import("messages.zig");
 const models_mod = @import("models.zig");
 const options_mod = @import("options.zig");
+const organization_mod = @import("organization.zig");
 const presets_mod = @import("presets.zig");
 const providers_mod = @import("providers.zig");
 const rerank_mod = @import("rerank.zig");
 const responses_mod = @import("responses.zig");
 const stream_mod = @import("stream.zig");
 const videos_mod = @import("videos.zig");
+const workspaces_mod = @import("workspaces.zig");
 
 pub const Config = config_mod.Config;
 
@@ -288,6 +290,46 @@ pub const GuardrailsResource = struct {
         return guardrails_mod.bulkUnassignMembers(client, id, request, request_options);
     }
 };
+pub const WorkspacesResource = struct {
+    pub fn list(self: *WorkspacesResource, request: workspaces_mod.ListRequest, request_options: options_mod.RequestOptions) !workspaces_mod.ListResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("workspaces", self));
+        return workspaces_mod.list(client, request, request_options);
+    }
+    pub fn create(self: *WorkspacesResource, request: workspaces_mod.CreateRequest, request_options: options_mod.RequestOptions) !workspaces_mod.CreateResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("workspaces", self));
+        return workspaces_mod.create(client, request, request_options);
+    }
+    pub fn get(self: *WorkspacesResource, id: []const u8, request_options: options_mod.RequestOptions) !workspaces_mod.GetResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("workspaces", self));
+        return workspaces_mod.get(client, id, request_options);
+    }
+    pub fn update(self: *WorkspacesResource, id: []const u8, request: workspaces_mod.UpdateRequest, request_options: options_mod.RequestOptions) !workspaces_mod.UpdateResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("workspaces", self));
+        return workspaces_mod.update(client, id, request, request_options);
+    }
+    pub fn delete(self: *WorkspacesResource, id: []const u8, request_options: options_mod.RequestOptions) !workspaces_mod.DeleteResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("workspaces", self));
+        return workspaces_mod.delete(client, id, request_options);
+    }
+    pub fn bulkAddMembers(self: *WorkspacesResource, id: []const u8, request: workspaces_mod.BulkMembersRequest, request_options: options_mod.RequestOptions) !workspaces_mod.BulkAddMembersResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("workspaces", self));
+        return workspaces_mod.bulkAddMembers(client, id, request, request_options);
+    }
+    pub fn bulkRemoveMembers(self: *WorkspacesResource, id: []const u8, request: workspaces_mod.BulkMembersRequest, request_options: options_mod.RequestOptions) !workspaces_mod.BulkRemoveMembersResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("workspaces", self));
+        return workspaces_mod.bulkRemoveMembers(client, id, request, request_options);
+    }
+};
+pub const OrganizationResource = struct {
+    members: OrganizationMembersResource = .{},
+};
+pub const OrganizationMembersResource = struct {
+    pub fn list(self: *OrganizationMembersResource, request: organization_mod.MembersListRequest, request_options: options_mod.RequestOptions) !organization_mod.MembersListResponse {
+        const organization: *OrganizationResource = @alignCast(@fieldParentPtr("members", self));
+        const client: *Client = @alignCast(@fieldParentPtr("organization", organization));
+        return organization_mod.listMembers(client, request, request_options);
+    }
+};
 pub const AuthKeysResource = struct {
     code: AuthKeysCodeResource = .{},
 
@@ -400,6 +442,8 @@ pub const Client = struct {
     credits: CreditsResource,
     byok: ByokResource,
     guardrails: GuardrailsResource,
+    workspaces: WorkspacesResource,
+    organization: OrganizationResource,
     auth: AuthKeysResource,
     key: KeyResource,
     keys: KeysResource,
@@ -435,6 +479,8 @@ pub const Client = struct {
             .credits = .{},
             .byok = .{},
             .guardrails = .{},
+            .workspaces = .{},
+            .organization = .{},
             .auth = .{},
             .key = .{},
             .keys = .{},
@@ -568,6 +614,9 @@ test "client initializes resource namespaces" {
     _ = client.credits;
     _ = client.byok;
     _ = client.guardrails;
+    _ = client.workspaces;
+    _ = client.organization;
+    _ = client.organization.members;
     _ = client.key;
     _ = client.keys;
     _ = client.providers;
