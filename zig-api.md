@@ -937,20 +937,20 @@ Implement after `v0.1.0` core is stable.
 - [x] `client.credits.get(...)`
 - [x] `client.providers.list(...)`
 - [ ] `client.endpoints.list(...)`
-- [ ] `client.guardrails.*`
-- [ ] `client.api_keys.*`
-- [ ] `client.workspaces.*`
-- [ ] `client.responses.*` beta API
-- [ ] `client.rerank.create(...)`
-- [ ] `client.tts.create(...)`
-- [ ] `client.video_generation.*`
+- [x] `client.guardrails.*`
+- [x] `client.keys.*`
+- [x] `client.workspaces.*`
+- [x] `client.responses.*` beta API
+- [x] `client.rerank.create(...)`
+- [x] `client.audio.speech.create(...)`
+- [x] `client.videos.*`
 - [ ] OAuth helpers
 
 ## Acceptance Criteria
 
-- [ ] Each new resource follows established naming style.
-- [ ] Each new resource has tests.
-- [ ] Each new resource has clear ownership/deinit behavior.
+- [x] Each implemented resource follows established naming style.
+- [x] Each implemented resource has tests.
+- [x] Each implemented resource has clear ownership/deinit behavior.
 
 ---
 
@@ -1042,11 +1042,11 @@ Integration tests must be opt-in and require environment variables.
 
 ## Deferred
 
-- [ ] Full management API coverage.
+- [x] Broad management API coverage.
 - [ ] OAuth.
-- [ ] Video generation.
-- [ ] Guardrails.
-- [ ] Workspaces.
+- [x] Video generation.
+- [x] Guardrails.
+- [x] Workspaces.
 - [ ] Advanced provider routing helpers.
 - [ ] Generated API compatibility layer.
 

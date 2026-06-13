@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.5.0-dev - Unreleased
+
+- Added Messages SSE streaming via `client.messages.stream`.
+- Added BYOK provider-key management APIs.
+- Added Guardrails CRUD plus key/member assignment APIs.
+- Added Workspaces CRUD plus member management APIs.
+- Added Observability destinations CRUD APIs.
+- Added preset Messages and Responses creation APIs.
+- Added opt-in management API smoke tests.
+- Refactored SSE parsing for reuse.
+
 ## v0.4.0 - 2026-06-08
 
 - Added audio speech and transcription APIs.

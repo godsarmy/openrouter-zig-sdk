@@ -163,6 +163,15 @@ Response values own their parsed JSON data or buffered raw bytes. Call `deinit()
 - `GenerationContentResponse.deinit()`
 - `ActivityGetResponse.deinit()`
 - `KeyGetResponse.deinit()`
+- `CreditsGetResponse.deinit()`
+- `ProvidersListResponse.deinit()`
+- `PresetCreateResponse.deinit()` / preset chat, Messages, and Responses create responses
+- Auth-key create/exchange response `deinit()` methods
+- API key list/create/get/update/delete response `deinit()` methods
+- BYOK list/create/get/update/delete response `deinit()` methods
+- Guardrails list/create/get/update/delete, assignment list, and bulk assignment response `deinit()` methods
+- Workspace list/create/get/update/delete and bulk member response `deinit()` methods
+- `OrganizationMembersListResponse.deinit()`
 - `RankingsDailyGetResponse.deinit()`
 - Observability destination list/create/get/update/delete response `deinit()` methods
 
@@ -246,7 +255,7 @@ zig fmt .
 
 ## Project Status
 
-The SDK includes typed APIs for chat completions, streaming chat completions, Responses API creation, Anthropic-compatible Messages API creation, preset chat completion creation, audio speech, audio transcriptions, reranking, embeddings, embedding model discovery, video generation, models, user model discovery, model endpoint discovery, ZDR endpoint discovery, providers, credits, current key metadata, generation metadata/content, activity, and rankings datasets. Public APIs may change between minor releases while the SDK is pre-1.0.
+The SDK includes typed APIs for chat completions, streaming chat completions, Responses API creation, Anthropic-compatible Messages API creation and streaming, preset chat/Messages/Responses creation, audio speech, audio transcriptions, reranking, embeddings, embedding model discovery, video generation, models, user model discovery, model endpoint discovery, ZDR endpoint discovery, providers, credits, current key metadata, API key management, BYOK provider-key management, guardrails, workspaces, organization members, observability destinations, generation metadata/content, activity, and rankings datasets. Public APIs may change between minor releases while the SDK is pre-1.0.
 
 ## License
 
