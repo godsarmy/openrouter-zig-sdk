@@ -1,6 +1,7 @@
 //! Root module for the OpenRouter Zig client.
 
 const std = @import("std");
+const version_mod = @import("version.zig");
 
 pub const Client = @import("client.zig").Client;
 pub const Config = @import("config.zig").Config;
@@ -183,10 +184,10 @@ pub const json = @import("json.zig");
 pub const pagination = @import("pagination.zig");
 pub const stream = @import("stream.zig");
 
-pub const version = "0.5.0";
+pub const version = version_mod.sdk_version;
 
 test "openrouter module exposes package version" {
-    try std.testing.expectEqualStrings("0.5.0", version);
+    try std.testing.expectEqualStrings(version_mod.sdk_version, version);
 }
 
 test {
@@ -219,6 +220,7 @@ test {
     _ = @import("rerank.zig");
     _ = @import("responses.zig");
     _ = @import("stream.zig");
+    _ = @import("version.zig");
     _ = @import("videos.zig");
     _ = @import("workspaces.zig");
 }

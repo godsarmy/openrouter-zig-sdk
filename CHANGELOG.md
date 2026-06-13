@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.6.0-dev - Unreleased
+
+- Centralized SDK version and User-Agent metadata.
+
 ## v0.5.0 - 2026-06-13
 
 - Added Messages SSE streaming via `client.messages.stream`.

@@ -253,6 +253,14 @@ Format Zig files:
 zig fmt .
 ```
 
+Release checklist:
+
+1. Update `src/version.zig`, `build.zig.zon`, `CHANGELOG.md`, and the install tag in this README.
+2. Run `zig fmt --check src/*.zig tests/*.zig examples/*.zig build.zig`.
+3. Run `zig build test` and `zig build examples`.
+4. Optionally run credentialed checks with `zig build integration-test`.
+5. Commit the release prep, tag `vX.Y.Z`, push the tag, and create the GitHub release.
+
 ## Project Status
 
 The SDK includes typed APIs for chat completions, streaming chat completions, Responses API creation, Anthropic-compatible Messages API creation and streaming, preset chat/Messages/Responses creation, audio speech, audio transcriptions, reranking, embeddings, embedding model discovery, video generation, models, user model discovery, model endpoint discovery, ZDR endpoint discovery, providers, credits, current key metadata, API key management, BYOK provider-key management, guardrails, workspaces, organization members, observability destinations, generation metadata/content, activity, and rankings datasets. Public APIs may change between minor releases while the SDK is pre-1.0.

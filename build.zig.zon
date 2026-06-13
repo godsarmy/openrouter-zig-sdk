@@ -1,6 +1,6 @@
 .{
     .name = .openrouter,
-    .version = "0.5.0",
+    .version = "0.6.0-dev",
     .fingerprint = 0x84573ebf3852b216, // Changing this has security and trust implications.
     .minimum_zig_version = "0.16.0",
     .dependencies = .{},
