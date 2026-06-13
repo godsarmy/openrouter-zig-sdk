@@ -20,7 +20,7 @@ zig version
 Add this package to your Zig project:
 
 ```sh
-zig fetch --save https://github.com/godsarmy/openrouter-zig-sdk/archive/refs/tags/v0.4.0.tar.gz
+zig fetch --save https://github.com/godsarmy/openrouter-zig-sdk/archive/refs/tags/v0.5.0.tar.gz
 ```
 
 Then import it from your `build.zig` dependency graph.
