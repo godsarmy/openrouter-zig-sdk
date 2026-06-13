@@ -170,6 +170,8 @@ pub const VideosModelsResource = struct {
 };
 pub const PresetsResource = struct {
     chat: PresetsChatResource = .{},
+    messages: PresetsMessagesResource = .{},
+    responses: PresetsResponsesResource = .{},
 };
 pub const PresetsChatResource = struct {
     completions: PresetsChatCompletionsResource = .{},
@@ -184,6 +186,28 @@ pub const PresetsChatCompletionsResource = struct {
         const presets: *PresetsResource = @alignCast(@fieldParentPtr("chat", chat));
         const client: *Client = @alignCast(@fieldParentPtr("presets", presets));
         return presets_mod.createChatCompletion(client, request, request_options);
+    }
+};
+pub const PresetsMessagesResource = struct {
+    pub fn create(
+        self: *PresetsMessagesResource,
+        request: presets_mod.MessagesCreateRequest,
+        request_options: options_mod.RequestOptions,
+    ) !presets_mod.MessagesCreateResponse {
+        const presets: *PresetsResource = @alignCast(@fieldParentPtr("messages", self));
+        const client: *Client = @alignCast(@fieldParentPtr("presets", presets));
+        return presets_mod.createMessage(client, request, request_options);
+    }
+};
+pub const PresetsResponsesResource = struct {
+    pub fn create(
+        self: *PresetsResponsesResource,
+        request: presets_mod.ResponsesCreateRequest,
+        request_options: options_mod.RequestOptions,
+    ) !presets_mod.ResponsesCreateResponse {
+        const presets: *PresetsResource = @alignCast(@fieldParentPtr("responses", self));
+        const client: *Client = @alignCast(@fieldParentPtr("presets", presets));
+        return presets_mod.createResponse(client, request, request_options);
     }
 };
 pub const RerankResource = struct {
@@ -641,6 +665,8 @@ test "client initializes resource namespaces" {
     _ = client.presets;
     _ = client.presets.chat;
     _ = client.presets.chat.completions;
+    _ = client.presets.messages;
+    _ = client.presets.responses;
     _ = client.rerank;
     _ = client.responses;
     _ = client.messages;

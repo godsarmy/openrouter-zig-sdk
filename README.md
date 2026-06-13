@@ -96,6 +96,8 @@ Implemented endpoints:
 - `GET /api/v1/videos/{jobId}/content`
 - `GET /api/v1/videos/models`
 - `POST /api/v1/presets/{slug}/chat/completions`
+- `POST /api/v1/presets/{slug}/messages`
+- `POST /api/v1/presets/{slug}/responses`
 - `POST /api/v1/rerank`
 - `POST /api/v1/chat/completions`
 - `POST /api/v1/embeddings`
@@ -130,6 +132,7 @@ Implemented endpoints:
 `/models/count` accepts optional `output_modalities` values such as `text`, `image`, `audio`, `embeddings`, comma-separated combinations, or `all`; OpenRouter defaults to `text`.
 `client.responses.create` implements non-streaming `/responses`; use `RequestOptions.extra_headers` with `X-OpenRouter-Experimental-Metadata: enabled` to receive `openrouter_metadata` when OpenRouter provides it.
 `client.messages.create` implements non-streaming Anthropic-compatible `/messages`; `client.messages.stream` forces `stream: true` and returns parsed SSE events. Use `RequestOptions.extra_headers` with `X-OpenRouter-Experimental-Metadata: enabled` to receive `openrouter_metadata` when OpenRouter provides it. Less common provider/model-specific fields can be sent through `extra_body`; `stream` in `extra_body` is ignored so the SDK method controls streaming behavior.
+Preset-based inference is available through `client.presets.chat.completions.create`, `client.presets.messages.create`, and `client.presets.responses.create`.
 
 ## Ownership and Lifecycle
 

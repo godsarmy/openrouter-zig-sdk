@@ -7,7 +7,7 @@
 - Added rerank, video generation, model endpoints, endpoint ZDR, user models, and embedding models APIs.
 - Added preset chat completions support.
 - Added examples for the new endpoint groups.
-- Documented remaining API scope, including unsupported Messages streaming.
+- Documented remaining API scope.
 
 ## v0.3.0 - 2026-06-06
 
