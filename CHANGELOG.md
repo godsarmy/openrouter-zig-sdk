@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.5.0-dev - Unreleased
+## v0.5.0 - 2026-06-13
 
 - Added Messages SSE streaming via `client.messages.stream`.
 - Added BYOK provider-key management APIs.
