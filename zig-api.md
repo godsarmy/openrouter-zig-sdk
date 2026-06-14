@@ -98,13 +98,19 @@ while (try stream.next()) |chunk| {
 
 - [x] Use OpenRouter/Go SDK resource concepts where possible.
 - [x] Use Zig naming style for symbols and fields.
-- [ ] Prefer namespaced resources:
+- [x] Prefer namespaced resources:
   - [x] `client.chat.completions.create(...)`
   - [x] `client.chat.completions.stream(...)`
   - [x] `client.models.list(...)`
   - [x] `client.embeddings.create(...)`
   - [x] `client.credits.get(...)`
   - [x] `client.providers.list(...)`
+  - [x] `client.messages.create(...)` / `client.messages.stream(...)`
+  - [x] `client.responses.create(...)`
+  - [x] `client.presets.chat.completions.create(...)`
+  - [x] `client.presets.messages.create(...)`
+  - [x] `client.presets.responses.create(...)`
+  - [x] management namespaces such as `client.keys`, `client.byok`, `client.guardrails`, `client.workspaces`, and `client.observability`
 - [x] Keep request JSON fields aligned with OpenRouter API field names.
 - [x] Avoid generated internal type names in public API.
 
@@ -218,7 +224,12 @@ pub const Client = struct {
 - [x] `client.chat.completions`
 - [x] `client.models`
 - [x] `client.embeddings`
-- [ ] Later: `client.guardrails`, `client.api_keys`, `client.workspaces`
+- [x] `client.guardrails`
+- [x] `client.keys`
+- [x] `client.byok`
+- [x] `client.workspaces`
+- [x] `client.observability`
+- [x] `client.organization`
 
 ## Tasks
 
@@ -370,11 +381,23 @@ pub const HttpResponse = struct {
     status: std.http.Status,
     body: []u8,
     content_type: ?[]const u8 = null,
+    generation_id: ?[]const u8 = null,
     request_id: ?[]const u8 = null,
     rate_limit_remaining: ?[]const u8 = null,
     rate_limit_reset: ?[]const u8 = null,
 
     pub fn deinit(self: *HttpResponse) void;
+};
+
+pub const ResponseMetadata = struct {
+    content_type: ?[]const u8 = null,
+    generation_id: ?[]const u8 = null,
+    request_id: ?[]const u8 = null,
+    rate_limit_remaining: ?[]const u8 = null,
+    rate_limit_reset: ?[]const u8 = null,
+
+    pub fn fromHttpResponse(allocator: std.mem.Allocator, response: HttpResponse) !ResponseMetadata;
+    pub fn deinit(self: *ResponseMetadata, allocator: std.mem.Allocator) void;
 };
 ```
 
@@ -398,6 +421,7 @@ pub const HttpResponse = struct {
 - [x] Preserve response status.
 - [x] Capture response content type.
 - [x] Capture useful response metadata when present, such as request id and rate-limit headers.
+- [x] Expose captured response metadata on core inference response structs.
 - [x] Redact authorization header from debug/error messages.
 - [x] Add fake/mock transport support for tests.
 
@@ -696,6 +720,7 @@ pub const ProviderRouting = struct {
 
 pub const CompletionResponse = struct {
     arena: std.heap.ArenaAllocator,
+    response_metadata: http.ResponseMetadata = .{},
     id: []const u8,
     model: []const u8,
     choices: []Choice,
@@ -730,6 +755,7 @@ pub const Usage = struct {
 - [x] Re-check OpenRouter docs before freezing the final typed chat fields.
 - [x] Preserve an escape hatch for unsupported provider/OpenRouter request fields.
 - [x] Parse chat response.
+- [x] Expose response metadata on parsed chat responses.
 - [x] Add deinit logic for owned response data.
 - [x] Add example `examples/chat.zig`.
 
@@ -867,6 +893,7 @@ pub const Input = union(enum) {
 
 pub const CreateResponse = struct {
     arena: std.heap.ArenaAllocator,
+    response_metadata: http.ResponseMetadata = .{},
     data: []Embedding,
     model: []const u8,
     usage: ?chat.Usage = null,
@@ -884,6 +911,7 @@ pub const Embedding = struct {
 
 - [x] Implement embeddings request serialization.
 - [x] Implement embeddings response parsing.
+- [x] Expose response metadata on parsed embeddings responses.
 - [x] Add deinit logic.
 - [x] Add tests for string and string-array inputs.
 
@@ -936,13 +964,19 @@ Implement after `v0.1.0` core is stable.
 
 - [x] `client.credits.get(...)`
 - [x] `client.providers.list(...)`
-- [ ] `client.endpoints.list(...)`
+- [x] `client.endpoints.zdr.list(...)`
 - [x] `client.guardrails.*`
 - [x] `client.keys.*`
+- [x] `client.byok.*`
 - [x] `client.workspaces.*`
+- [x] `client.observability.*`
+- [x] `client.organization.members.*`
 - [x] `client.responses.*` beta API
+- [x] `client.messages.*`
+- [x] `client.presets.*`
 - [x] `client.rerank.create(...)`
 - [x] `client.audio.speech.create(...)`
+- [x] `client.audio.transcriptions.create(...)`
 - [x] `client.videos.*`
 - [ ] OAuth helpers
 
@@ -974,6 +1008,7 @@ Implement after `v0.1.0` core is stable.
 - [x] `[DONE]` stream termination.
 - [x] Response `deinit` behavior.
 - [x] Arena-backed response cleanup behavior.
+- [x] Response metadata capture and ownership behavior.
 
 ## Integration Tests
 
@@ -1001,6 +1036,7 @@ Integration tests must be opt-in and require environment variables.
 - [x] `examples/embeddings.zig`
 - [x] `examples/credits.zig`
 - [x] `examples/providers.zig`
+- [x] endpoint-specific examples for audio, messages, responses, rerank, video, presets, management APIs, generation, activity, and rankings daily.
 
 ## Documentation
 
@@ -1012,6 +1048,7 @@ Integration tests must be opt-in and require environment variables.
 - [x] Document retry behavior.
 - [x] Document error behavior.
 - [x] Document supported endpoints.
+- [x] Document response metadata ownership.
 
 ## Acceptance Criteria
 
