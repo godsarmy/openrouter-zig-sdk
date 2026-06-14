@@ -90,6 +90,50 @@ zig build test
 
 If network behavior changes, include tests that avoid requiring real API credentials unless explicitly marked as integration tests.
 
+## Development Commands
+
+Build and test:
+
+```sh
+zig build
+zig build test
+zig build examples
+```
+
+Run opt-in integration tests. Without `OPENROUTER_API_KEY`, these tests skip network work. Some tests also require `OPENROUTER_GENERATION_ID` or `OPENROUTER_MANAGEMENT_API_KEY`:
+
+```sh
+export OPENROUTER_API_KEY="sk-or-v1-..."
+export OPENROUTER_GENERATION_ID="gen-..."
+export OPENROUTER_MANAGEMENT_API_KEY="sk-or-v1-..."
+zig build integration-test
+```
+
+Common runnable examples:
+
+```sh
+zig build run-chat
+zig build run-stream
+zig build run-list-models
+zig build run-responses
+zig build run-messages
+zig build run-messages-stream
+zig build run-embeddings
+zig build run-rerank
+zig build run-credits
+zig build run-providers
+```
+
+See `build.zig` for the full example command list.
+
+## Release Checklist
+
+1. Update `src/version.zig`, `build.zig.zon`, `CHANGELOG.md`, and the install tag in `README.md`.
+2. Run `zig fmt --check src/*.zig tests/*.zig examples/*.zig build.zig`.
+3. Run `zig build test` and `zig build examples`.
+4. Optionally run credentialed checks with `zig build integration-test`.
+5. Commit the release prep, tag `vX.Y.Z`, push the tag, and create the GitHub release.
+
 ## Security
 
 - Never hardcode API keys.

@@ -1041,6 +1041,7 @@ Integration tests must be opt-in and require environment variables.
 ## Documentation
 
 - [x] Update `README.md` to use the canonical `client.chat.completions.create(...)` API before publishing examples.
+- [x] Keep `README.md` concise and move detailed endpoint, ownership, and contributor guidance into `APIs.md`, `zig-api.md`, and `AGENT.md`.
 - [x] Document allocator ownership.
 - [x] Document response deinit requirements.
 - [x] Document streaming lifecycle.
@@ -1049,6 +1050,17 @@ Integration tests must be opt-in and require environment variables.
 - [x] Document error behavior.
 - [x] Document supported endpoints.
 - [x] Document response metadata ownership.
+
+## Ownership Reference
+
+The public README intentionally keeps ownership guidance brief. Detailed expectations:
+
+- The caller provides the allocator and `std.Io` to `Client.init`.
+- The client owns its internal HTTP client and must be closed with `client.deinit()`.
+- Parsed response values, raw/binary response values, stream chunks, and stream events own their returned data and expose `deinit()`.
+- `response_metadata` on parsed responses is owned by that parsed response and remains valid until the response's `deinit()` is called.
+- Standalone `ResponseMetadata.fromHttpResponse(...)` copies must be freed with `ResponseMetadata.deinit(allocator)`.
+- Streaming iterators must be deinitialized even when the caller stops reading before `[DONE]`.
 
 ## Acceptance Criteria
 

@@ -164,3 +164,8 @@ Status legend:
 - Update the status checkbox and SDK notes when implementing a new endpoint.
 - OpenRouter uses OpenAI-compatible request and response styles for core inference endpoints, with OpenRouter-specific routing and metadata features.
 - The OpenAPI spec is the best source of truth for endpoint inventory because it includes endpoints beyond chat and model listing.
+- `/datasets/rankings-daily` returns `total_tokens` as a decimal string and may include aggregated `other` rows.
+- `/models/count` accepts optional `output_modalities` values such as `text`, `image`, `audio`, `embeddings`, comma-separated combinations, or `all`; OpenRouter defaults to `text`.
+- `client.responses.create` implements non-streaming `/responses`; use `RequestOptions.extra_headers` with `X-OpenRouter-Experimental-Metadata: enabled` to receive `openrouter_metadata` when OpenRouter provides it.
+- `client.messages.create` implements non-streaming Anthropic-compatible `/messages`; `client.messages.stream` forces `stream: true` and returns parsed SSE events. Use `RequestOptions.extra_headers` with `X-OpenRouter-Experimental-Metadata: enabled` to receive `openrouter_metadata` when OpenRouter provides it. Less common provider/model-specific fields can be sent through `extra_body`; `stream` in `extra_body` is ignored so the SDK method controls streaming behavior.
+- Preset-based inference is available through `client.presets.chat.completions.create`, `client.presets.messages.create`, and `client.presets.responses.create`.
