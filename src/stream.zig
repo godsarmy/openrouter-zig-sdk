@@ -29,7 +29,10 @@ pub const CompletionStream = struct {
             const payload = data orelse return null;
             defer self.state.allocator.free(payload);
 
-            var chunk = try parseChunk(self.state.allocator, payload);
+            var chunk = parseChunk(self.state.allocator, payload) catch |err| {
+                self.state.done = true;
+                return err;
+            };
             if (chunk.choices.len == 0) {
                 chunk.deinit();
                 continue;

@@ -40,7 +40,10 @@ pub const State = struct {
             var saw_data = false;
 
             while (true) {
-                const maybe_line = try self.readLineAlloc();
+                const maybe_line = self.readLineAlloc() catch |err| {
+                    self.done = true;
+                    return err;
+                };
                 const line = maybe_line orelse {
                     self.done = true;
                     if (saw_data) return error.UnexpectedEndOfStream;
@@ -53,10 +56,16 @@ pub const State = struct {
                 if (dataLineValue(line)) |value| {
                     if (saw_data) try event_data.writer.writeByte('\n');
                     try event_data.writer.writeAll(value);
-                    if (event_data.written().len > max_event_len) return error.StreamTooLong;
+                    if (event_data.written().len > max_event_len) {
+                        self.done = true;
+                        return error.StreamTooLong;
+                    }
                     saw_data = true;
                 } else {
-                    if (std.mem.indexOfScalar(u8, line, ':') == null) return error.MalformedSse;
+                    if (std.mem.indexOfScalar(u8, line, ':') == null) {
+                        self.done = true;
+                        return error.MalformedSse;
+                    }
                     continue;
                 }
             }
@@ -116,7 +125,10 @@ pub const Parser = struct {
             var saw_data = false;
 
             while (true) {
-                const maybe_line = try self.nextLine();
+                const maybe_line = self.nextLine() catch |err| {
+                    self.done = true;
+                    return err;
+                };
                 const line = maybe_line orelse {
                     self.done = true;
                     if (saw_data) return error.UnexpectedEndOfStream;
@@ -128,10 +140,16 @@ pub const Parser = struct {
                 if (dataLineValue(line)) |value| {
                     if (saw_data) try event_data.writer.writeByte('\n');
                     try event_data.writer.writeAll(value);
-                    if (event_data.written().len > max_event_len) return error.StreamTooLong;
+                    if (event_data.written().len > max_event_len) {
+                        self.done = true;
+                        return error.StreamTooLong;
+                    }
                     saw_data = true;
                 } else {
-                    if (std.mem.indexOfScalar(u8, line, ':') == null) return error.MalformedSse;
+                    if (std.mem.indexOfScalar(u8, line, ':') == null) {
+                        self.done = true;
+                        return error.MalformedSse;
+                    }
                     continue;
                 }
             }
@@ -246,4 +264,34 @@ test "SSE parser rejects malformed field" {
     };
 
     try std.testing.expectError(error.MalformedSse, parser.nextData());
+    try std.testing.expectEqual(null, try parser.nextData());
+}
+
+test "SSE parser marks done after EOF mid-event" {
+    var parser: Parser = .{
+        .allocator = std.testing.allocator,
+        .input = "data: partial",
+    };
+
+    try std.testing.expectError(error.UnexpectedEndOfStream, parser.nextData());
+    try std.testing.expectEqual(null, try parser.nextData());
+}
+
+test "SSE parser marks done after line too long" {
+    const long_line = try std.testing.allocator.alloc(u8, max_line_len + 1);
+    defer std.testing.allocator.free(long_line);
+    @memset(long_line, 'x');
+
+    var input = std.Io.Writer.Allocating.init(std.testing.allocator);
+    defer input.deinit();
+    try input.writer.writeAll(long_line);
+    try input.writer.writeAll("\n\n");
+
+    var parser: Parser = .{
+        .allocator = std.testing.allocator,
+        .input = input.written(),
+    };
+
+    try std.testing.expectError(error.StreamTooLong, parser.nextData());
+    try std.testing.expectEqual(null, try parser.nextData());
 }

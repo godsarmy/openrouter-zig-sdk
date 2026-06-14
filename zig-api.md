@@ -357,7 +357,7 @@ Future async/concurrency compatibility requirements:
 - [x] Do not expose transport internals in endpoint APIs.
 - [x] Keep request/response types independent of `std.http.Client`.
 - [x] Return stream objects with explicit `deinit` so callers can cancel/close early.
-- [ ] Surface cancellation/closed-stream errors clearly where supported.
+- [x] Surface closed-stream errors clearly where supported.
 - [ ] Propagate `error.Canceled` where the underlying I/O reports cancellation.
 - [ ] Use `std.testing.io` for I/O-oriented tests where possible.
 - [ ] Document `-fsingle-threaded` vs `-fno-single-threaded` behavior where relevant.

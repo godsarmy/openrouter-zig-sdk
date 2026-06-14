@@ -231,7 +231,10 @@ pub const MessageStream = struct {
         const data = try self.state.nextDataEvent() orelse return null;
         defer self.state.allocator.free(data);
 
-        return try parseStreamEvent(self.state.allocator, data);
+        return parseStreamEvent(self.state.allocator, data) catch |err| {
+            self.state.done = true;
+            return err;
+        };
     }
 
     pub fn deinit(self: *MessageStream) void {
