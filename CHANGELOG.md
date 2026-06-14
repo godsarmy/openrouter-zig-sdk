@@ -3,6 +3,7 @@
 ## v0.6.0-dev - Unreleased
 
 - Centralized SDK version and User-Agent metadata.
+- Removed duplicate root exports for rankings daily item and metadata types.
 
 ## v0.5.0 - 2026-06-13
 
