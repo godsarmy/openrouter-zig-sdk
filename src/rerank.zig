@@ -18,6 +18,7 @@ pub const CreateRequest = struct {
 
 pub const CreateResponse = struct {
     arena: std.heap.ArenaAllocator,
+    response_metadata: http.ResponseMetadata = .{},
     id: ?[]const u8 = null,
     model: []const u8,
     provider: ?[]const u8 = null,
@@ -92,6 +93,7 @@ pub fn parseCreateResponse(allocator: std.mem.Allocator, response: http.HttpResp
     const parsed = try json.parseResponseLeaky(WireCreateResponse, arena_allocator, owned_body);
     return .{
         .arena = arena,
+        .response_metadata = try http.ResponseMetadata.fromHttpResponse(arena_allocator, response),
         .id = parsed.id,
         .model = parsed.model,
         .provider = parsed.provider,

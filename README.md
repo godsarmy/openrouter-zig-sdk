@@ -175,6 +175,8 @@ Response values own their parsed JSON data or buffered raw bytes. Call `deinit()
 - `RankingsDailyGetResponse.deinit()`
 - Observability destination list/create/get/update/delete response `deinit()` methods
 
+Inference create responses expose `response_metadata` with captured response headers such as request ID, generation ID, and rate-limit values when OpenRouter returns them. This metadata is owned by the parsed response and remains valid until that response's `deinit()` is called.
+
 Streaming responses use a pull iterator. Call `stream.deinit()` even if you stop reading before `[DONE]` so the HTTP request is closed.
 
 `Client` is not thread-safe unless access is externally synchronized. Prefer one client per worker when issuing concurrent requests.

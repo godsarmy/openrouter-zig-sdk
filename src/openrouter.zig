@@ -143,6 +143,7 @@ pub const PresetResponsesCreateRequest = @import("presets.zig").ResponsesCreateR
 pub const PresetResponsesCreateResponse = @import("presets.zig").ResponsesCreateResponse;
 pub const PresetVersion = @import("presets.zig").PresetVersion;
 pub const RequestOptions = @import("options.zig").RequestOptions;
+pub const ResponseMetadata = @import("http.zig").ResponseMetadata;
 pub const RerankCreateRequest = @import("rerank.zig").CreateRequest;
 pub const RerankCreateResponse = @import("rerank.zig").CreateResponse;
 pub const RerankDocument = @import("rerank.zig").Document;

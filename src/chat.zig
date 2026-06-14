@@ -153,6 +153,7 @@ pub const ProviderRouting = struct {
 
 pub const CompletionResponse = struct {
     arena: std.heap.ArenaAllocator,
+    response_metadata: http.ResponseMetadata = .{},
     id: []const u8,
     model: []const u8,
     choices: []Choice,
@@ -227,6 +228,7 @@ pub fn parseCompletionResponse(allocator: std.mem.Allocator, response: http.Http
     const parsed = try json.parseResponseLeaky(WireCompletionResponse, arena_allocator, owned_body);
     return .{
         .arena = arena,
+        .response_metadata = try http.ResponseMetadata.fromHttpResponse(arena_allocator, response),
         .id = parsed.id,
         .model = parsed.model,
         .choices = parsed.choices,
@@ -308,7 +310,14 @@ test "chat create parses non-streaming completion" {
     ;
     const messages = &.{Message{ .role = .user, .content = .{ .text = "Hello" } }};
 
-    var result = try createWithTransport(std.testing.allocator, .{ .api_key = "test-key" }, http.FakeTransport{ .body = response_body }, .{
+    var result = try createWithTransport(std.testing.allocator, .{ .api_key = "test-key" }, http.FakeTransport{
+        .body = response_body,
+        .headers = &.{
+            .{ .name = "x-request-id", .value = "req_chat_123" },
+            .{ .name = "x-ratelimit-remaining", .value = "42" },
+            .{ .name = "x-ratelimit-reset", .value = "60" },
+        },
+    }, .{
         .model = "openai/gpt-4o-mini",
         .messages = messages,
     }, .{});
@@ -320,6 +329,9 @@ test "chat create parses non-streaming completion" {
     try std.testing.expectEqual(Role.assistant, result.choices[0].message.role);
     try std.testing.expectEqualStrings("Hi there", result.choices[0].message.content.?);
     try std.testing.expectEqual(@as(?u32, 6), result.usage.?.total_tokens);
+    try std.testing.expectEqualStrings("req_chat_123", result.response_metadata.request_id.?);
+    try std.testing.expectEqualStrings("42", result.response_metadata.rate_limit_remaining.?);
+    try std.testing.expectEqualStrings("60", result.response_metadata.rate_limit_reset.?);
 }
 
 test "chat create maps error status to ApiError" {

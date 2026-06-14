@@ -57,14 +57,27 @@ pub const HttpResponse = struct {
     }
 };
 
-const ResponseMetadata = struct {
+pub const ResponseMetadata = struct {
     content_type: ?[]const u8 = null,
     generation_id: ?[]const u8 = null,
     request_id: ?[]const u8 = null,
     rate_limit_remaining: ?[]const u8 = null,
     rate_limit_reset: ?[]const u8 = null,
 
-    fn deinit(self: *ResponseMetadata, allocator: std.mem.Allocator) void {
+    pub fn fromHttpResponse(allocator: std.mem.Allocator, response: HttpResponse) !ResponseMetadata {
+        var metadata: ResponseMetadata = .{};
+        errdefer metadata.deinit(allocator);
+
+        metadata.content_type = try copyOptional(allocator, response.content_type);
+        metadata.generation_id = try copyOptional(allocator, response.generation_id);
+        metadata.request_id = try copyOptional(allocator, response.request_id);
+        metadata.rate_limit_remaining = try copyOptional(allocator, response.rate_limit_remaining);
+        metadata.rate_limit_reset = try copyOptional(allocator, response.rate_limit_reset);
+
+        return metadata;
+    }
+
+    pub fn deinit(self: *ResponseMetadata, allocator: std.mem.Allocator) void {
         if (self.content_type) |value| allocator.free(value);
         if (self.generation_id) |value| allocator.free(value);
         if (self.request_id) |value| allocator.free(value);
@@ -405,6 +418,28 @@ test "fake transport captures response metadata headers" {
     try std.testing.expectEqualStrings("req_123", response.request_id.?);
     try std.testing.expectEqualStrings("42", response.rate_limit_remaining.?);
     try std.testing.expectEqualStrings("1710000000", response.rate_limit_reset.?);
+}
+
+test "response metadata can be copied and deinitialized independently" {
+    var prepared = try prepareRequest(std.testing.allocator, .{ .api_key = "secret-key" }, .{
+        .method = .GET,
+        .path = "/models",
+    }, .{});
+    defer prepared.deinit();
+
+    var response = try (FakeTransport{
+        .headers = &.{
+            .{ .name = "X-Request-ID", .value = "req_copy" },
+            .{ .name = "X-Generation-ID", .value = "gen_copy" },
+        },
+    }).execute(std.testing.allocator, prepared);
+    defer response.deinit();
+
+    var metadata = try ResponseMetadata.fromHttpResponse(std.testing.allocator, response);
+    defer metadata.deinit(std.testing.allocator);
+
+    try std.testing.expectEqualStrings("req_copy", metadata.request_id.?);
+    try std.testing.expectEqualStrings("gen_copy", metadata.generation_id.?);
 }
 
 test "response metadata captures alternate header names case insensitively" {

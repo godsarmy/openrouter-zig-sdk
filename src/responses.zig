@@ -80,6 +80,7 @@ pub const Input = union(enum) {
 
 pub const CreateResponse = struct {
     arena: std.heap.ArenaAllocator,
+    response_metadata: http.ResponseMetadata = .{},
     id: ?[]const u8 = null,
     object: ?[]const u8 = null,
     created_at: ?i64 = null,
@@ -152,6 +153,7 @@ pub fn parseCreateResponse(allocator: std.mem.Allocator, response: http.HttpResp
     const parsed = try json.parseResponseLeaky(WireCreateResponse, arena_allocator, owned_body);
     return .{
         .arena = arena,
+        .response_metadata = try http.ResponseMetadata.fromHttpResponse(arena_allocator, response),
         .id = parsed.id,
         .object = parsed.object,
         .created_at = parsed.created_at,

@@ -4,6 +4,7 @@
 
 - Centralized SDK version and User-Agent metadata.
 - Removed duplicate root exports for rankings daily item and metadata types.
+- Exposed response metadata for request IDs, generation IDs, and rate-limit headers on core inference responses.
 
 ## v0.5.0 - 2026-06-13
 
