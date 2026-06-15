@@ -351,7 +351,7 @@ defer client.deinit();
 
 Concurrent app usage should be implemented by the application around the sync call. If the app uses `io.async` or `io.concurrent`, it owns cancellation and lifetime of request memory.
 
-Future async/concurrency compatibility requirements:
+Async/concurrency compatibility requirements:
 
 - [x] Require caller-provided `std.Io` in `Client.init`.
 - [x] Do not expose transport internals in endpoint APIs.
@@ -359,10 +359,13 @@ Future async/concurrency compatibility requirements:
 - [x] Return stream objects with explicit `deinit` so callers can cancel/close early.
 - [x] Surface closed-stream errors clearly where supported.
 - [x] Propagate `error.Canceled` where the underlying I/O reports cancellation.
-- [ ] Use `std.testing.io` for I/O-oriented tests where possible.
 - [x] Document `-fsingle-threaded` vs `-fno-single-threaded` behavior where relevant.
 - [x] Prefer client-per-worker or externally synchronized usage until thread-safety is verified.
 - [x] Add optional async/task wrappers only after the sync API is stable.
+
+Future test cleanup:
+
+- Use `std.testing.io` for I/O-oriented tests where possible when it improves coverage or clarity.
 
 ## Internal Types
 
@@ -978,7 +981,10 @@ Implement after `v0.1.0` core is stable.
 - [x] `client.audio.speech.create(...)`
 - [x] `client.audio.transcriptions.create(...)`
 - [x] `client.videos.*`
-- [ ] OAuth helpers
+
+Future resource candidates:
+
+- OAuth helpers.
 
 ## Acceptance Criteria
 
@@ -1072,7 +1078,7 @@ The public README intentionally keeps ownership guidance brief. Detailed expecta
 
 ---
 
-# v0.1.0 Scope
+# Implemented Scope
 
 ## Required
 
@@ -1091,15 +1097,18 @@ The public README intentionally keeps ownership guidance brief. Detailed expecta
 - [x] Unit tests.
 - [x] Examples.
 
-## Deferred
+## Implemented Since v0.1.0
 
 - [x] Broad management API coverage.
-- [ ] OAuth.
 - [x] Video generation.
 - [x] Guardrails.
 - [x] Workspaces.
-- [ ] Advanced provider routing helpers.
-- [ ] Generated API compatibility layer.
+
+## Future Work
+
+- OAuth helpers.
+- Advanced provider routing helpers.
+- Generated API compatibility layer.
 
 ---
 
@@ -1117,11 +1126,11 @@ If exact Go SDK/OpenAPI parity becomes important, add an experimental namespace 
 openrouter.experimental.generated
 ```
 
-Rules:
+Rules for any future generated compatibility layer:
 
-- [ ] Keep generated/compat types out of the main API.
-- [ ] Mark experimental APIs clearly.
-- [ ] Do not let generated naming destabilize the stable API.
+- Keep generated/compat types out of the main API.
+- Mark experimental APIs clearly.
+- Do not let generated naming destabilize the stable API.
 
 ---
 

@@ -20,6 +20,7 @@ Status legend:
 
 - `[x]` Implemented in the SDK
 - `[ ]` Not implemented yet
+- `[deprecated]` Deprecated upstream and intentionally not implemented
 
 ## Implementation Summary
 
@@ -86,7 +87,7 @@ Status legend:
 | Status | Method | Path | Operation | Description | SDK notes |
 |---|---|---|---|---|---|
 | [x] | GET | `/credits` | `getCredits` | Get remaining credits. | Implemented in `src/credits.zig`. Requires a management API key. |
-| [ ] | POST | `/credits/coinbase` | `createCoinbaseCharge` | Create a Coinbase Commerce charge. Deprecated. |  |
+| [deprecated] | POST | `/credits/coinbase` | `createCoinbaseCharge` | Create a Coinbase Commerce charge. Deprecated. | Intentionally not implemented. |
 | [x] | GET | `/generation` | `getGeneration` | Get request and usage metadata for a generation. | Implemented in `src/generation.zig`. |
 | [x] | GET | `/generation/content` | `listGenerationContent` | Get stored prompt/completion content for a generation. | Implemented in `src/generation.zig`. |
 | [x] | GET | `/activity` | `getUserActivity` | Get user activity grouped by endpoint. | Implemented in `src/activity.zig`. Requires a management API key. |
