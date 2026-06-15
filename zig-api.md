@@ -360,7 +360,7 @@ Future async/concurrency compatibility requirements:
 - [x] Surface closed-stream errors clearly where supported.
 - [x] Propagate `error.Canceled` where the underlying I/O reports cancellation.
 - [ ] Use `std.testing.io` for I/O-oriented tests where possible.
-- [ ] Document `-fsingle-threaded` vs `-fno-single-threaded` behavior where relevant.
+- [x] Document `-fsingle-threaded` vs `-fno-single-threaded` behavior where relevant.
 - [x] Prefer client-per-worker or externally synchronized usage until thread-safety is verified.
 - [x] Add optional async/task wrappers only after the sync API is stable.
 
@@ -1056,6 +1056,8 @@ Integration tests must be opt-in and require environment variables.
 The public README intentionally keeps ownership guidance brief. Detailed expectations:
 
 - The caller provides the allocator and `std.Io` to `Client.init`.
+- Normal applications should provide an application-owned `std.Io.Threaded` or another real I/O backend; unit tests that only need a client can use `std.testing.io`.
+- The SDK should not assume `-fsingle-threaded` behavior. Callers choose the I/O backend and concurrency model, and integration tests that perform network I/O should keep explicit `std.Io.Threaded` setup.
 - The client owns its internal HTTP client and must be closed with `client.deinit()`.
 - Parsed response values, raw/binary response values, stream chunks, and stream events own their returned data and expose `deinit()`.
 - `response_metadata` on parsed responses is owned by that parsed response and remains valid until the response's `deinit()` is called.

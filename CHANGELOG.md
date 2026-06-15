@@ -7,6 +7,7 @@
 - Exposed response metadata for request IDs, generation IDs, and rate-limit headers on core inference responses.
 - Clarified streaming lifecycle behavior after malformed or unexpectedly closed SSE streams.
 - Preserve `error.Canceled` when Zig exposes cancellation through HTTP connection reads.
+- Documented threading-mode expectations for caller-provided Zig I/O backends.
 
 ## v0.5.0 - 2026-06-13
 

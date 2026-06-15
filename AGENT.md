@@ -52,6 +52,8 @@ Zig `0.16.x` uses I/O as an explicit interface. The OpenRouter client should use
 
 Do not hard-code an async runtime or event-loop backend into the library.
 
+Normal builds should provide an application-owned `std.Io.Threaded` or another real I/O backend. Tests that only need to initialize the client can use `std.testing.io`; credentialed integration tests should keep an explicit `std.Io.Threaded` because they perform real network I/O. Avoid assuming `-fsingle-threaded` semantics inside the SDK; callers choose the I/O backend and concurrency model.
+
 Base URL:
 
 ```text
