@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.7.0-dev - Unreleased
+
+- Development resumed after `v0.6.0`.
+
 ## v0.6.0 - 2026-06-15
 
 - Centralized SDK version and User-Agent metadata.
