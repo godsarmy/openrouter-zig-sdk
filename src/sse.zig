@@ -97,7 +97,7 @@ pub const State = struct {
     fn readByte(self: *State) !?u8 {
         if (self.read_pos >= self.read_end) {
             const n = self.reader.readSliceShort(&self.read_buffer) catch |err| switch (err) {
-                error.ReadFailed => return error.UnexpectedEndOfStream,
+                error.ReadFailed => return self.readFailure(),
             };
             if (n == 0) return null;
             self.read_pos = 0;
@@ -107,6 +107,15 @@ pub const State = struct {
         const byte = self.read_buffer[self.read_pos];
         self.read_pos += 1;
         return byte;
+    }
+
+    fn readFailure(self: *State) error{ Canceled, UnexpectedEndOfStream } {
+        const connection = self.request.connection orelse return error.UnexpectedEndOfStream;
+        const read_error = connection.getReadError() orelse return error.UnexpectedEndOfStream;
+        return switch (read_error) {
+            error.Canceled => error.Canceled,
+            else => error.UnexpectedEndOfStream,
+        };
     }
 };
 

@@ -14,6 +14,7 @@ pub const Error = error{
     MalformedSse,
     StreamTooLong,
     UnexpectedEndOfStream,
+    Canceled,
     ApiError,
     OutOfMemory,
 };
@@ -121,7 +122,18 @@ pub fn streamWithHttpClient(
 
     try req.sendBodyComplete(body);
 
-    const response = try req.receiveHead(&.{});
+    const response = req.receiveHead(&.{}) catch |err| switch (err) {
+        error.ReadFailed => {
+            if (req.connection) |connection| {
+                if (connection.getReadError()) |read_error| switch (read_error) {
+                    error.Canceled => return error.Canceled,
+                    else => {},
+                };
+            }
+            return error.ReadFailed;
+        },
+        else => |e| return e,
+    };
     if (errors.isErrorStatus(@intFromEnum(response.head.status))) return error.ApiError;
 
     const state = try allocator.create(sse.State);

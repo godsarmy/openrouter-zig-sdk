@@ -6,6 +6,7 @@
 - Removed duplicate root exports for rankings daily item and metadata types.
 - Exposed response metadata for request IDs, generation IDs, and rate-limit headers on core inference responses.
 - Clarified streaming lifecycle behavior after malformed or unexpectedly closed SSE streams.
+- Preserve `error.Canceled` when Zig exposes cancellation through HTTP connection reads.
 
 ## v0.5.0 - 2026-06-13
 

@@ -148,7 +148,18 @@ pub fn execute(
     const redirect_buffer: []u8 = if (redirect_behavior == .unhandled) &.{} else try allocator.alloc(u8, 8 * 1024);
     defer if (redirect_buffer.len > 0) allocator.free(redirect_buffer);
 
-    var response = try request.receiveHead(redirect_buffer);
+    var response = request.receiveHead(redirect_buffer) catch |err| switch (err) {
+        error.ReadFailed => {
+            if (request.connection) |connection| {
+                if (connection.getReadError()) |read_error| switch (read_error) {
+                    error.Canceled => return error.Canceled,
+                    else => {},
+                };
+            }
+            return error.ReadFailed;
+        },
+        else => |e| return e,
+    };
     var metadata = try responseMetadataFromHead(allocator, response.head);
     errdefer metadata.deinit(allocator);
 
@@ -160,7 +171,15 @@ pub fn execute(
     const reader = response.readerDecompressing(&transfer_buffer, &decompress, decompress_buffer);
 
     _ = reader.streamRemaining(&response_body.writer) catch |err| switch (err) {
-        error.ReadFailed => return response.bodyErr().?,
+        error.ReadFailed => {
+            if (request.connection) |connection| {
+                if (connection.getReadError()) |read_error| switch (read_error) {
+                    error.Canceled => return error.Canceled,
+                    else => {},
+                };
+            }
+            return response.bodyErr() orelse error.UnexpectedEndOfStream;
+        },
         else => |e| return e,
     };
 
