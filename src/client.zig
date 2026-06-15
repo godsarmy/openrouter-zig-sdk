@@ -565,10 +565,7 @@ fn validateBaseUrl(base_url: []const u8) !std.Uri {
 }
 
 test "client initializes with API key and caller-provided Io" {
-    var threaded: std.Io.Threaded = .init_single_threaded;
-    defer threaded.deinit();
-
-    var client = try Client.init(std.testing.allocator, threaded.io(), .{
+    var client = try Client.init(std.testing.allocator, std.testing.io, .{
         .api_key = "test-key",
     });
     defer client.deinit();
@@ -578,10 +575,7 @@ test "client initializes with API key and caller-provided Io" {
 }
 
 test "client supports custom base URL" {
-    var threaded: std.Io.Threaded = .init_single_threaded;
-    defer threaded.deinit();
-
-    var client = try Client.init(std.testing.allocator, threaded.io(), .{
+    var client = try Client.init(std.testing.allocator, std.testing.io, .{
         .api_key = "test-key",
         .base_url = "http://localhost:8080/api/v1",
     });
@@ -592,10 +586,7 @@ test "client supports custom base URL" {
 }
 
 test "client stores optional attribution headers" {
-    var threaded: std.Io.Threaded = .init_single_threaded;
-    defer threaded.deinit();
-
-    var client = try Client.init(std.testing.allocator, threaded.io(), .{
+    var client = try Client.init(std.testing.allocator, std.testing.io, .{
         .api_key = "test-key",
         .http_referer = "https://example.com",
         .x_title = "openrouter-zig-test",
@@ -607,43 +598,31 @@ test "client stores optional attribution headers" {
 }
 
 test "client exposes auth keys resource" {
-    var threaded: std.Io.Threaded = .init_single_threaded;
-    defer threaded.deinit();
-
-    var client = try Client.init(std.testing.allocator, threaded.io(), .{ .api_key = "test-key" });
+    var client = try Client.init(std.testing.allocator, std.testing.io, .{ .api_key = "test-key" });
     defer client.deinit();
 
     _ = &client.auth.code;
 }
 
 test "client rejects invalid base URL" {
-    var threaded: std.Io.Threaded = .init_single_threaded;
-    defer threaded.deinit();
-
-    try std.testing.expectError(error.InvalidBaseUrl, Client.init(std.testing.allocator, threaded.io(), .{
+    try std.testing.expectError(error.InvalidBaseUrl, Client.init(std.testing.allocator, std.testing.io, .{
         .api_key = "test-key",
         .base_url = "not a url",
     }));
-    try std.testing.expectError(error.InvalidBaseUrl, Client.init(std.testing.allocator, threaded.io(), .{
+    try std.testing.expectError(error.InvalidBaseUrl, Client.init(std.testing.allocator, std.testing.io, .{
         .api_key = "test-key",
         .base_url = "ftp://example.com",
     }));
 }
 
 test "client rejects empty API key" {
-    var threaded: std.Io.Threaded = .init_single_threaded;
-    defer threaded.deinit();
-
-    try std.testing.expectError(error.EmptyApiKey, Client.init(std.testing.allocator, threaded.io(), .{
+    try std.testing.expectError(error.EmptyApiKey, Client.init(std.testing.allocator, std.testing.io, .{
         .api_key = "",
     }));
 }
 
 test "client initializes resource namespaces" {
-    var threaded: std.Io.Threaded = .init_single_threaded;
-    defer threaded.deinit();
-
-    var client = try Client.init(std.testing.allocator, threaded.io(), .{
+    var client = try Client.init(std.testing.allocator, std.testing.io, .{
         .api_key = "test-key",
     });
     defer client.deinit();

@@ -363,9 +363,7 @@ Async/concurrency compatibility requirements:
 - [x] Prefer client-per-worker or externally synchronized usage until thread-safety is verified.
 - [x] Add optional async/task wrappers only after the sync API is stable.
 
-Future test cleanup:
-
-- Use `std.testing.io` for I/O-oriented tests where possible when it improves coverage or clarity.
+- [x] Use `std.testing.io` for client initialization unit tests where no real network I/O is required.
 
 ## Internal Types
 
