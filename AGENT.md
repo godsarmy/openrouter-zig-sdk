@@ -115,6 +115,7 @@ Common runnable examples:
 
 ```sh
 zig build run-chat
+zig build run-async-chat
 zig build run-stream
 zig build run-list-models
 zig build run-responses

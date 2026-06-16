@@ -103,6 +103,8 @@ zig build examples
 
 Individual runnable examples are defined in `build.zig` and source files live under [`examples/`](examples/).
 
+For concurrent I/O usage, run `zig build run-async-chat`; it uses `std.Io.concurrent` with one client per task.
+
 ## Development
 
 Build:
