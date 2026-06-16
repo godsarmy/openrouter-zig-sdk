@@ -99,18 +99,26 @@ test "messages streaming integration" {
         .model = env("OPENROUTER_MESSAGES_MODEL") orelse "anthropic/claude-3.5-haiku",
         .messages = &.{.{
             .role = .user,
-            .content = .{ .text = "Reply with one word." },
+            .content = .{ .text = "Reply with only: ok" },
         }},
-        .max_tokens = 1,
+        .max_tokens = 4,
     }, .{});
     defer response.deinit();
 
     var events_seen: usize = 0;
-    while (events_seen < 10) : (events_seen += 1) {
+    var saw_content = false;
+    while (events_seen < 64) {
         var event = (try response.next()) orelse break;
         defer event.deinit();
+
+        events_seen += 1;
         try std.testing.expect(event.type != null or event.message != null or event.delta != null);
+        if (event.message != null) saw_content = true;
+        if (event.textDelta()) |text| saw_content = saw_content or text.len > 0;
     }
+
+    try std.testing.expect(events_seen > 0);
+    try std.testing.expect(saw_content);
 }
 
 test "credits integration with management key" {
