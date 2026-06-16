@@ -5,6 +5,7 @@
 - Development resumed after `v0.6.0`.
 - Switched client initialization unit tests to `std.testing.io` where no real network I/O is required.
 - Added an async I/O chat example using `std.Io.concurrent`.
+- Updated the streaming example to use the process-provided `std.Io`.
 
 ## v0.6.0 - 2026-06-15
 
