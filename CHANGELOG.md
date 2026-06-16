@@ -5,6 +5,7 @@
 - Development resumed after `v0.6.0`.
 - Switched client initialization unit tests to `std.testing.io` where no real network I/O is required.
 - Added an async I/O chat example using `std.Io.concurrent`.
+- Fixed SSE stream reader initialization after moving HTTP request state into owned stream storage.
 
 ## v0.6.0 - 2026-06-15
 

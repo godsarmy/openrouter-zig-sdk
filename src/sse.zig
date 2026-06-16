@@ -21,6 +21,11 @@ pub const State = struct {
     read_end: usize = 0,
     done: bool = false,
 
+    pub fn initReader(self: *State) void {
+        self.response.request = &self.request;
+        self.reader = self.response.reader(&self.transfer_buffer);
+    }
+
     pub fn deinit(self: *State) void {
         self.request.deinit();
         self.allocator.free(self.std_headers);

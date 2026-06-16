@@ -364,7 +364,7 @@ pub fn streamWithHttpClient(
         .response = response,
         .reader = undefined,
     };
-    state.reader = state.response.reader(&state.transfer_buffer);
+    state.initReader();
 
     return .{ .state = state };
 }
