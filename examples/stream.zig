@@ -12,7 +12,10 @@ pub fn main(init: std.process.Init) !void {
     };
     defer allocator.free(api_key);
 
-    var client = try openrouter.Client.init(allocator, init.io, .{
+    var threaded: std.Io.Threaded = .init_single_threaded;
+    defer threaded.deinit();
+
+    var client = try openrouter.Client.init(allocator, threaded.io(), .{
         .api_key = api_key,
         .http_referer = "https://github.com/godsarmy/openrouter-zig-sdk",
         .x_title = "openrouter-zig example",
