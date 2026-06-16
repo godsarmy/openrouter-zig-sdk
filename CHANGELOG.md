@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.8.0-dev - Unreleased
+
+- Development resumed after `v0.7.0`.
+
 ## v0.7.0 - 2026-06-15
 
 - Switched client initialization unit tests to `std.testing.io` where no real network I/O is required.
