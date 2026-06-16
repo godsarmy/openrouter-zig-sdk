@@ -22,8 +22,15 @@ pub const State = struct {
     done: bool = false,
 
     pub fn initReader(self: *State) void {
-        self.response.request = &self.request;
+        // `std.http.Client.Response` stores a pointer to its request. Streaming
+        // setup moves both values into `State`, so rebind that pointer before
+        // creating the body reader; otherwise it can point at an old stack copy.
+        self.rebindResponseRequest();
         self.reader = self.response.reader(&self.transfer_buffer);
+    }
+
+    fn rebindResponseRequest(self: *State) void {
+        self.response.request = &self.request;
     }
 
     pub fn deinit(self: *State) void {
@@ -308,4 +315,12 @@ test "SSE parser marks done after line too long" {
 
     try std.testing.expectError(error.StreamTooLong, parser.nextData());
     try std.testing.expectEqual(null, try parser.nextData());
+}
+
+test "SSE state rebinds response request after move" {
+    var state: State = undefined;
+
+    state.rebindResponseRequest();
+
+    try std.testing.expectEqual(&state.request, state.response.request);
 }

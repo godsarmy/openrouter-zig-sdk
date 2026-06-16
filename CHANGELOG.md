@@ -3,6 +3,7 @@
 ## v0.8.0-dev - Unreleased
 
 - Development resumed after `v0.7.0`.
+- Added regression coverage for the SSE stream response/request ownership invariant.
 
 ## v0.7.0 - 2026-06-15
 
