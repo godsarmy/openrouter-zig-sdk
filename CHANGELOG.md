@@ -1,8 +1,7 @@
 # Changelog
 
-## v0.8.0-dev - Unreleased
+## v0.8.0 - 2026-06-15
 
-- Development resumed after `v0.7.0`.
 - Added regression coverage for the SSE stream response/request ownership invariant.
 - Hardened the opt-in Messages streaming integration smoke test to require real stream events.
 - Added an opt-in chat completions streaming integration smoke test.
