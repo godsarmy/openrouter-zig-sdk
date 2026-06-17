@@ -36,6 +36,9 @@ pub const Credits = @import("credits.zig").Credits;
 pub const CreditsGetResponse = @import("credits.zig").GetResponse;
 pub const OAuthCreateAuthCodeRequest = @import("auth_keys.zig").CreateCodeRequest;
 pub const OAuthExchangeAuthCodeForAPIKeyRequest = @import("auth_keys.zig").ExchangeRequest;
+pub const OAuthCodeChallengeMethodS256 = @import("oauth.zig").code_challenge_method_s256;
+pub const OAuthCreateCodeVerifier = @import("oauth.zig").createCodeVerifier;
+pub const OAuthCreateS256CodeChallenge = @import("oauth.zig").createS256CodeChallenge;
 pub const AuthorizationCode = @import("auth_keys.zig").AuthorizationCode;
 pub const OAuthCreateAuthCodeResponse = @import("auth_keys.zig").CreateCodeResponse;
 pub const OAuthExchangeAuthCodeForAPIKeyResponse = @import("auth_keys.zig").ExchangeResponse;
@@ -210,6 +213,7 @@ test {
     _ = @import("messages.zig");
     _ = @import("models.zig");
     _ = @import("observability.zig");
+    _ = @import("oauth.zig");
     _ = @import("options.zig");
     _ = @import("organization.zig");
     _ = @import("pagination.zig");
