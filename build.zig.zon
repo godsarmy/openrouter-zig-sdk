@@ -16,6 +16,5 @@
         "LICENSE",
         "APIs.md",
         "AGENT.md",
-        "zig-api.md",
     },
 }

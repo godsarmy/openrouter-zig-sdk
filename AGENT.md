@@ -42,6 +42,7 @@ zig build test
 - Prefer typed enums/structs over loosely typed strings where practical.
 - Preserve OpenRouter-compatible model IDs as strings.
 - Keep transport details isolated from high-level API types.
+- Keep generated or compatibility-layer types out of the stable handwritten API unless an explicit experimental namespace is added.
 - Make optional OpenRouter headers configurable:
   - `HTTP-Referer`
   - `X-Title`
@@ -53,6 +54,12 @@ Zig `0.16.x` uses I/O as an explicit interface. The OpenRouter client should use
 Do not hard-code an async runtime or event-loop backend into the library.
 
 Normal builds should provide an application-owned `std.Io.Threaded` or another real I/O backend. Tests that only need to initialize the client can use `std.testing.io`; credentialed integration tests should keep an explicit `std.Io.Threaded` because they perform real network I/O. Avoid assuming `-fsingle-threaded` semantics inside the SDK; callers choose the I/O backend and concurrency model.
+
+The client is not thread-safe unless access is externally synchronized. Prefer one client per worker when issuing concurrent requests.
+
+Streaming iterators and returned response/chunk/event values own resources and must be deinitialized, including when callers stop reading before `[DONE]`.
+
+`response_metadata` fields on parsed responses are owned by the parsed response and remain valid until that response is deinitialized.
 
 Base URL:
 
@@ -136,6 +143,11 @@ See `build.zig` for the full example command list.
 3. Run `zig build test` and `zig build examples`.
 4. Optionally run credentialed checks with `zig build integration-test`.
 5. Commit the release prep, tag `vX.Y.Z`, push the tag, and create the GitHub release.
+
+## Future Work
+
+- Advanced provider routing helpers.
+- Optional generated compatibility layer under an explicitly experimental namespace if exact OpenAPI parity becomes important.
 
 ## Security
 
