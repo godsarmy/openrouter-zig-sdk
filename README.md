@@ -105,6 +105,8 @@ Individual runnable examples are defined in `build.zig` and source files live un
 
 For concurrent I/O usage, run `zig build run-async-chat`; it uses `std.Io.concurrent` with one client per task.
 
+For auth-key OAuth flows, run `zig build run-oauth-keys`; it demonstrates authorization-code creation and exchange.
+
 ## Development
 
 Build:

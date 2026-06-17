@@ -6,6 +6,7 @@
 - Added regression coverage for the SSE stream response/request ownership invariant.
 - Hardened the opt-in Messages streaming integration smoke test to require real stream events.
 - Added an opt-in chat completions streaming integration smoke test.
+- Added an auth-key OAuth flow example using the existing code creation and exchange APIs.
 
 ## v0.7.0 - 2026-06-15
 

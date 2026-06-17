@@ -11,6 +11,7 @@ pub fn build(b: *std.Build) void {
 
     const examples_step = b.step("examples", "Build examples");
     addExample(b, examples_step, target, optimize, openrouter, "async_chat", "examples/async_chat.zig", "run-async-chat", "Run async chat example");
+    addExample(b, examples_step, target, optimize, openrouter, "oauth_keys", "examples/oauth_keys.zig", "run-oauth-keys", "Run auth-key OAuth example");
     addExample(b, examples_step, target, optimize, openrouter, "chat", "examples/chat.zig", "run-chat", "Run chat example");
     addExample(b, examples_step, target, optimize, openrouter, "stream", "examples/stream.zig", "run-stream", "Run stream example");
     addExample(b, examples_step, target, optimize, openrouter, "list_models", "examples/list_models.zig", "run-list-models", "Run list models example");
