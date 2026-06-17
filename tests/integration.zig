@@ -87,6 +87,38 @@ test "generation content integration" {
     try std.testing.expect(response.data.input.prompt != null or response.data.input.messages != null);
 }
 
+test "chat streaming integration" {
+    var threaded: std.Io.Threaded = .init_single_threaded;
+    defer threaded.deinit();
+
+    const maybe_client = try initPublicClient(&threaded);
+    var client = maybe_client orelse return;
+    defer client.deinit();
+
+    var response = try client.chat.completions.stream(.{
+        .model = env("OPENROUTER_CHAT_MODEL") orelse "openai/gpt-4o-mini",
+        .messages = &.{openrouter.ChatMessage{
+            .role = .user,
+            .content = .{ .text = "Reply with only: ok" },
+        }},
+        .max_tokens = 4,
+    }, .{});
+    defer response.deinit();
+
+    var chunks_seen: usize = 0;
+    var saw_content = false;
+    while (chunks_seen < 64) {
+        var chunk = (try response.next()) orelse break;
+        defer chunk.deinit();
+
+        chunks_seen += 1;
+        if (chunk.content()) |text| saw_content = saw_content or text.len > 0;
+    }
+
+    try std.testing.expect(chunks_seen > 0);
+    try std.testing.expect(saw_content);
+}
+
 test "messages streaming integration" {
     var threaded: std.Io.Threaded = .init_single_threaded;
     defer threaded.deinit();
