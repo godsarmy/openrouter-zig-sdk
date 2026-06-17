@@ -11,6 +11,7 @@
         "tests",
         "examples",
         "README.md",
+        "EXAMPLES.md",
         "CHANGELOG.md",
         "LICENSE",
         "APIs.md",

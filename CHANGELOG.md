@@ -9,6 +9,7 @@
 - Added OAuth helper methods `client.oauth.createAuthCode` and `client.oauth.exchangeAuthCodeForAPIKey` plus an example.
 - Added OAuth PKCE helpers for code verifier generation and S256 challenge derivation.
 - Documented the OAuth PKCE example flow and verifier persistence requirement.
+- Moved advanced example guidance from `README.md` to `EXAMPLES.md`.
 
 ## v0.7.0 - 2026-06-15
 
