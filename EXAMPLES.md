@@ -33,6 +33,23 @@ zig build run-async-chat
 
 The async chat example uses `std.Io.concurrent` with one `Client` per concurrent task. `Client` is not thread-safe unless access is externally synchronized.
 
+## Fusion Plugin
+
+Chat completions support typed plugins. Fusion can be enabled with the `openrouter/fusion` model alias and a Fusion plugin config:
+
+```zig
+var response = try client.chat.completions.create(.{
+    .model = "openrouter/fusion",
+    .messages = &.{
+        .{ .role = .user, .content = .{ .text = "Compare ridge, lasso, and elastic-net regression." } },
+    },
+    .plugins = &.{openrouter.ChatPlugin{ .fusion = .{
+        .preset = "general-budget",
+    } }},
+}, .{});
+defer response.deinit();
+```
+
 ## OAuth PKCE
 
 Run:

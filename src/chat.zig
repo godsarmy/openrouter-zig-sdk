@@ -79,6 +79,7 @@ pub const CompletionRequest = struct {
     presence_penalty: ?f32 = null,
     response_format: ?ResponseFormat = null,
     provider: ?ProviderRouting = null,
+    plugins: ?[]const Plugin = null,
     stream: bool = false,
     stop: ?[]const []const u8 = null,
     extra_body: ?std.json.Value = null,
@@ -121,6 +122,10 @@ pub const CompletionRequest = struct {
             try jws.objectField("provider");
             try jws.write(value);
         }
+        if (self.plugins) |value| {
+            try jws.objectField("plugins");
+            try jws.write(value);
+        }
         try jws.objectField("stream");
         try jws.write(self.stream);
         if (self.stop) |value| {
@@ -149,6 +154,53 @@ pub const ProviderRouting = struct {
     order: ?[]const []const u8 = null,
     allow_fallbacks: ?bool = null,
     require_parameters: ?bool = null,
+};
+
+pub const Plugin = union(enum) {
+    fusion: FusionPlugin,
+    raw: std.json.Value,
+
+    pub fn jsonStringify(self: Plugin, jws: anytype) !void {
+        switch (self) {
+            .fusion => |plugin| try jws.write(plugin),
+            .raw => |value| try jws.write(value),
+        }
+    }
+};
+
+pub const FusionPlugin = struct {
+    preset: ?[]const u8 = null,
+    analysis_models: ?[]const []const u8 = null,
+    model: ?[]const u8 = null,
+    max_tool_calls: ?u8 = null,
+    enabled: ?bool = null,
+
+    pub fn jsonStringify(self: FusionPlugin, jws: anytype) !void {
+        try jws.beginObject();
+        try jws.objectField("id");
+        try jws.write("fusion");
+        if (self.preset) |value| {
+            try jws.objectField("preset");
+            try jws.write(value);
+        }
+        if (self.analysis_models) |value| {
+            try jws.objectField("analysis_models");
+            try jws.write(value);
+        }
+        if (self.model) |value| {
+            try jws.objectField("model");
+            try jws.write(value);
+        }
+        if (self.max_tool_calls) |value| {
+            try jws.objectField("max_tool_calls");
+            try jws.write(value);
+        }
+        if (self.enabled) |value| {
+            try jws.objectField("enabled");
+            try jws.write(value);
+        }
+        try jws.endObject();
+    }
 };
 
 pub const CompletionResponse = struct {
@@ -272,6 +324,46 @@ test "chat request merges extra body object fields" {
 
     try std.testing.expect(std.mem.indexOf(u8, body, "\"route\":\"fallback\"") != null);
     try std.testing.expect(std.mem.indexOf(u8, body, "\"extra_body\"") == null);
+}
+
+test "chat request serializes fusion plugin" {
+    const messages = &.{Message{ .role = .user, .content = .{ .text = "Compare options" } }};
+    const analysis_models = &.{ "~anthropic/claude-opus-latest", "~openai/gpt-latest" };
+    const plugins = &.{Plugin{ .fusion = .{
+        .analysis_models = analysis_models,
+        .model = "~openai/gpt-latest",
+        .max_tool_calls = 4,
+    } }};
+
+    const body = try json.stringifyRequest(std.testing.allocator, CompletionRequest{
+        .model = "openrouter/fusion",
+        .messages = messages,
+        .plugins = plugins,
+    });
+    defer std.testing.allocator.free(body);
+
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"plugins\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"id\":\"fusion\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"analysis_models\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "~anthropic/claude-opus-latest") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"model\":\"~openai/gpt-latest\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"max_tool_calls\":4") != null);
+}
+
+test "chat request serializes fusion preset plugin" {
+    const messages = &.{Message{ .role = .user, .content = .{ .text = "Compare options" } }};
+    const plugins = &.{Plugin{ .fusion = .{ .preset = "general-budget" } }};
+
+    const body = try json.stringifyRequest(std.testing.allocator, CompletionRequest{
+        .model = "openrouter/fusion",
+        .messages = messages,
+        .plugins = plugins,
+    });
+    defer std.testing.allocator.free(body);
+
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"id\":\"fusion\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"preset\":\"general-budget\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"analysis_models\"") == null);
 }
 
 test "chat request serializes multipart content" {
