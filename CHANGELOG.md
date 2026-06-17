@@ -5,6 +5,7 @@
 - Development resumed after `v0.8.0`.
 - Added typed chat plugin support for OpenRouter Fusion.
 - Removed the completed implementation plan and moved durable guidance into `AGENT.md`.
+- Added a runnable Fusion plugin example.
 
 ## v0.8.0 - 2026-06-15
 

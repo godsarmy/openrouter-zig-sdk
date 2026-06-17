@@ -12,6 +12,7 @@ zig build examples
 
 ```sh
 zig build run-chat
+zig build run-fusion
 zig build run-stream
 zig build run-async-chat
 zig build run-messages
@@ -36,6 +37,12 @@ The async chat example uses `std.Io.concurrent` with one `Client` per concurrent
 ## Fusion Plugin
 
 Chat completions support typed plugins. Fusion can be enabled with the `openrouter/fusion` model alias and a Fusion plugin config:
+
+Run:
+
+```sh
+zig build run-fusion
+```
 
 ```zig
 var response = try client.chat.completions.create(.{
