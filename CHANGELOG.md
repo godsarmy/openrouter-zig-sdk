@@ -8,6 +8,7 @@
 - Added an opt-in chat completions streaming integration smoke test.
 - Added OAuth helper methods `client.oauth.createAuthCode` and `client.oauth.exchangeAuthCodeForAPIKey` plus an example.
 - Added OAuth PKCE helpers for code verifier generation and S256 challenge derivation.
+- Documented the OAuth PKCE example flow and verifier persistence requirement.
 
 ## v0.7.0 - 2026-06-15
 

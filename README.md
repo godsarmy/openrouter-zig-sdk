@@ -107,6 +107,24 @@ For concurrent I/O usage, run `zig build run-async-chat`; it uses `std.Io.concur
 
 For auth-key OAuth flows, run `zig build run-oauth-keys`; it demonstrates PKCE verifier/challenge helpers plus `client.oauth.createAuthCode` and `client.oauth.exchangeAuthCodeForAPIKey`.
 
+OAuth PKCE flow:
+
+```sh
+OPENROUTER_API_KEY="sk-or-v1-..." \
+OPENROUTER_AUTH_CALLBACK_URL="https://your-app.example/callback" \
+zig build run-oauth-keys
+```
+
+The example prints a generated `OPENROUTER_AUTH_CODE_VERIFIER`; persist it before redirecting the user. After OpenRouter returns an authorization code, exchange it with:
+
+```sh
+OPENROUTER_API_KEY="sk-or-v1-..." \
+OPENROUTER_AUTH_CALLBACK_URL="https://your-app.example/callback" \
+OPENROUTER_AUTH_CODE_VERIFIER="<printed verifier>" \
+OPENROUTER_AUTH_CODE="<returned code>" \
+zig build run-oauth-keys
+```
+
 ## Development
 
 Build:
