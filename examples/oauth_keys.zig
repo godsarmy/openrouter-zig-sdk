@@ -31,7 +31,7 @@ pub fn main(init: std.process.Init) !void {
     });
     defer client.deinit();
 
-    var created = try client.auth.code.create(.{
+    var created = try client.oauth.createAuthCode(.{
         .callback_url = callback_url,
         .code_challenge = code_challenge,
         .code_challenge_method = code_challenge_method,
@@ -51,7 +51,7 @@ pub fn main(init: std.process.Init) !void {
         return;
     }
 
-    var exchanged = try client.auth.exchange(.{
+    var exchanged = try client.oauth.exchangeAuthCodeForAPIKey(.{
         .code = auth_code.?,
         .code_challenge_method = code_challenge_method,
         .code_verifier = code_verifier.?,

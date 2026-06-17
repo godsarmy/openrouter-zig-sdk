@@ -982,7 +982,7 @@ Implement after `v0.1.0` core is stable.
 
 Future resource candidates:
 
-- OAuth helpers.
+- [x] OAuth helpers via `client.oauth.createAuthCode` and `client.oauth.exchangeAuthCodeForAPIKey`.
 
 ## Acceptance Criteria
 
@@ -1104,7 +1104,6 @@ The public README intentionally keeps ownership guidance brief. Detailed expecta
 
 ## Future Work
 
-- OAuth helpers.
 - Advanced provider routing helpers.
 - Generated API compatibility layer.
 

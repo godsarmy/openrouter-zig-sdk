@@ -385,19 +385,15 @@ pub const OrganizationMembersResource = struct {
         return organization_mod.listMembers(client, request, request_options);
     }
 };
-pub const AuthKeysResource = struct {
-    code: AuthKeysCodeResource = .{},
-
-    pub fn exchange(self: *AuthKeysResource, request: auth_keys_mod.ExchangeRequest, request_options: options_mod.RequestOptions) !auth_keys_mod.ExchangeResponse {
-        const client: *Client = @alignCast(@fieldParentPtr("auth", self));
-        return auth_keys_mod.exchange(client, request, request_options);
-    }
-};
-pub const AuthKeysCodeResource = struct {
-    pub fn create(self: *AuthKeysCodeResource, request: auth_keys_mod.CreateCodeRequest, request_options: options_mod.RequestOptions) !auth_keys_mod.CreateCodeResponse {
-        const auth: *AuthKeysResource = @alignCast(@fieldParentPtr("code", self));
-        const client: *Client = @alignCast(@fieldParentPtr("auth", auth));
+pub const OAuthResource = struct {
+    pub fn createAuthCode(self: *OAuthResource, request: auth_keys_mod.CreateCodeRequest, request_options: options_mod.RequestOptions) !auth_keys_mod.CreateCodeResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("oauth", self));
         return auth_keys_mod.createCode(client, request, request_options);
+    }
+
+    pub fn exchangeAuthCodeForAPIKey(self: *OAuthResource, request: auth_keys_mod.ExchangeRequest, request_options: options_mod.RequestOptions) !auth_keys_mod.ExchangeResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("oauth", self));
+        return auth_keys_mod.exchange(client, request, request_options);
     }
 };
 pub const KeyResource = struct {
@@ -500,7 +496,7 @@ pub const Client = struct {
     workspaces: WorkspacesResource,
     observability: ObservabilityResource,
     organization: OrganizationResource,
-    auth: AuthKeysResource,
+    oauth: OAuthResource,
     key: KeyResource,
     keys: KeysResource,
     providers: ProvidersResource,
@@ -538,7 +534,7 @@ pub const Client = struct {
             .workspaces = .{},
             .observability = .{},
             .organization = .{},
-            .auth = .{},
+            .oauth = .{},
             .key = .{},
             .keys = .{},
             .providers = .{},
@@ -597,11 +593,20 @@ test "client stores optional attribution headers" {
     try std.testing.expectEqualStrings("openrouter-zig-test", client.config.x_title.?);
 }
 
-test "client exposes auth keys resource" {
+test "client exposes OAuth resource" {
     var client = try Client.init(std.testing.allocator, std.testing.io, .{ .api_key = "test-key" });
     defer client.deinit();
 
-    _ = &client.auth.code;
+    _ = &client.oauth;
+}
+
+test "client exposes OAuth helper methods" {
+    var client = try Client.init(std.testing.allocator, std.testing.io, .{ .api_key = "test-key" });
+    defer client.deinit();
+
+    _ = &client.oauth;
+    _ = OAuthResource.createAuthCode;
+    _ = OAuthResource.exchangeAuthCodeForAPIKey;
 }
 
 test "client rejects invalid base URL" {

@@ -6,7 +6,7 @@
 - Added regression coverage for the SSE stream response/request ownership invariant.
 - Hardened the opt-in Messages streaming integration smoke test to require real stream events.
 - Added an opt-in chat completions streaming integration smoke test.
-- Added an auth-key OAuth flow example using the existing code creation and exchange APIs.
+- Added OAuth helper methods `client.oauth.createAuthCode` and `client.oauth.exchangeAuthCodeForAPIKey` plus an example.
 
 ## v0.7.0 - 2026-06-15
 
@@ -47,7 +47,7 @@
 
 - Added current API key metadata via `client.key.get` for `GET /key`.
 - Added API key management endpoints under `client.keys` for listing, creating, retrieving, updating, and deleting keys.
-- Added auth-key authorization-code and exchange endpoints under `client.auth.keys`.
+- Added auth-key authorization-code and exchange endpoints.
 - Added `client.models.count` for `GET /models/count` with `output_modalities` query support.
 - Refactored endpoint implementations to reuse transport-backed request paths for real and fake transports.
 

@@ -103,8 +103,8 @@ Status legend:
 | [x] | GET | `/keys/{hash}` | `get` | Get a single API key. | Implemented in `src/keys.zig` as `client.keys.get`. |
 | [x] | PATCH | `/keys/{hash}` | `update` | Update an API key. | Implemented in `src/keys.zig` as `client.keys.update`. |
 | [x] | DELETE | `/keys/{hash}` | `delete` | Delete an API key. | Implemented in `src/keys.zig` as `client.keys.delete`. |
-| [x] | POST | `/auth/keys/code` | `createAuthKeysCode` | Create an authorization code. | Implemented in `src/auth_keys.zig` as `client.auth.code.create`. |
-| [x] | POST | `/auth/keys` | `exchangeAuthCodeForAPIKey` | Exchange an authorization code for an API key. | Implemented in `src/auth_keys.zig` as `client.auth.exchange`. |
+| [x] | POST | `/auth/keys/code` | `createAuthKeysCode` | Create an authorization code. | Implemented in `src/auth_keys.zig` as `client.oauth.createAuthCode`. |
+| [x] | POST | `/auth/keys` | `exchangeAuthCodeForAPIKey` | Exchange an authorization code for an API key. | Implemented in `src/auth_keys.zig` as `client.oauth.exchangeAuthCodeForAPIKey`. |
 | [x] | GET | `/byok` | `listBYOKKeys` | List BYOK provider credentials. | Implemented in `src/byok.zig`. Requires management auth. |
 | [x] | POST | `/byok` | `createBYOKKey` | Create a BYOK provider credential. | Implemented in `src/byok.zig`; raw provider keys are request-only and not represented in responses. |
 | [x] | GET | `/byok/{id}` | `getBYOKKey` | Get a BYOK provider credential. | Implemented in `src/byok.zig`. |
