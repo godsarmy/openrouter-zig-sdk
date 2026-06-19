@@ -157,7 +157,23 @@ pub const CompletionRequest = struct {
 };
 
 pub const ResponseFormat = struct {
-    type: []const u8,
+    type: ResponseFormatType,
+};
+
+pub const ResponseFormatType = union(enum) {
+    text,
+    json_object,
+    json_schema,
+    raw: []const u8,
+
+    pub fn jsonStringify(self: ResponseFormatType, jws: anytype) !void {
+        switch (self) {
+            .text => try jws.write("text"),
+            .json_object => try jws.write("json_object"),
+            .json_schema => try jws.write("json_schema"),
+            .raw => |value| try jws.write(value),
+        }
+    }
 };
 
 pub const ProviderRouting = struct {
@@ -346,11 +362,15 @@ pub const WebSearchContextSize = enum {
 };
 
 pub const UserLocation = struct {
-    type: []const u8 = "approximate",
+    type: UserLocationType = .approximate,
     city: ?[]const u8 = null,
     region: ?[]const u8 = null,
     country: ?[]const u8 = null,
     timezone: ?[]const u8 = null,
+};
+
+pub const UserLocationType = enum {
+    approximate,
 };
 
 pub const WebFetchToolParameters = struct {
@@ -507,6 +527,19 @@ test "chat request serializes content string and omits null optionals" {
     try std.testing.expect(std.mem.indexOf(u8, body, "\"stream\":false") != null);
 }
 
+test "chat request serializes typed response format" {
+    const messages = &.{Message{ .role = .user, .content = .{ .text = "Return JSON" } }};
+    const body = try json.stringifyRequest(std.testing.allocator, CompletionRequest{
+        .model = "openai/gpt-4o-mini",
+        .messages = messages,
+        .response_format = .{ .type = .json_object },
+    });
+    defer std.testing.allocator.free(body);
+
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"response_format\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"type\":\"json_object\"") != null);
+}
+
 test "chat request merges extra body object fields" {
     var extra: std.json.ObjectMap = .empty;
     defer extra.deinit(std.testing.allocator);
@@ -620,6 +653,7 @@ test "chat request serializes web search and web fetch server tools" {
     try std.testing.expect(std.mem.indexOf(u8, body, "\"engine\":\"exa\"") != null);
     try std.testing.expect(std.mem.indexOf(u8, body, "\"allowed_domains\"") != null);
     try std.testing.expect(std.mem.indexOf(u8, body, "\"user_location\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"type\":\"approximate\"") != null);
     try std.testing.expect(std.mem.indexOf(u8, body, "\"type\":\"openrouter:web_fetch\"") != null);
     try std.testing.expect(std.mem.indexOf(u8, body, "\"blocked_domains\"") != null);
 }

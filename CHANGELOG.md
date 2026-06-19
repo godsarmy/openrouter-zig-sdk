@@ -4,6 +4,7 @@
 
 - Stabilization resumed after `v0.9.0`.
 - Typed chat server tool `tool_choice` and web search `search_context_size` before `1.0.0` stabilization.
+- Typed chat `response_format.type` and server tool `user_location.type` before `1.0.0` stabilization.
 
 ## v0.9.0 - 2026-06-18
 
