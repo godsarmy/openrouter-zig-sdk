@@ -14,7 +14,7 @@ pub fn main(init: std.process.Init) !void {
 
     const mode = mode_env orelse "web_search";
     const prompt, const tool = if (std.mem.eql(u8, mode, "web_search")) .{
-        "Search the web and summarize one recent Zig language development in two sentences.",
+        "Search ziglang.org and summarize what the Zig programming language is in two sentences.",
         openrouter.ChatServerTool{ .web_search = .{
             .max_results = 3,
             .search_context_size = "medium",
