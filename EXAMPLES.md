@@ -13,6 +13,7 @@ zig build examples
 ```sh
 zig build run-chat
 zig build run-fusion
+zig build run-server-tools
 zig build run-stream
 zig build run-async-chat
 zig build run-messages
@@ -60,6 +61,14 @@ defer response.deinit();
 ## Server Tools
 
 Chat completions also support typed OpenRouter server tools:
+
+Run:
+
+```sh
+zig build run-server-tools
+OPENROUTER_SERVER_TOOL=web_fetch zig build run-server-tools
+OPENROUTER_SERVER_TOOL=fusion zig build run-server-tools
+```
 
 ```zig
 var response = try client.chat.completions.create(.{

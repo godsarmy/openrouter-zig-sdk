@@ -14,6 +14,7 @@ pub fn build(b: *std.Build) void {
     addExample(b, examples_step, target, optimize, openrouter, "oauth_keys", "examples/oauth_keys.zig", "run-oauth-keys", "Run auth-key OAuth example");
     addExample(b, examples_step, target, optimize, openrouter, "chat", "examples/chat.zig", "run-chat", "Run chat example");
     addExample(b, examples_step, target, optimize, openrouter, "fusion", "examples/fusion.zig", "run-fusion", "Run Fusion plugin example");
+    addExample(b, examples_step, target, optimize, openrouter, "server_tools", "examples/server_tools.zig", "run-server-tools", "Run server tools example");
     addExample(b, examples_step, target, optimize, openrouter, "stream", "examples/stream.zig", "run-stream", "Run stream example");
     addExample(b, examples_step, target, optimize, openrouter, "list_models", "examples/list_models.zig", "run-list-models", "Run list models example");
     addExample(b, examples_step, target, optimize, openrouter, "list_user_models", "examples/list_user_models.zig", "run-list-user-models", "Run list user models example");

@@ -9,6 +9,7 @@
 - Added an env-gated Fusion integration smoke test.
 - Made the Fusion integration smoke test non-strict by default for account or feature availability errors.
 - Added typed chat server tool support for `openrouter:fusion`, `openrouter:web_search`, and `openrouter:web_fetch`.
+- Added a runnable server tools example.
 
 ## v0.8.0 - 2026-06-15
 
