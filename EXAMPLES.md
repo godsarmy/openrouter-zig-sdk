@@ -57,6 +57,24 @@ var response = try client.chat.completions.create(.{
 defer response.deinit();
 ```
 
+## Server Tools
+
+Chat completions also support typed OpenRouter server tools:
+
+```zig
+var response = try client.chat.completions.create(.{
+    .model = "openai/gpt-4o-mini",
+    .messages = &.{
+        .{ .role = .user, .content = .{ .text = "Survey arguments for and against carbon taxes." } },
+    },
+    .tools = &.{openrouter.ChatServerTool{ .fusion = .{} }},
+    .tool_choice = "required",
+}, .{});
+defer response.deinit();
+```
+
+Available typed server tools include `.fusion`, `.web_search`, and `.web_fetch`. Use `.raw` for future OpenRouter tool shapes that are not typed yet.
+
 ## OAuth PKCE
 
 Run:

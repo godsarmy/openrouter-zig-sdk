@@ -80,6 +80,8 @@ pub const CompletionRequest = struct {
     response_format: ?ResponseFormat = null,
     provider: ?ProviderRouting = null,
     plugins: ?[]const Plugin = null,
+    tools: ?[]const ServerTool = null,
+    tool_choice: ?[]const u8 = null,
     stream: bool = false,
     stop: ?[]const []const u8 = null,
     extra_body: ?std.json.Value = null,
@@ -124,6 +126,14 @@ pub const CompletionRequest = struct {
         }
         if (self.plugins) |value| {
             try jws.objectField("plugins");
+            try jws.write(value);
+        }
+        if (self.tools) |value| {
+            try jws.objectField("tools");
+            try jws.write(value);
+        }
+        if (self.tool_choice) |value| {
+            try jws.objectField("tool_choice");
             try jws.write(value);
         }
         try jws.objectField("stream");
@@ -202,6 +212,172 @@ pub const FusionPlugin = struct {
         try jws.endObject();
     }
 };
+
+pub const ServerTool = union(enum) {
+    fusion: FusionToolParameters,
+    web_search: WebSearchToolParameters,
+    web_fetch: WebFetchToolParameters,
+    raw: std.json.Value,
+
+    pub fn jsonStringify(self: ServerTool, jws: anytype) !void {
+        switch (self) {
+            .fusion => |parameters| try writeServerTool(jws, "openrouter:fusion", parameters),
+            .web_search => |parameters| try writeServerTool(jws, "openrouter:web_search", parameters),
+            .web_fetch => |parameters| try writeServerTool(jws, "openrouter:web_fetch", parameters),
+            .raw => |value| try jws.write(value),
+        }
+    }
+};
+
+pub const FusionToolParameters = struct {
+    analysis_models: ?[]const []const u8 = null,
+    model: ?[]const u8 = null,
+    max_tool_calls: ?u8 = null,
+    max_completion_tokens: ?u32 = null,
+    reasoning: ?std.json.Value = null,
+    temperature: ?f32 = null,
+
+    fn isEmpty(self: FusionToolParameters) bool {
+        return self.analysis_models == null and self.model == null and self.max_tool_calls == null and self.max_completion_tokens == null and self.reasoning == null and self.temperature == null;
+    }
+
+    pub fn jsonStringify(self: FusionToolParameters, jws: anytype) !void {
+        try jws.beginObject();
+        if (self.analysis_models) |value| {
+            try jws.objectField("analysis_models");
+            try jws.write(value);
+        }
+        if (self.model) |value| {
+            try jws.objectField("model");
+            try jws.write(value);
+        }
+        if (self.max_tool_calls) |value| {
+            try jws.objectField("max_tool_calls");
+            try jws.write(value);
+        }
+        if (self.max_completion_tokens) |value| {
+            try jws.objectField("max_completion_tokens");
+            try jws.write(value);
+        }
+        if (self.reasoning) |value| {
+            try jws.objectField("reasoning");
+            try jws.write(value);
+        }
+        if (self.temperature) |value| {
+            try jws.objectField("temperature");
+            try jws.write(value);
+        }
+        try jws.endObject();
+    }
+};
+
+pub const WebSearchToolParameters = struct {
+    engine: ?[]const u8 = null,
+    max_results: ?u8 = null,
+    max_total_results: ?u32 = null,
+    search_context_size: ?[]const u8 = null,
+    max_characters: ?u32 = null,
+    user_location: ?UserLocation = null,
+    allowed_domains: ?[]const []const u8 = null,
+    excluded_domains: ?[]const []const u8 = null,
+
+    fn isEmpty(self: WebSearchToolParameters) bool {
+        return self.engine == null and self.max_results == null and self.max_total_results == null and self.search_context_size == null and self.max_characters == null and self.user_location == null and self.allowed_domains == null and self.excluded_domains == null;
+    }
+
+    pub fn jsonStringify(self: WebSearchToolParameters, jws: anytype) !void {
+        try jws.beginObject();
+        if (self.engine) |value| {
+            try jws.objectField("engine");
+            try jws.write(value);
+        }
+        if (self.max_results) |value| {
+            try jws.objectField("max_results");
+            try jws.write(value);
+        }
+        if (self.max_total_results) |value| {
+            try jws.objectField("max_total_results");
+            try jws.write(value);
+        }
+        if (self.search_context_size) |value| {
+            try jws.objectField("search_context_size");
+            try jws.write(value);
+        }
+        if (self.max_characters) |value| {
+            try jws.objectField("max_characters");
+            try jws.write(value);
+        }
+        if (self.user_location) |value| {
+            try jws.objectField("user_location");
+            try jws.write(value);
+        }
+        if (self.allowed_domains) |value| {
+            try jws.objectField("allowed_domains");
+            try jws.write(value);
+        }
+        if (self.excluded_domains) |value| {
+            try jws.objectField("excluded_domains");
+            try jws.write(value);
+        }
+        try jws.endObject();
+    }
+};
+
+pub const UserLocation = struct {
+    type: []const u8 = "approximate",
+    city: ?[]const u8 = null,
+    region: ?[]const u8 = null,
+    country: ?[]const u8 = null,
+    timezone: ?[]const u8 = null,
+};
+
+pub const WebFetchToolParameters = struct {
+    engine: ?[]const u8 = null,
+    max_uses: ?u32 = null,
+    max_content_tokens: ?u32 = null,
+    allowed_domains: ?[]const []const u8 = null,
+    blocked_domains: ?[]const []const u8 = null,
+
+    fn isEmpty(self: WebFetchToolParameters) bool {
+        return self.engine == null and self.max_uses == null and self.max_content_tokens == null and self.allowed_domains == null and self.blocked_domains == null;
+    }
+
+    pub fn jsonStringify(self: WebFetchToolParameters, jws: anytype) !void {
+        try jws.beginObject();
+        if (self.engine) |value| {
+            try jws.objectField("engine");
+            try jws.write(value);
+        }
+        if (self.max_uses) |value| {
+            try jws.objectField("max_uses");
+            try jws.write(value);
+        }
+        if (self.max_content_tokens) |value| {
+            try jws.objectField("max_content_tokens");
+            try jws.write(value);
+        }
+        if (self.allowed_domains) |value| {
+            try jws.objectField("allowed_domains");
+            try jws.write(value);
+        }
+        if (self.blocked_domains) |value| {
+            try jws.objectField("blocked_domains");
+            try jws.write(value);
+        }
+        try jws.endObject();
+    }
+};
+
+fn writeServerTool(jws: anytype, tool_type: []const u8, parameters: anytype) !void {
+    try jws.beginObject();
+    try jws.objectField("type");
+    try jws.write(tool_type);
+    if (!parameters.isEmpty()) {
+        try jws.objectField("parameters");
+        try jws.write(parameters);
+    }
+    try jws.endObject();
+}
 
 pub const CompletionResponse = struct {
     arena: std.heap.ArenaAllocator,
@@ -364,6 +540,81 @@ test "chat request serializes fusion preset plugin" {
     try std.testing.expect(std.mem.indexOf(u8, body, "\"id\":\"fusion\"") != null);
     try std.testing.expect(std.mem.indexOf(u8, body, "\"preset\":\"general-budget\"") != null);
     try std.testing.expect(std.mem.indexOf(u8, body, "\"analysis_models\"") == null);
+}
+
+test "chat request serializes openrouter fusion server tool" {
+    const messages = &.{Message{ .role = .user, .content = .{ .text = "Compare options" } }};
+    const analysis_models = &.{ "~google/gemini-flash-latest", "deepseek/deepseek-v3.2" };
+    const tools = &.{ServerTool{ .fusion = .{
+        .analysis_models = analysis_models,
+        .model = "~anthropic/claude-opus-latest",
+        .max_tool_calls = 4,
+        .temperature = 0.2,
+    } }};
+
+    const body = try json.stringifyRequest(std.testing.allocator, CompletionRequest{
+        .model = "openai/gpt-4o-mini",
+        .messages = messages,
+        .tools = tools,
+        .tool_choice = "required",
+    });
+    defer std.testing.allocator.free(body);
+
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"tools\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"type\":\"openrouter:fusion\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"parameters\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"analysis_models\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"tool_choice\":\"required\"") != null);
+}
+
+test "chat request serializes web search and web fetch server tools" {
+    const messages = &.{Message{ .role = .user, .content = .{ .text = "Find and fetch sources" } }};
+    const allowed_domains = &.{"example.com"};
+    const blocked_domains = &.{"private.example.com"};
+    const tools = &.{
+        ServerTool{ .web_search = .{
+            .engine = "exa",
+            .max_results = 3,
+            .search_context_size = "medium",
+            .allowed_domains = allowed_domains,
+            .user_location = .{ .city = "San Francisco", .country = "US" },
+        } },
+        ServerTool{ .web_fetch = .{
+            .engine = "openrouter",
+            .max_uses = 2,
+            .max_content_tokens = 50000,
+            .blocked_domains = blocked_domains,
+        } },
+    };
+
+    const body = try json.stringifyRequest(std.testing.allocator, CompletionRequest{
+        .model = "openai/gpt-4o-mini",
+        .messages = messages,
+        .tools = tools,
+    });
+    defer std.testing.allocator.free(body);
+
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"type\":\"openrouter:web_search\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"engine\":\"exa\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"allowed_domains\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"user_location\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"type\":\"openrouter:web_fetch\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"blocked_domains\"") != null);
+}
+
+test "chat request omits empty server tool parameters" {
+    const messages = &.{Message{ .role = .user, .content = .{ .text = "Search if needed" } }};
+    const tools = &.{ServerTool{ .web_search = .{} }};
+
+    const body = try json.stringifyRequest(std.testing.allocator, CompletionRequest{
+        .model = "openai/gpt-4o-mini",
+        .messages = messages,
+        .tools = tools,
+    });
+    defer std.testing.allocator.free(body);
+
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"type\":\"openrouter:web_search\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"parameters\"") == null);
 }
 
 test "chat request serializes multipart content" {
