@@ -139,10 +139,13 @@ See `build.zig` for the full example command list.
 ## Release Checklist
 
 1. Update `src/version.zig`, `build.zig.zon`, `CHANGELOG.md`, and the install tag in `README.md`.
-2. Run `zig fmt --check src/*.zig tests/*.zig examples/*.zig build.zig`.
-3. Run `zig build test` and `zig build examples`.
-4. Optionally run credentialed checks with `zig build integration-test`.
-5. Commit the release prep, tag `vX.Y.Z`, push the tag, and create the GitHub release.
+2. For `1.0.0` and later, review public root exports in `src/openrouter.zig` and treat public API changes as breaking changes.
+3. Run `zig fmt --check src/*.zig tests/*.zig examples/*.zig build.zig`.
+4. Run `zig build test` and `zig build examples`.
+5. Run `zig build integration-test`; without credentials this only verifies skip paths.
+6. For release confidence, run credentialed integration checks with `OPENROUTER_API_KEY`, plus `OPENROUTER_FUSION_TEST=1` and `OPENROUTER_FUSION_STRICT=1` when Fusion account access is available.
+7. If management endpoint behavior changed, also run with `OPENROUTER_MANAGEMENT_API_KEY`.
+8. Commit the release prep, tag `vX.Y.Z`, push the tag, and create the GitHub release.
 
 ## Future Work
 

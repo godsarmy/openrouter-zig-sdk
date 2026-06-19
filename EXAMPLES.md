@@ -143,6 +143,8 @@ export OPENROUTER_CHAT_MODEL="openai/gpt-4o-mini"
 export OPENROUTER_MESSAGES_MODEL="anthropic/claude-3.5-haiku"
 export OPENROUTER_FUSION_TEST="1"
 export OPENROUTER_FUSION_STRICT="1"
+export OPENROUTER_FUSION_MODEL="openrouter/fusion"
+export OPENROUTER_FUSION_PRESET="general-budget"
 export OPENROUTER_GENERATION_ID="gen-..."
 export OPENROUTER_MANAGEMENT_API_KEY="sk-or-v1-..."
 ```
