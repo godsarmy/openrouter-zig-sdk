@@ -7,6 +7,7 @@
 - Removed the completed implementation plan and moved durable guidance into `AGENT.md`.
 - Added a runnable Fusion plugin example.
 - Added an env-gated Fusion integration smoke test.
+- Made the Fusion integration smoke test non-strict by default for account or feature availability errors.
 
 ## v0.8.0 - 2026-06-15
 
