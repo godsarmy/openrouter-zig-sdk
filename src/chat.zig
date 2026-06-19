@@ -81,7 +81,7 @@ pub const CompletionRequest = struct {
     provider: ?ProviderRouting = null,
     plugins: ?[]const Plugin = null,
     tools: ?[]const ServerTool = null,
-    tool_choice: ?[]const u8 = null,
+    tool_choice: ?ToolChoice = null,
     stream: bool = false,
     stop: ?[]const []const u8 = null,
     extra_body: ?std.json.Value = null,
@@ -229,6 +229,22 @@ pub const ServerTool = union(enum) {
     }
 };
 
+pub const ToolChoice = union(enum) {
+    none,
+    auto,
+    required,
+    raw: std.json.Value,
+
+    pub fn jsonStringify(self: ToolChoice, jws: anytype) !void {
+        switch (self) {
+            .none => try jws.write("none"),
+            .auto => try jws.write("auto"),
+            .required => try jws.write("required"),
+            .raw => |value| try jws.write(value),
+        }
+    }
+};
+
 pub const FusionToolParameters = struct {
     analysis_models: ?[]const []const u8 = null,
     model: ?[]const u8 = null,
@@ -275,7 +291,7 @@ pub const WebSearchToolParameters = struct {
     engine: ?[]const u8 = null,
     max_results: ?u8 = null,
     max_total_results: ?u32 = null,
-    search_context_size: ?[]const u8 = null,
+    search_context_size: ?WebSearchContextSize = null,
     max_characters: ?u32 = null,
     user_location: ?UserLocation = null,
     allowed_domains: ?[]const []const u8 = null,
@@ -321,6 +337,12 @@ pub const WebSearchToolParameters = struct {
         }
         try jws.endObject();
     }
+};
+
+pub const WebSearchContextSize = enum {
+    low,
+    medium,
+    high,
 };
 
 pub const UserLocation = struct {
@@ -556,7 +578,7 @@ test "chat request serializes openrouter fusion server tool" {
         .model = "openai/gpt-4o-mini",
         .messages = messages,
         .tools = tools,
-        .tool_choice = "required",
+        .tool_choice = .required,
     });
     defer std.testing.allocator.free(body);
 
@@ -575,7 +597,7 @@ test "chat request serializes web search and web fetch server tools" {
         ServerTool{ .web_search = .{
             .engine = "exa",
             .max_results = 3,
-            .search_context_size = "medium",
+            .search_context_size = .medium,
             .allowed_domains = allowed_domains,
             .user_location = .{ .city = "San Francisco", .country = "US" },
         } },

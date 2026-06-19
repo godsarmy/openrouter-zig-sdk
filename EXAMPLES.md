@@ -77,7 +77,7 @@ var response = try client.chat.completions.create(.{
         .{ .role = .user, .content = .{ .text = "Survey arguments for and against carbon taxes." } },
     },
     .tools = &.{openrouter.ChatServerTool{ .fusion = .{} }},
-    .tool_choice = "required",
+    .tool_choice = .required,
 }, .{});
 defer response.deinit();
 ```

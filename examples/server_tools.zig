@@ -17,7 +17,7 @@ pub fn main(init: std.process.Init) !void {
         "Search ziglang.org and summarize what the Zig programming language is in two sentences.",
         openrouter.ChatServerTool{ .web_search = .{
             .max_results = 3,
-            .search_context_size = "medium",
+            .search_context_size = .medium,
             .allowed_domains = &.{"ziglang.org"},
         } },
     } else if (std.mem.eql(u8, mode, "web_fetch")) .{
@@ -48,7 +48,7 @@ pub fn main(init: std.process.Init) !void {
             .content = .{ .text = prompt },
         }},
         .tools = &.{tool},
-        .tool_choice = "required",
+        .tool_choice = .required,
     }, .{});
     defer response.deinit();
 
