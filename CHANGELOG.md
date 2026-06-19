@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.0.0-dev - Unreleased
+## v1.0.0 - 2026-06-19
 
 - Stabilization resumed after `v0.9.0`.
 - Typed chat server tool `tool_choice` and web search `search_context_size` before `1.0.0` stabilization.
