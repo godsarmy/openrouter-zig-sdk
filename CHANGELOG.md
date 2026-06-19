@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.9.0-dev - Unreleased
+## v0.9.0 - 2026-06-18
 
 - Development resumed after `v0.8.0`.
 - Added typed chat plugin support for OpenRouter Fusion.
