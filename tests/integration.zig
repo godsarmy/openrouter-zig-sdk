@@ -119,6 +119,34 @@ test "chat streaming integration" {
     try std.testing.expect(saw_content);
 }
 
+test "chat Fusion plugin integration" {
+    if (!envFlag("OPENROUTER_FUSION_TEST")) return;
+
+    var threaded: std.Io.Threaded = .init_single_threaded;
+    defer threaded.deinit();
+
+    const maybe_client = try initPublicClient(&threaded);
+    var client = maybe_client orelse return;
+    defer client.deinit();
+
+    var response = try client.chat.completions.create(.{
+        .model = env("OPENROUTER_FUSION_MODEL") orelse "openrouter/fusion",
+        .messages = &.{openrouter.ChatMessage{
+            .role = .user,
+            .content = .{ .text = "Answer in one short sentence: what is Fusion useful for?" },
+        }},
+        .plugins = &.{openrouter.ChatPlugin{ .fusion = .{
+            .preset = env("OPENROUTER_FUSION_PRESET") orelse "general-budget",
+        } }},
+        .max_tokens = 64,
+    }, .{});
+    defer response.deinit();
+
+    try std.testing.expect(response.choices.len > 0);
+    try std.testing.expect(response.choices[0].message.content != null);
+    try std.testing.expect(response.choices[0].message.content.?.len > 0);
+}
+
 test "messages streaming integration" {
     var threaded: std.Io.Threaded = .init_single_threaded;
     defer threaded.deinit();
@@ -263,6 +291,11 @@ fn env(name: []const u8) ?[]const u8 {
         }
     }
     return null;
+}
+
+fn envFlag(name: []const u8) bool {
+    const value = env(name) orelse return false;
+    return std.mem.eql(u8, value, "1") or std.mem.eql(u8, value, "true") or std.mem.eql(u8, value, "yes");
 }
 
 fn initPublicClient(threaded: *std.Io.Threaded) !?openrouter.Client {
