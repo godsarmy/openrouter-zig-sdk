@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.10.0-dev - Unreleased
+
+- Development resumed after `v0.9.0`.
+
 ## v0.9.0 - 2026-06-18
 
 - Development resumed after `v0.8.0`.
