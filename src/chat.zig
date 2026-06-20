@@ -180,6 +180,20 @@ pub const ProviderRouting = struct {
     order: ?[]const []const u8 = null,
     allow_fallbacks: ?bool = null,
     require_parameters: ?bool = null,
+
+    pub fn prefer(order: []const []const u8) ProviderRouting {
+        return .{ .order = order };
+    }
+
+    pub fn only(order: []const []const u8) ProviderRouting {
+        return .{ .order = order, .allow_fallbacks = false };
+    }
+
+    pub fn withRequiredParameters(self: ProviderRouting) ProviderRouting {
+        var copy = self;
+        copy.require_parameters = true;
+        return copy;
+    }
 };
 
 pub const Plugin = union(enum) {
@@ -538,6 +552,21 @@ test "chat request serializes typed response format" {
 
     try std.testing.expect(std.mem.indexOf(u8, body, "\"response_format\"") != null);
     try std.testing.expect(std.mem.indexOf(u8, body, "\"type\":\"json_object\"") != null);
+}
+
+test "chat request serializes provider routing helpers" {
+    const messages = &.{Message{ .role = .user, .content = .{ .text = "Hello" } }};
+    const body = try json.stringifyRequest(std.testing.allocator, CompletionRequest{
+        .model = "openai/gpt-4o-mini",
+        .messages = messages,
+        .provider = ProviderRouting.only(&.{ "openai", "azure" }).withRequiredParameters(),
+    });
+    defer std.testing.allocator.free(body);
+
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"provider\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"order\":[\"openai\",\"azure\"]") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"allow_fallbacks\":false") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"require_parameters\":true") != null);
 }
 
 test "chat request merges extra body object fields" {

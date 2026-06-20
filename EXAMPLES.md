@@ -93,6 +93,21 @@ var response = try client.responses.create(.{
 defer response.deinit();
 ```
 
+## Provider Routing
+
+Use typed provider routing helpers for common chat routing policies:
+
+```zig
+var response = try client.chat.completions.create(.{
+    .model = "openai/gpt-4o-mini",
+    .messages = &.{
+        .{ .role = .user, .content = .{ .text = "Say hello from Zig." } },
+    },
+    .provider = openrouter.ChatProviderRouting.only(&.{ "openai", "azure" }).withRequiredParameters(),
+}, .{});
+defer response.deinit();
+```
+
 ## OAuth PKCE
 
 Run:

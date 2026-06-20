@@ -35,6 +35,7 @@ pub const ChatFusionPlugin = @import("chat.zig").FusionPlugin;
 pub const ChatMessage = @import("chat.zig").Message;
 pub const ChatMessageContent = @import("chat.zig").MessageContent;
 pub const ChatPlugin = @import("chat.zig").Plugin;
+pub const ChatProviderRouting = @import("chat.zig").ProviderRouting;
 pub const ChatResponseFormat = @import("chat.zig").ResponseFormat;
 pub const ChatResponseFormatType = @import("chat.zig").ResponseFormatType;
 pub const ChatRole = @import("chat.zig").Role;

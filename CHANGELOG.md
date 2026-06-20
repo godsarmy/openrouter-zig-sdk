@@ -5,6 +5,7 @@
 - Development resumed after `v1.0.0`.
 - Added typed Responses API server tool support.
 - Added an env-gated chat server tools integration smoke test.
+- Added chat provider routing helper constructors and documented stable SemVer expectations.
 
 ## v1.0.0 - 2026-06-19
 
