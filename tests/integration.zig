@@ -152,6 +152,43 @@ test "chat Fusion plugin integration" {
     try std.testing.expect(response.choices[0].message.content.?.len > 0);
 }
 
+test "chat server tools integration" {
+    if (!envFlag("OPENROUTER_CHAT_SERVER_TOOLS_TEST")) return;
+
+    var threaded: std.Io.Threaded = .init_single_threaded;
+    defer threaded.deinit();
+
+    const maybe_client = try initPublicClient(&threaded);
+    var client = maybe_client orelse return;
+    defer client.deinit();
+
+    var response = client.chat.completions.create(.{
+        .model = env("OPENROUTER_CHAT_SERVER_TOOLS_MODEL") orelse "openai/gpt-4o-mini",
+        .messages = &.{openrouter.ChatMessage{
+            .role = .user,
+            .content = .{ .text = "Search ziglang.org and answer in one short sentence: what is Zig?" },
+        }},
+        .tools = &.{openrouter.ChatServerTool{ .web_search = .{
+            .max_results = 3,
+            .search_context_size = .medium,
+            .allowed_domains = &.{"ziglang.org"},
+        } }},
+        .tool_choice = .required,
+        .max_tokens = 80,
+    }, .{}) catch |err| switch (err) {
+        error.ApiError => {
+            if (envFlag("OPENROUTER_CHAT_SERVER_TOOLS_STRICT")) return err;
+            return;
+        },
+        else => |e| return e,
+    };
+    defer response.deinit();
+
+    try std.testing.expect(response.choices.len > 0);
+    try std.testing.expect(response.choices[0].message.content != null);
+    try std.testing.expect(response.choices[0].message.content.?.len > 0);
+}
+
 test "messages streaming integration" {
     var threaded: std.Io.Threaded = .init_single_threaded;
     defer threaded.deinit();
