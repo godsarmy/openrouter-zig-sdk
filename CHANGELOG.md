@@ -3,6 +3,7 @@
 ## v1.1.0-dev - Unreleased
 
 - Development resumed after `v1.0.0`.
+- Added typed Responses API server tool support.
 
 ## v1.0.0 - 2026-06-19
 

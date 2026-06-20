@@ -82,7 +82,16 @@ var response = try client.chat.completions.create(.{
 defer response.deinit();
 ```
 
-Available typed server tools include `.fusion`, `.web_search`, and `.web_fetch`. Use `.raw` for future OpenRouter tool shapes that are not typed yet.
+Available typed server tools include `.fusion`, `.web_search`, and `.web_fetch`. Use `.raw` for future OpenRouter tool shapes that are not typed yet. The Responses API uses the same tool shapes via `openrouter.ResponsesServerTool`.
+
+```zig
+var response = try client.responses.create(.{
+    .model = "openai/o4-mini",
+    .input = .{ .text = "Search for relevant sources." },
+    .tools = &.{openrouter.ResponsesServerTool{ .web_search = .{} }},
+}, .{});
+defer response.deinit();
+```
 
 ## OAuth PKCE
 

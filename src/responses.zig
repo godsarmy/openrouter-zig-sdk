@@ -4,6 +4,7 @@ const std = @import("std");
 
 const config_mod = @import("config.zig");
 const errors = @import("errors.zig");
+const chat_mod = @import("chat.zig");
 const http = @import("http.zig");
 const json = @import("json.zig");
 const options_mod = @import("options.zig");
@@ -15,7 +16,7 @@ pub const CreateRequest = struct {
     temperature: ?f32 = null,
     top_p: ?f32 = null,
     reasoning: ?std.json.Value = null,
-    tools: ?[]const std.json.Value = null,
+    tools: ?[]const ServerTool = null,
     provider: ?std.json.Value = null,
     extra_body: ?std.json.Value = null,
 
@@ -63,6 +64,8 @@ pub const CreateRequest = struct {
         try jws.endObject();
     }
 };
+
+pub const ServerTool = chat_mod.ServerTool;
 
 pub const Input = union(enum) {
     text: []const u8,
@@ -192,6 +195,26 @@ test "responses create merges extra body" {
     defer std.testing.allocator.free(body);
 
     try std.testing.expect(std.mem.indexOf(u8, body, "\"parallel_tool_calls\":false") != null);
+}
+
+test "responses create serializes typed server tools" {
+    const tools = &.{ServerTool{ .web_search = .{
+        .max_results = 3,
+        .search_context_size = .medium,
+        .allowed_domains = &.{"example.com"},
+    } }};
+
+    const body = try json.stringifyRequest(std.testing.allocator, CreateRequest{
+        .model = "openai/o4-mini",
+        .input = .{ .text = "Search for sources" },
+        .tools = tools,
+    });
+    defer std.testing.allocator.free(body);
+
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"tools\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"type\":\"openrouter:web_search\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"search_context_size\":\"medium\"") != null);
+    try std.testing.expect(std.mem.indexOf(u8, body, "\"allowed_domains\"") != null);
 }
 
 test "responses create ignores stream from extra body" {

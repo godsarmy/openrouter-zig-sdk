@@ -170,6 +170,7 @@ pub const RerankUsage = @import("rerank.zig").Usage;
 pub const ResponsesCreateRequest = @import("responses.zig").CreateRequest;
 pub const ResponsesCreateResponse = @import("responses.zig").CreateResponse;
 pub const ResponsesInput = @import("responses.zig").Input;
+pub const ResponsesServerTool = @import("responses.zig").ServerTool;
 pub const ResponsesUsage = @import("responses.zig").Usage;
 pub const RetryConfig = @import("retry.zig").RetryConfig;
 pub const VideoContentRequest = @import("videos.zig").ContentRequest;
