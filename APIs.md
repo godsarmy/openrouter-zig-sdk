@@ -44,6 +44,10 @@ Status legend:
 | [x] | GET | `/videos/{jobId}` | `client.videos.get` | Polls video generation job status. |
 | [x] | GET | `/videos/{jobId}/content` | `client.videos.content` | Downloads generated video content. |
 | [x] | GET | `/videos/models` | `client.videos.models.list` | Lists video generation models. |
+| [x] | GET | `/presets` | `client.presets.list` | Lists presets. |
+| [x] | GET | `/presets/{slug}` | `client.presets.get` | Gets a preset. |
+| [x] | GET | `/presets/{slug}/versions` | `client.presets.versions.list` | Lists preset versions. |
+| [x] | GET | `/presets/{slug}/versions/{version}` | `client.presets.versions.get` | Gets a preset version. |
 | [x] | POST | `/presets/{slug}/chat/completions` | `client.presets.chat.completions.create` | Creates a preset from a chat completions request body. |
 | [x] | POST | `/presets/{slug}/messages` | `client.presets.messages.create` | Creates a preset from a messages request body. |
 | [x] | POST | `/presets/{slug}/responses` | `client.presets.responses.create` | Creates a preset from a responses request body. |
@@ -179,10 +183,10 @@ Status legend:
 | [x] | POST | `/presets/{slug}/chat/completions` | `createPresetsChatCompletions` | Create a preset from a chat completions request body. | Implemented in `src/presets.zig`. |
 | [x] | POST | `/presets/{slug}/messages` | `createPresetsMessages` | Create a preset from a messages request body. | Implemented in `src/presets.zig`. |
 | [x] | POST | `/presets/{slug}/responses` | `createPresetsResponses` | Create a preset from a responses request body. | Implemented in `src/presets.zig`. |
-| [ ] | GET | `/presets` | `listPresets` | List presets. | Implemented by the TypeScript SDK; not implemented here yet. |
-| [ ] | GET | `/presets/{slug}` | `getPreset` | Get a preset. | Implemented by the TypeScript SDK; not implemented here yet. |
-| [ ] | GET | `/presets/{slug}/versions` | `listPresetVersions` | List preset versions. | Implemented by the TypeScript SDK; not implemented here yet. |
-| [ ] | GET | `/presets/{slug}/versions/{version}` | `getPresetVersion` | Get a preset version. | Implemented by the TypeScript SDK; not implemented here yet. |
+| [x] | GET | `/presets` | `listPresets` | List presets. | Implemented in `src/presets.zig`. |
+| [x] | GET | `/presets/{slug}` | `getPreset` | Get a preset. | Implemented in `src/presets.zig`. |
+| [x] | GET | `/presets/{slug}/versions` | `listPresetVersions` | List preset versions. | Implemented in `src/presets.zig`. |
+| [x] | GET | `/presets/{slug}/versions/{version}` | `getPresetVersion` | Get a preset version. | Implemented in `src/presets.zig`. |
 
 ## Notes
 

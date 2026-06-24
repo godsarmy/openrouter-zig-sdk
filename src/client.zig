@@ -181,6 +181,17 @@ pub const PresetsResource = struct {
     chat: PresetsChatResource = .{},
     messages: PresetsMessagesResource = .{},
     responses: PresetsResponsesResource = .{},
+    versions: PresetsVersionsResource = .{},
+
+    pub fn list(self: *PresetsResource, request: presets_mod.ListRequest, request_options: options_mod.RequestOptions) !presets_mod.ListResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("presets", self));
+        return presets_mod.list(client, request, request_options);
+    }
+
+    pub fn get(self: *PresetsResource, request: presets_mod.GetRequest, request_options: options_mod.RequestOptions) !presets_mod.GetResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("presets", self));
+        return presets_mod.get(client, request, request_options);
+    }
 };
 pub const PresetsChatResource = struct {
     completions: PresetsChatCompletionsResource = .{},
@@ -217,6 +228,27 @@ pub const PresetsResponsesResource = struct {
         const presets: *PresetsResource = @alignCast(@fieldParentPtr("responses", self));
         const client: *Client = @alignCast(@fieldParentPtr("presets", presets));
         return presets_mod.createResponse(client, request, request_options);
+    }
+};
+pub const PresetsVersionsResource = struct {
+    pub fn list(
+        self: *PresetsVersionsResource,
+        request: presets_mod.VersionsListRequest,
+        request_options: options_mod.RequestOptions,
+    ) !presets_mod.VersionsListResponse {
+        const presets: *PresetsResource = @alignCast(@fieldParentPtr("versions", self));
+        const client: *Client = @alignCast(@fieldParentPtr("presets", presets));
+        return presets_mod.listVersions(client, request, request_options);
+    }
+
+    pub fn get(
+        self: *PresetsVersionsResource,
+        request: presets_mod.VersionGetRequest,
+        request_options: options_mod.RequestOptions,
+    ) !presets_mod.VersionGetResponse {
+        const presets: *PresetsResource = @alignCast(@fieldParentPtr("versions", self));
+        const client: *Client = @alignCast(@fieldParentPtr("presets", presets));
+        return presets_mod.getVersion(client, request, request_options);
     }
 };
 pub const RerankResource = struct {
@@ -660,6 +692,7 @@ test "client initializes resource namespaces" {
     _ = client.presets.chat.completions;
     _ = client.presets.messages;
     _ = client.presets.responses;
+    _ = client.presets.versions;
     _ = client.rerank;
     _ = client.responses;
     _ = client.messages;
