@@ -78,6 +78,7 @@ Status legend:
 | [x] | GET | `/models` | `getModels` | List all models and their properties. | Implemented in `src/models.zig`. |
 | [x] | GET | `/models/count` | `listModelsCount` | Get the total count of available models. | Implemented in `src/models.zig`. |
 | [x] | GET | `/models/user` | `listModelsUser` | List models filtered by user preferences, privacy, or guardrails. | Implemented in `src/models.zig`. |
+| [ ] | GET | `/model/{author}/{slug}` | `getModel` | Get a single model. | Implemented by the TypeScript SDK; not implemented here yet. |
 | [x] | GET | `/models/{author}/{slug}/endpoints` | `listEndpoints` | List endpoints for a specific model. | Implemented in `src/models.zig`. |
 | [x] | GET | `/providers` | `listProviders` | List all providers. | Implemented in `src/providers.zig`. |
 | [x] | GET | `/endpoints/zdr` | `listEndpointsZdr` | Preview Zero Data Retention impact on available endpoints. | Implemented in `src/endpoints.zig`. |
@@ -92,6 +93,11 @@ Status legend:
 | [x] | GET | `/generation/content` | `listGenerationContent` | Get stored prompt/completion content for a generation. | Implemented in `src/generation.zig`. |
 | [x] | GET | `/activity` | `getUserActivity` | Get user activity grouped by endpoint. | Implemented in `src/activity.zig`. Requires a management API key. |
 | [x] | GET | `/datasets/rankings-daily` | `getRankingsDaily` | Get daily token totals for top models. | Implemented in `src/datasets.zig`. |
+| [ ] | GET | `/datasets/app-rankings` | `getAppRankings` | Get app rankings. | Implemented by the TypeScript SDK; not implemented here yet. |
+| [ ] | GET | `/datasets/benchmarks/artificial-analysis` | `getBenchmarksArtificialAnalysis` | Get Artificial Analysis benchmark data. | Implemented by the TypeScript SDK; not implemented here yet. |
+| [ ] | GET | `/datasets/benchmarks/design-arena` | `getBenchmarksDesignArena` | Get Design Arena benchmark data. | Implemented by the TypeScript SDK; not implemented here yet. |
+| [ ] | GET | `/analytics/meta` | `getAnalyticsMeta` | Get analytics query metadata. | Implemented by the TypeScript SDK; not implemented here yet. |
+| [ ] | POST | `/analytics/query` | `queryAnalytics` | Query analytics data. | Implemented by the TypeScript SDK; not implemented here yet. |
 
 ## API Keys, Auth, and BYOK
 
@@ -140,7 +146,20 @@ Status legend:
 | [x] | DELETE | `/workspaces/{id}` | `deleteWorkspace` | Delete a workspace. | Implemented in `src/workspaces.zig`. |
 | [x] | POST | `/workspaces/{id}/members/add` | `bulkAddWorkspaceMembers` | Bulk add members to a workspace. | Implemented in `src/workspaces.zig`. |
 | [x] | POST | `/workspaces/{id}/members/remove` | `bulkRemoveWorkspaceMembers` | Bulk remove members from a workspace. | Implemented in `src/workspaces.zig`. |
+| [ ] | GET | `/workspaces/{id}/budgets` | `listWorkspaceBudgets` | List workspace budgets. | Implemented by the TypeScript SDK; not implemented here yet. |
+| [ ] | PUT | `/workspaces/{id}/budgets/{interval}` | `upsertWorkspaceBudget` | Create or update a workspace budget for an interval. | Implemented by the TypeScript SDK; not implemented here yet. |
+| [ ] | DELETE | `/workspaces/{id}/budgets/{interval}` | `deleteWorkspaceBudget` | Delete a workspace budget for an interval. | Implemented by the TypeScript SDK; not implemented here yet. |
 | [x] | GET | `/organization/members` | `listOrganizationMembers` | List organization members. | Implemented in `src/organization.zig`. Requires management auth. |
+
+## Files
+
+| Status | Method | Path | Operation | Description | SDK notes |
+|---|---|---|---|---|---|
+| [ ] | GET | `/files` | `listFiles` | List uploaded files. | Implemented by the TypeScript SDK; not implemented here yet. |
+| [ ] | POST | `/files` | `uploadFile` | Upload a file. | Implemented by the TypeScript SDK; not implemented here yet. |
+| [ ] | GET | `/files/{file_id}` | `getFileMetadata` | Get file metadata. | Implemented by the TypeScript SDK; not implemented here yet. |
+| [ ] | DELETE | `/files/{file_id}` | `deleteFile` | Delete a file. | Implemented by the TypeScript SDK; not implemented here yet. |
+| [ ] | GET | `/files/{file_id}/content` | `downloadFileContent` | Download file content. | Implemented by the TypeScript SDK; not implemented here yet. |
 
 ## Observability
 
@@ -159,6 +178,10 @@ Status legend:
 | [x] | POST | `/presets/{slug}/chat/completions` | `createPresetsChatCompletions` | Create a preset from a chat completions request body. | Implemented in `src/presets.zig`. |
 | [x] | POST | `/presets/{slug}/messages` | `createPresetsMessages` | Create a preset from a messages request body. | Implemented in `src/presets.zig`. |
 | [x] | POST | `/presets/{slug}/responses` | `createPresetsResponses` | Create a preset from a responses request body. | Implemented in `src/presets.zig`. |
+| [ ] | GET | `/presets` | `listPresets` | List presets. | Implemented by the TypeScript SDK; not implemented here yet. |
+| [ ] | GET | `/presets/{slug}` | `getPreset` | Get a preset. | Implemented by the TypeScript SDK; not implemented here yet. |
+| [ ] | GET | `/presets/{slug}/versions` | `listPresetVersions` | List preset versions. | Implemented by the TypeScript SDK; not implemented here yet. |
+| [ ] | GET | `/presets/{slug}/versions/{version}` | `getPresetVersion` | Get a preset version. | Implemented by the TypeScript SDK; not implemented here yet. |
 
 ## Notes
 
