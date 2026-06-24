@@ -135,10 +135,6 @@ Format Zig files:
 zig fmt .
 ```
 
-## Project Status
-
-The SDK follows semantic versioning from `1.0.0` onward; public API changes should be reviewed as breaking changes.
-
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE).
