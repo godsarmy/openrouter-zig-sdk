@@ -35,6 +35,7 @@ Status legend:
 | [x] | POST | `/embeddings` | `client.embeddings.create` | Text embedding requests. |
 | [x] | GET | `/embeddings/models` | `client.embeddings.models.list` | Lists embedding models. |
 | [x] | GET | `/models` | `client.models.list` | Lists available models. |
+| [x] | GET | `/model/{author}/{slug}` | `client.models.get` | Gets a single model. |
 | [x] | GET | `/models/user` | `client.models.user.list` | Lists models available to the current user. |
 | [x] | GET | `/models/{author}/{slug}/endpoints` | `client.models.endpoints.list` | Lists endpoints for a specific model. |
 | [x] | GET | `/endpoints/zdr` | `client.endpoints.zdr.list` | Previews Zero Data Retention endpoint availability. |
@@ -78,7 +79,7 @@ Status legend:
 | [x] | GET | `/models` | `getModels` | List all models and their properties. | Implemented in `src/models.zig`. |
 | [x] | GET | `/models/count` | `listModelsCount` | Get the total count of available models. | Implemented in `src/models.zig`. |
 | [x] | GET | `/models/user` | `listModelsUser` | List models filtered by user preferences, privacy, or guardrails. | Implemented in `src/models.zig`. |
-| [ ] | GET | `/model/{author}/{slug}` | `getModel` | Get a single model. | Implemented by the TypeScript SDK; not implemented here yet. |
+| [x] | GET | `/model/{author}/{slug}` | `getModel` | Get a single model. | Implemented in `src/models.zig`. |
 | [x] | GET | `/models/{author}/{slug}/endpoints` | `listEndpoints` | List endpoints for a specific model. | Implemented in `src/models.zig`. |
 | [x] | GET | `/providers` | `listProviders` | List all providers. | Implemented in `src/providers.zig`. |
 | [x] | GET | `/endpoints/zdr` | `listEndpointsZdr` | Preview Zero Data Retention impact on available endpoints. | Implemented in `src/endpoints.zig`. |

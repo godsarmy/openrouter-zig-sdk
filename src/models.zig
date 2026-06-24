@@ -23,6 +23,11 @@ pub const CountRequest = struct {
     output_modalities: ?[]const u8 = null,
 };
 
+pub const GetRequest = struct {
+    author: []const u8,
+    slug: []const u8,
+};
+
 pub const EndpointsListRequest = struct {
     author: []const u8,
     slug: []const u8,
@@ -33,6 +38,16 @@ pub const CountResponse = struct {
     data: Count,
 
     pub fn deinit(self: *CountResponse) void {
+        self.arena.deinit();
+        self.* = undefined;
+    }
+};
+
+pub const GetResponse = struct {
+    arena: std.heap.ArenaAllocator,
+    data: Model,
+
+    pub fn deinit(self: *GetResponse) void {
         self.arena.deinit();
         self.* = undefined;
     }
@@ -131,6 +146,10 @@ const WireCountResponse = struct {
     data: Count,
 };
 
+const WireGetResponse = struct {
+    data: Model,
+};
+
 const WireEndpointsListResponse = struct {
     data: ModelEndpoints,
 };
@@ -181,6 +200,32 @@ pub fn listUserWithTransport(
 
 pub fn count(client: anytype, request: CountRequest, request_options: options_mod.RequestOptions) !CountResponse {
     return countWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, request, request_options);
+}
+
+pub fn get(client: anytype, request: GetRequest, request_options: options_mod.RequestOptions) !GetResponse {
+    return getWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, request, request_options);
+}
+
+pub fn getWithTransport(
+    allocator: std.mem.Allocator,
+    config: config_mod.Config,
+    transport: anytype,
+    request: GetRequest,
+    request_options: options_mod.RequestOptions,
+) !GetResponse {
+    const path = try getPath(allocator, request);
+    defer allocator.free(path);
+
+    var prepared = try http.prepareRequest(allocator, config, .{
+        .method = .GET,
+        .path = path,
+    }, request_options);
+    defer prepared.deinit();
+
+    var response = try transport.execute(allocator, prepared);
+    defer response.deinit();
+
+    return parseGetResponse(allocator, response);
 }
 
 pub fn listEndpoints(client: anytype, request: EndpointsListRequest, request_options: options_mod.RequestOptions) !EndpointsListResponse {
@@ -262,6 +307,21 @@ pub fn parseCountResponse(allocator: std.mem.Allocator, response: http.HttpRespo
     };
 }
 
+pub fn parseGetResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !GetResponse {
+    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    errdefer arena.deinit();
+    const arena_allocator = arena.allocator();
+
+    const owned_body = try arena_allocator.dupe(u8, response.body);
+    const parsed = try json.parseResponseLeaky(WireGetResponse, arena_allocator, owned_body);
+    return .{
+        .arena = arena,
+        .data = parsed.data,
+    };
+}
+
 pub fn parseEndpointsListResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !EndpointsListResponse {
     if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
 
@@ -279,6 +339,18 @@ pub fn parseEndpointsListResponse(allocator: std.mem.Allocator, response: http.H
 
 pub fn countQueryString(allocator: std.mem.Allocator, request: CountRequest) ![]u8 {
     return query_mod.build(allocator, &.{.{ .name = "output_modalities", .value = request.output_modalities }});
+}
+
+pub fn getPath(allocator: std.mem.Allocator, request: GetRequest) ![]u8 {
+    var path: std.ArrayList(u8) = .empty;
+    errdefer path.deinit(allocator);
+
+    try path.appendSlice(allocator, "/model/");
+    try appendPathSegment(allocator, &path, request.author);
+    try path.append(allocator, '/');
+    try appendPathSegment(allocator, &path, request.slug);
+
+    return path.toOwnedSlice(allocator);
 }
 
 pub fn endpointsPath(allocator: std.mem.Allocator, request: EndpointsListRequest) ![]u8 {
@@ -402,6 +474,66 @@ test "models user list maps error status to ApiError" {
         std.testing.allocator,
         config_mod.Config{ .api_key = "test-key" },
         http.FakeTransport{ .status = .unauthorized, .body = "{\"error\":{\"message\":\"bad key\"}}" },
+        .{},
+    ));
+}
+
+test "models get parses response and ignores unknown fields" {
+    const body =
+        \\{
+        \\  "data": {
+        \\    "id": "openai/gpt-4o-mini",
+        \\    "name": "GPT-4o mini",
+        \\    "description": "Small model",
+        \\    "context_length": 128000,
+        \\    "pricing": {
+        \\      "prompt": "0.00000015",
+        \\      "completion": "0.0000006"
+        \\    },
+        \\    "unknown": true
+        \\  }
+        \\}
+    ;
+
+    var result = try getWithTransport(std.testing.allocator, config_mod.Config{ .api_key = "test-key" }, http.FakeTransport{ .body = body }, .{
+        .author = "openai",
+        .slug = "gpt-4o-mini",
+    }, .{});
+    defer result.deinit();
+
+    try std.testing.expectEqualStrings("openai/gpt-4o-mini", result.data.id);
+    try std.testing.expectEqualStrings("GPT-4o mini", result.data.name.?);
+    try std.testing.expectEqual(@as(?u32, 128000), result.data.context_length);
+    try std.testing.expectEqualStrings("0.00000015", result.data.pricing.?.prompt.?);
+}
+
+test "models get sends GET /model/{author}/{slug}" {
+    const path = try getPath(std.testing.allocator, .{ .author = "openai", .slug = "gpt-4o-mini" });
+    defer std.testing.allocator.free(path);
+
+    var prepared = try http.prepareRequest(std.testing.allocator, .{ .api_key = "test-key" }, .{
+        .method = .GET,
+        .path = path,
+    }, .{});
+    defer prepared.deinit();
+
+    try std.testing.expectEqual(std.http.Method.GET, prepared.method);
+    try std.testing.expectEqualStrings("https://openrouter.ai/api/v1/model/openai/gpt-4o-mini", prepared.url);
+}
+
+test "models get path escapes path segments" {
+    const path = try getPath(std.testing.allocator, .{ .author = "author name", .slug = "model/slug:free" });
+    defer std.testing.allocator.free(path);
+
+    try std.testing.expectEqualStrings("/model/author%20name/model%2Fslug%3Afree", path);
+}
+
+test "models get maps error status to ApiError" {
+    try std.testing.expectError(error.ApiError, getWithTransport(
+        std.testing.allocator,
+        config_mod.Config{ .api_key = "test-key" },
+        http.FakeTransport{ .status = .not_found, .body = "{\"error\":{\"message\":\"not found\"}}" },
+        .{ .author = "openai", .slug = "missing" },
         .{},
     ));
 }

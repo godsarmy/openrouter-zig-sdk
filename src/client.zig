@@ -95,6 +95,15 @@ pub const ModelsResource = struct {
         const client: *Client = @alignCast(@fieldParentPtr("models", self));
         return models_mod.count(client, request, request_options);
     }
+
+    pub fn get(
+        self: *ModelsResource,
+        request: models_mod.GetRequest,
+        request_options: options_mod.RequestOptions,
+    ) !models_mod.GetResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("models", self));
+        return models_mod.get(client, request, request_options);
+    }
 };
 pub const ModelsEndpointsResource = struct {
     pub fn list(
