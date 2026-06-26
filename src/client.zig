@@ -497,7 +497,48 @@ pub const ActivityResource = struct {
     }
 };
 pub const DatasetsResource = struct {
+    app_rankings: AppRankingsResource = .{},
+    benchmarks: DatasetBenchmarksResource = .{},
     rankings_daily: RankingsDailyResource = .{},
+};
+pub const AppRankingsResource = struct {
+    pub fn get(
+        self: *AppRankingsResource,
+        request: datasets_mod.AppRankingsGetRequest,
+        request_options: options_mod.RequestOptions,
+    ) !datasets_mod.AppRankingsGetResponse {
+        const datasets: *DatasetsResource = @alignCast(@fieldParentPtr("app_rankings", self));
+        const client: *Client = @alignCast(@fieldParentPtr("datasets", datasets));
+        return datasets_mod.getAppRankings(client, request, request_options);
+    }
+};
+pub const DatasetBenchmarksResource = struct {
+    artificial_analysis: DatasetBenchmarksArtificialAnalysisResource = .{},
+    design_arena: DatasetBenchmarksDesignArenaResource = .{},
+};
+pub const DatasetBenchmarksArtificialAnalysisResource = struct {
+    pub fn get(
+        self: *DatasetBenchmarksArtificialAnalysisResource,
+        request: datasets_mod.BenchmarksArtificialAnalysisGetRequest,
+        request_options: options_mod.RequestOptions,
+    ) !datasets_mod.BenchmarksArtificialAnalysisGetResponse {
+        const benchmarks: *DatasetBenchmarksResource = @alignCast(@fieldParentPtr("artificial_analysis", self));
+        const datasets: *DatasetsResource = @alignCast(@fieldParentPtr("benchmarks", benchmarks));
+        const client: *Client = @alignCast(@fieldParentPtr("datasets", datasets));
+        return datasets_mod.getBenchmarksArtificialAnalysis(client, request, request_options);
+    }
+};
+pub const DatasetBenchmarksDesignArenaResource = struct {
+    pub fn get(
+        self: *DatasetBenchmarksDesignArenaResource,
+        request: datasets_mod.BenchmarksDesignArenaGetRequest,
+        request_options: options_mod.RequestOptions,
+    ) !datasets_mod.BenchmarksDesignArenaGetResponse {
+        const benchmarks: *DatasetBenchmarksResource = @alignCast(@fieldParentPtr("design_arena", self));
+        const datasets: *DatasetsResource = @alignCast(@fieldParentPtr("benchmarks", benchmarks));
+        const client: *Client = @alignCast(@fieldParentPtr("datasets", datasets));
+        return datasets_mod.getBenchmarksDesignArena(client, request, request_options);
+    }
 };
 pub const RankingsDailyResource = struct {
     pub fn get(
@@ -708,5 +749,9 @@ test "client initializes resource namespaces" {
     _ = client.generation;
     _ = client.activity;
     _ = client.datasets;
+    _ = client.datasets.app_rankings;
+    _ = client.datasets.benchmarks;
+    _ = client.datasets.benchmarks.artificial_analysis;
+    _ = client.datasets.benchmarks.design_arena;
     _ = client.datasets.rankings_daily;
 }
