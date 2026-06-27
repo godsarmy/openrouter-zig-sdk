@@ -62,6 +62,11 @@ Status legend:
 | [x] | GET | `/datasets/benchmarks/design-arena` | `client.datasets.benchmarks.design_arena.get` | Gets Design Arena benchmark data. |
 | [x] | GET | `/analytics/meta` | `client.analytics.meta.get` | Gets analytics query metadata. Requires a management API key. |
 | [x] | POST | `/analytics/query` | `client.analytics.query` | Queries analytics data. Requires a management API key. |
+| [x] | GET | `/files` | `client.files.list` | Lists uploaded files. |
+| [x] | POST | `/files` | `client.files.upload` | Uploads a file using multipart/form-data. |
+| [x] | GET | `/files/{file_id}` | `client.files.get` | Gets file metadata. |
+| [x] | DELETE | `/files/{file_id}` | `client.files.delete` | Deletes a file. |
+| [x] | GET | `/files/{file_id}/content` | `client.files.content` | Downloads raw file content. |
 | [x] | GET | `/key` | `client.key.get` | Gets metadata for the current API key. |
 
 ## Core Inference Endpoints
@@ -165,11 +170,11 @@ Status legend:
 
 | Status | Method | Path | Operation | Description | SDK notes |
 |---|---|---|---|---|---|
-| [ ] | GET | `/files` | `listFiles` | List uploaded files. | Implemented by the TypeScript SDK; not implemented here yet. |
-| [ ] | POST | `/files` | `uploadFile` | Upload a file. | Implemented by the TypeScript SDK; not implemented here yet. |
-| [ ] | GET | `/files/{file_id}` | `getFileMetadata` | Get file metadata. | Implemented by the TypeScript SDK; not implemented here yet. |
-| [ ] | DELETE | `/files/{file_id}` | `deleteFile` | Delete a file. | Implemented by the TypeScript SDK; not implemented here yet. |
-| [ ] | GET | `/files/{file_id}/content` | `downloadFileContent` | Download file content. | Implemented by the TypeScript SDK; not implemented here yet. |
+| [x] | GET | `/files` | `listFiles` | List uploaded files. | Implemented in `src/files.zig`. |
+| [x] | POST | `/files` | `uploadFile` | Upload a file. | Implemented in `src/files.zig` using multipart/form-data. |
+| [x] | GET | `/files/{file_id}` | `getFileMetadata` | Get file metadata. | Implemented in `src/files.zig`. |
+| [x] | DELETE | `/files/{file_id}` | `deleteFile` | Delete a file. | Implemented in `src/files.zig`. |
+| [x] | GET | `/files/{file_id}/content` | `downloadFileContent` | Download file content. | Implemented in `src/files.zig`; returns raw bytes. |
 
 ## Observability
 

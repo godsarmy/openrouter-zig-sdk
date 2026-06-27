@@ -12,6 +12,7 @@ const auth_keys_mod = @import("auth_keys.zig");
 const datasets_mod = @import("datasets.zig");
 const embeddings_mod = @import("embeddings.zig");
 const endpoints_mod = @import("endpoints.zig");
+const files_mod = @import("files.zig");
 const generation_mod = @import("generation.zig");
 const guardrails_mod = @import("guardrails.zig");
 const key_mod = @import("key.zig");
@@ -176,6 +177,28 @@ pub const VideosModelsResource = struct {
         const videos: *VideosResource = @alignCast(@fieldParentPtr("models", self));
         const client: *Client = @alignCast(@fieldParentPtr("videos", videos));
         return videos_mod.listModels(client, request_options);
+    }
+};
+pub const FilesResource = struct {
+    pub fn list(self: *FilesResource, request: files_mod.ListRequest, request_options: options_mod.RequestOptions) !files_mod.ListResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("files", self));
+        return files_mod.list(client, request, request_options);
+    }
+    pub fn upload(self: *FilesResource, request: files_mod.UploadRequest, request_options: options_mod.RequestOptions) !files_mod.MetadataResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("files", self));
+        return files_mod.upload(client, request, request_options);
+    }
+    pub fn get(self: *FilesResource, file_id: []const u8, request: files_mod.WorkspaceRequest, request_options: options_mod.RequestOptions) !files_mod.MetadataResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("files", self));
+        return files_mod.get(client, file_id, request, request_options);
+    }
+    pub fn delete(self: *FilesResource, file_id: []const u8, request: files_mod.WorkspaceRequest, request_options: options_mod.RequestOptions) !files_mod.DeleteResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("files", self));
+        return files_mod.delete(client, file_id, request, request_options);
+    }
+    pub fn content(self: *FilesResource, file_id: []const u8, request: files_mod.WorkspaceRequest, request_options: options_mod.RequestOptions) !files_mod.ContentResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("files", self));
+        return files_mod.content(client, file_id, request, request_options);
     }
 };
 pub const PresetsResource = struct {
@@ -602,6 +625,7 @@ pub const Client = struct {
     models: ModelsResource,
     embeddings: EmbeddingsResource,
     endpoints: EndpointsResource,
+    files: FilesResource,
     videos: VideosResource,
     presets: PresetsResource,
     rerank: RerankResource,
@@ -641,6 +665,7 @@ pub const Client = struct {
             .models = .{},
             .embeddings = .{},
             .endpoints = .{},
+            .files = .{},
             .videos = .{},
             .presets = .{},
             .rerank = .{},
@@ -763,6 +788,7 @@ test "client initializes resource namespaces" {
     _ = client.embeddings.models;
     _ = client.endpoints;
     _ = client.endpoints.zdr;
+    _ = client.files;
     _ = client.videos;
     _ = client.videos.models;
     _ = client.presets;

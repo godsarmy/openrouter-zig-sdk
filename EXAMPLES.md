@@ -21,6 +21,7 @@ zig build run-messages-stream
 zig build run-responses
 zig build run-embeddings
 zig build run-rerank
+zig build run-files
 zig build run-analytics
 ```
 
