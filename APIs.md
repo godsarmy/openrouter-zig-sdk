@@ -156,9 +156,9 @@ Status legend:
 | [x] | DELETE | `/workspaces/{id}` | `deleteWorkspace` | Delete a workspace. | Implemented in `src/workspaces.zig`. |
 | [x] | POST | `/workspaces/{id}/members/add` | `bulkAddWorkspaceMembers` | Bulk add members to a workspace. | Implemented in `src/workspaces.zig`. |
 | [x] | POST | `/workspaces/{id}/members/remove` | `bulkRemoveWorkspaceMembers` | Bulk remove members from a workspace. | Implemented in `src/workspaces.zig`. |
-| [ ] | GET | `/workspaces/{id}/budgets` | `listWorkspaceBudgets` | List workspace budgets. | Implemented by the TypeScript SDK; not implemented here yet. |
-| [ ] | PUT | `/workspaces/{id}/budgets/{interval}` | `upsertWorkspaceBudget` | Create or update a workspace budget for an interval. | Implemented by the TypeScript SDK; not implemented here yet. |
-| [ ] | DELETE | `/workspaces/{id}/budgets/{interval}` | `deleteWorkspaceBudget` | Delete a workspace budget for an interval. | Implemented by the TypeScript SDK; not implemented here yet. |
+| [x] | GET | `/workspaces/{id}/budgets` | `listWorkspaceBudgets` | List workspace budgets. | Implemented in `src/workspaces.zig` as `client.workspaces.budgets.list`. |
+| [x] | PUT | `/workspaces/{id}/budgets/{interval}` | `upsertWorkspaceBudget` | Create or update a workspace budget for an interval. | Implemented in `src/workspaces.zig` as `client.workspaces.budgets.upsert`. |
+| [x] | DELETE | `/workspaces/{id}/budgets/{interval}` | `deleteWorkspaceBudget` | Delete a workspace budget for an interval. | Implemented in `src/workspaces.zig` as `client.workspaces.budgets.delete`. |
 | [x] | GET | `/organization/members` | `listOrganizationMembers` | List organization members. | Implemented in `src/organization.zig`. Requires management auth. |
 
 ## Files

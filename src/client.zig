@@ -358,6 +358,8 @@ pub const GuardrailsResource = struct {
     }
 };
 pub const WorkspacesResource = struct {
+    budgets: WorkspaceBudgetsResource = .{},
+
     pub fn list(self: *WorkspacesResource, request: workspaces_mod.ListRequest, request_options: options_mod.RequestOptions) !workspaces_mod.ListResponse {
         const client: *Client = @alignCast(@fieldParentPtr("workspaces", self));
         return workspaces_mod.list(client, request, request_options);
@@ -385,6 +387,23 @@ pub const WorkspacesResource = struct {
     pub fn bulkRemoveMembers(self: *WorkspacesResource, id: []const u8, request: workspaces_mod.BulkMembersRequest, request_options: options_mod.RequestOptions) !workspaces_mod.BulkRemoveMembersResponse {
         const client: *Client = @alignCast(@fieldParentPtr("workspaces", self));
         return workspaces_mod.bulkRemoveMembers(client, id, request, request_options);
+    }
+};
+pub const WorkspaceBudgetsResource = struct {
+    pub fn list(self: *WorkspaceBudgetsResource, id: []const u8, request_options: options_mod.RequestOptions) !workspaces_mod.BudgetListResponse {
+        const workspaces: *WorkspacesResource = @alignCast(@fieldParentPtr("budgets", self));
+        const client: *Client = @alignCast(@fieldParentPtr("workspaces", workspaces));
+        return workspaces_mod.listBudgets(client, id, request_options);
+    }
+    pub fn upsert(self: *WorkspaceBudgetsResource, id: []const u8, interval: workspaces_mod.BudgetInterval, request: workspaces_mod.BudgetUpsertRequest, request_options: options_mod.RequestOptions) !workspaces_mod.BudgetUpsertResponse {
+        const workspaces: *WorkspacesResource = @alignCast(@fieldParentPtr("budgets", self));
+        const client: *Client = @alignCast(@fieldParentPtr("workspaces", workspaces));
+        return workspaces_mod.upsertBudget(client, id, interval, request, request_options);
+    }
+    pub fn delete(self: *WorkspaceBudgetsResource, id: []const u8, interval: workspaces_mod.BudgetInterval, request_options: options_mod.RequestOptions) !workspaces_mod.BudgetDeleteResponse {
+        const workspaces: *WorkspacesResource = @alignCast(@fieldParentPtr("budgets", self));
+        const client: *Client = @alignCast(@fieldParentPtr("workspaces", workspaces));
+        return workspaces_mod.deleteBudget(client, id, interval, request_options);
     }
 };
 pub const ObservabilityResource = struct {
@@ -759,6 +778,7 @@ test "client initializes resource namespaces" {
     _ = client.byok;
     _ = client.guardrails;
     _ = client.workspaces;
+    _ = client.workspaces.budgets;
     _ = client.organization;
     _ = client.organization.members;
     _ = client.key;
