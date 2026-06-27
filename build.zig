@@ -42,6 +42,7 @@ pub fn build(b: *std.Build) void {
     addExample(b, examples_step, target, optimize, openrouter, "generation", "examples/generation.zig", "run-generation", "Run generation metadata example");
     addExample(b, examples_step, target, optimize, openrouter, "generation_content", "examples/generation_content.zig", "run-generation-content", "Run generation content example");
     addExample(b, examples_step, target, optimize, openrouter, "activity", "examples/activity.zig", "run-activity", "Run activity example");
+    addExample(b, examples_step, target, optimize, openrouter, "analytics", "examples/analytics.zig", "run-analytics", "Run analytics example");
     addExample(b, examples_step, target, optimize, openrouter, "rankings_daily", "examples/rankings_daily.zig", "run-rankings-daily", "Run rankings daily example");
 
     const tests = b.addTest(.{

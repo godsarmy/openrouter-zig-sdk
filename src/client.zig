@@ -2,6 +2,7 @@
 
 const std = @import("std");
 const activity_mod = @import("activity.zig");
+const analytics_mod = @import("analytics.zig");
 const audio_mod = @import("audio.zig");
 const byok_mod = @import("byok.zig");
 const chat_mod = @import("chat.zig");
@@ -496,6 +497,21 @@ pub const ActivityResource = struct {
         return activity_mod.get(client, request, request_options);
     }
 };
+pub const AnalyticsResource = struct {
+    meta: AnalyticsMetaResource = .{},
+
+    pub fn query(self: *AnalyticsResource, request: analytics_mod.QueryRequest, request_options: options_mod.RequestOptions) !analytics_mod.QueryResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("analytics", self));
+        return analytics_mod.query(client, request, request_options);
+    }
+};
+pub const AnalyticsMetaResource = struct {
+    pub fn get(self: *AnalyticsMetaResource, request_options: options_mod.RequestOptions) !analytics_mod.MetaGetResponse {
+        const analytics: *AnalyticsResource = @alignCast(@fieldParentPtr("meta", self));
+        const client: *Client = @alignCast(@fieldParentPtr("analytics", analytics));
+        return analytics_mod.getMeta(client, request_options);
+    }
+};
 pub const DatasetsResource = struct {
     app_rankings: AppRankingsResource = .{},
     benchmarks: DatasetBenchmarksResource = .{},
@@ -584,6 +600,7 @@ pub const Client = struct {
     providers: ProvidersResource,
     generation: GenerationResource,
     activity: ActivityResource,
+    analytics: AnalyticsResource,
     datasets: DatasetsResource,
 
     pub fn init(allocator: std.mem.Allocator, io: std.Io, config: Config) Error!Client {
@@ -622,6 +639,7 @@ pub const Client = struct {
             .providers = .{},
             .generation = .{},
             .activity = .{},
+            .analytics = .{},
             .datasets = .{},
         };
     }
@@ -748,6 +766,8 @@ test "client initializes resource namespaces" {
     _ = client.providers;
     _ = client.generation;
     _ = client.activity;
+    _ = client.analytics;
+    _ = client.analytics.meta;
     _ = client.datasets;
     _ = client.datasets.app_rankings;
     _ = client.datasets.benchmarks;

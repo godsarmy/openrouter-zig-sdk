@@ -73,7 +73,7 @@ pub fn main() !void {
 
 ## API Scope
 
-The SDK covers chat completions, streaming, Messages, Responses, embeddings, rerank, audio, video, presets, model/provider discovery, usage metadata, datasets, and management APIs.
+The SDK covers chat completions, streaming, Messages, Responses, embeddings, rerank, audio, video, presets, model/provider discovery, usage metadata, datasets, analytics, and management APIs.
 
 See [APIs.md](APIs.md) for the full endpoint tracker and endpoint-specific notes.
 

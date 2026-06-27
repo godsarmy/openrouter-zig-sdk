@@ -60,6 +60,8 @@ Status legend:
 | [x] | GET | `/datasets/app-rankings` | `client.datasets.app_rankings.get` | Gets app rankings. |
 | [x] | GET | `/datasets/benchmarks/artificial-analysis` | `client.datasets.benchmarks.artificial_analysis.get` | Gets Artificial Analysis benchmark data. |
 | [x] | GET | `/datasets/benchmarks/design-arena` | `client.datasets.benchmarks.design_arena.get` | Gets Design Arena benchmark data. |
+| [x] | GET | `/analytics/meta` | `client.analytics.meta.get` | Gets analytics query metadata. Requires a management API key. |
+| [x] | POST | `/analytics/query` | `client.analytics.query` | Queries analytics data. Requires a management API key. |
 | [x] | GET | `/key` | `client.key.get` | Gets metadata for the current API key. |
 
 ## Core Inference Endpoints
@@ -104,8 +106,8 @@ Status legend:
 | [x] | GET | `/datasets/app-rankings` | `getAppRankings` | Get app rankings. | Implemented in `src/datasets.zig`. |
 | [x] | GET | `/datasets/benchmarks/artificial-analysis` | `getBenchmarksArtificialAnalysis` | Get Artificial Analysis benchmark data. | Implemented in `src/datasets.zig`. |
 | [x] | GET | `/datasets/benchmarks/design-arena` | `getBenchmarksDesignArena` | Get Design Arena benchmark data. | Implemented in `src/datasets.zig`. |
-| [ ] | GET | `/analytics/meta` | `getAnalyticsMeta` | Get analytics query metadata. | Implemented by the TypeScript SDK; not implemented here yet. |
-| [ ] | POST | `/analytics/query` | `queryAnalytics` | Query analytics data. | Implemented by the TypeScript SDK; not implemented here yet. |
+| [x] | GET | `/analytics/meta` | `getAnalyticsMeta` | Get analytics query metadata. | Implemented in `src/analytics.zig`. Requires a management API key. |
+| [x] | POST | `/analytics/query` | `queryAnalytics` | Query analytics data. | Implemented in `src/analytics.zig`. Requires a management API key. |
 
 ## API Keys, Auth, and BYOK
 
