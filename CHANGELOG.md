@@ -1,11 +1,16 @@
 # Changelog
 
-## v1.1.0-dev - Unreleased
+## v1.1.0 - 2026-06-27
 
 - Development resumed after `v1.0.0`.
 - Added typed Responses API server tool support.
 - Added an env-gated chat server tools integration smoke test.
 - Added chat provider routing helper constructors and documented stable SemVer expectations.
+- Added single-model lookup and preset read endpoints.
+- Added dataset app rankings and benchmark endpoints.
+- Added analytics metadata and query endpoints.
+- Added workspace budget endpoints.
+- Added Files API endpoints for listing, upload, metadata, deletion, and raw content downloads.
 
 ## v1.0.0 - 2026-06-19
 
