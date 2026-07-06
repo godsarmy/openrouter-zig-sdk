@@ -42,6 +42,7 @@ zig build test
 - Prefer typed enums/structs over loosely typed strings where practical.
 - Preserve OpenRouter-compatible model IDs as strings.
 - Keep transport details isolated from high-level API types.
+- Design the public API so the same request/response types and high-level calls can be used from both synchronous and asynchronous application code; callers choose the `std.Io` backend and concurrency model.
 - Keep generated or compatibility-layer types out of the stable handwritten API unless an explicit experimental namespace is added.
 - Make optional OpenRouter headers configurable:
   - `HTTP-Referer`
