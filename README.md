@@ -9,12 +9,6 @@ This project provides a small, idiomatic Zig wrapper around OpenRouter's HTTP AP
 - Zig `0.16.x`
 - An OpenRouter API key
 
-Check your Zig version:
-
-```sh
-zig version
-```
-
 ## Installation
 
 Add this package to your Zig project:
@@ -92,12 +86,6 @@ Inference create responses expose `response_metadata` for headers such as reques
 Requests use the client retry policy by default and can override it per request with `RequestOptions.retry`. Retryable responses include `429` and common transient `5xx` OpenRouter statuses when enabled.
 
 Public endpoint methods return `!T`. HTTP/API failures map to Zig errors such as `error.ApiError`; API keys are redacted from error/debug output.
-
-## Stable API and SemVer
-
-Starting with `v1.0.0`, public root exports and endpoint request/response types follow semantic versioning. Breaking public API changes require a major version bump.
-
-New endpoints, optional fields, typed helpers, and additional enum/union variants may be added in minor releases when they preserve existing source compatibility.
 
 ## Examples
 
