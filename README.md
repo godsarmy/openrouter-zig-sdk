@@ -14,7 +14,7 @@ This project provides a small, idiomatic Zig wrapper around OpenRouter's HTTP AP
 Add this package to your Zig project:
 
 ```sh
-zig fetch --save https://github.com/godsarmy/openrouter-zig-sdk/archive/refs/tags/v1.1.0.tar.gz
+zig fetch --save https://github.com/godsarmy/openrouter-zig-sdk/archive/refs/tags/v1.2.0.tar.gz
 ```
 
 Then import it from your `build.zig` dependency graph.
