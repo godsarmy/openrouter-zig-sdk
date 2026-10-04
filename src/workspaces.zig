@@ -309,7 +309,7 @@ fn execute(allocator: std.mem.Allocator, config: config_mod.Config, transport: a
 }
 
 pub fn parseListResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !ListResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
     const parsed = try json.parseResponseLeaky(WireListResponse, arena.allocator(), try arena.allocator().dupe(u8, response.body));
@@ -317,7 +317,7 @@ pub fn parseListResponse(allocator: std.mem.Allocator, response: http.HttpRespon
 }
 
 pub fn parseCreateResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !CreateResponse {
-    if (response.status != .created and errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (response.status != .created and errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
     return parseDataResponse(CreateResponse, allocator, response);
 }
 
@@ -330,7 +330,7 @@ pub fn parseUpdateResponse(allocator: std.mem.Allocator, response: http.HttpResp
 }
 
 fn parseDataResponse(comptime T: type, allocator: std.mem.Allocator, response: http.HttpResponse) !T {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
     const parsed = try json.parseResponseLeaky(WireDataResponse, arena.allocator(), try arena.allocator().dupe(u8, response.body));
@@ -338,7 +338,7 @@ fn parseDataResponse(comptime T: type, allocator: std.mem.Allocator, response: h
 }
 
 pub fn parseDeleteResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !DeleteResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
     const parsed = try json.parseResponseLeaky(WireDeleteResponse, arena.allocator(), try arena.allocator().dupe(u8, response.body));
@@ -346,7 +346,7 @@ pub fn parseDeleteResponse(allocator: std.mem.Allocator, response: http.HttpResp
 }
 
 pub fn parseBulkAddMembersResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !BulkAddMembersResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
     const parsed = try json.parseResponseLeaky(WireBulkAddMembersResponse, arena.allocator(), try arena.allocator().dupe(u8, response.body));
@@ -354,7 +354,7 @@ pub fn parseBulkAddMembersResponse(allocator: std.mem.Allocator, response: http.
 }
 
 pub fn parseBulkRemoveMembersResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !BulkRemoveMembersResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
     const parsed = try json.parseResponseLeaky(WireBulkRemoveMembersResponse, arena.allocator(), try arena.allocator().dupe(u8, response.body));
@@ -362,7 +362,7 @@ pub fn parseBulkRemoveMembersResponse(allocator: std.mem.Allocator, response: ht
 }
 
 pub fn parseBudgetListResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !BudgetListResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
     const parsed = try json.parseResponseLeaky(WireBudgetListResponse, arena.allocator(), try arena.allocator().dupe(u8, response.body));
@@ -370,7 +370,7 @@ pub fn parseBudgetListResponse(allocator: std.mem.Allocator, response: http.Http
 }
 
 pub fn parseBudgetUpsertResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !BudgetUpsertResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
     const parsed = try json.parseResponseLeaky(WireBudgetDataResponse, arena.allocator(), try arena.allocator().dupe(u8, response.body));
@@ -378,7 +378,7 @@ pub fn parseBudgetUpsertResponse(allocator: std.mem.Allocator, response: http.Ht
 }
 
 pub fn parseBudgetDeleteResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !BudgetDeleteResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
     const parsed = try json.parseResponseLeaky(WireBudgetDeleteResponse, arena.allocator(), try arena.allocator().dupe(u8, response.body));

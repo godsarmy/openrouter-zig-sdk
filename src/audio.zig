@@ -103,7 +103,7 @@ pub fn createSpeechWithTransport(
     defer prepared.deinit();
 
     var response = try transport.execute(allocator, prepared);
-    if (errors.isErrorStatus(@intFromEnum(response.status))) {
+    if (errors.isErrorStatus(@backingInt(response.status))) {
         response.deinit();
         return error.ApiError;
     }
@@ -139,7 +139,7 @@ pub fn createTranscriptionWithTransport(
 }
 
 pub fn parseTranscriptionsCreateResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !TranscriptionsCreateResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();

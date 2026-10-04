@@ -134,7 +134,7 @@ pub fn streamWithHttpClient(
         },
         else => |e| return e,
     };
-    if (errors.isErrorStatus(@intFromEnum(response.head.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.head.status))) return error.ApiError;
 
     const state = try allocator.create(sse.State);
     state.* = .{

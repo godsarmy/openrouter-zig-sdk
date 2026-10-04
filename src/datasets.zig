@@ -288,7 +288,7 @@ pub fn getBenchmarksDesignArenaWithTransport(
 }
 
 pub fn parseRankingsDailyGetResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !RankingsDailyGetResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
@@ -304,7 +304,7 @@ pub fn parseRankingsDailyGetResponse(allocator: std.mem.Allocator, response: htt
 }
 
 pub fn parseAppRankingsGetResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !AppRankingsGetResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
@@ -320,7 +320,7 @@ pub fn parseAppRankingsGetResponse(allocator: std.mem.Allocator, response: http.
 }
 
 pub fn parseBenchmarksArtificialAnalysisGetResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !BenchmarksArtificialAnalysisGetResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
@@ -336,7 +336,7 @@ pub fn parseBenchmarksArtificialAnalysisGetResponse(allocator: std.mem.Allocator
 }
 
 pub fn parseBenchmarksDesignArenaGetResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !BenchmarksDesignArenaGetResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();

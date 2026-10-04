@@ -128,7 +128,7 @@ pub fn execute(
     }
 
     const uri = try std.Uri.parse(prepared.url);
-    const redirect_behavior: std.http.Client.Request.RedirectBehavior = if (prepared.body == null) @enumFromInt(3) else .unhandled;
+    const redirect_behavior: std.http.Client.Request.RedirectBehavior = if (prepared.body == null) @fromBackingInt(@intCast(3)) else .unhandled;
     var request = try std.http.Client.request(client, prepared.method, uri, .{
         .extra_headers = std_headers,
         .redirect_behavior = redirect_behavior,

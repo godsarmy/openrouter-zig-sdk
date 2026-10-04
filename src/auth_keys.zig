@@ -80,7 +80,7 @@ pub fn exchangeWithTransport(allocator: std.mem.Allocator, config: config_mod.Co
 }
 
 pub fn parseCreateCodeResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !CreateCodeResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
     const parsed = try json.parseResponseLeaky(WireCreateCodeResponse, arena.allocator(), try arena.allocator().dupe(u8, response.body));
@@ -88,7 +88,7 @@ pub fn parseCreateCodeResponse(allocator: std.mem.Allocator, response: http.Http
 }
 
 pub fn parseExchangeResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !ExchangeResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
     const parsed = try json.parseResponseLeaky(WireExchangeResponse, arena.allocator(), try arena.allocator().dupe(u8, response.body));

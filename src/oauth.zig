@@ -42,7 +42,7 @@ test "OAuth PKCE S256 challenge matches RFC 7636 example" {
 }
 
 test "OAuth PKCE verifier uses base64url without padding" {
-    const bytes = [_]u8{0xab} ** default_verifier_random_bytes;
+    const bytes: [default_verifier_random_bytes]u8 = @splat(0xab);
     const verifier = try createCodeVerifier(std.testing.allocator, &bytes);
     defer std.testing.allocator.free(verifier);
 
@@ -53,8 +53,8 @@ test "OAuth PKCE verifier uses base64url without padding" {
 }
 
 test "OAuth PKCE verifier rejects entropy lengths outside PKCE bounds" {
-    const too_short = [_]u8{0xab} ** 31;
-    const too_long = [_]u8{0xab} ** 97;
+    const too_short: [31]u8 = @splat(0xab);
+    const too_long: [97]u8 = @splat(0xab);
 
     try std.testing.expectError(error.InvalidCodeVerifierEntropy, createCodeVerifier(std.testing.allocator, &too_short));
     try std.testing.expectError(error.InvalidCodeVerifierEntropy, createCodeVerifier(std.testing.allocator, &too_long));

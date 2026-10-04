@@ -178,7 +178,7 @@ pub fn contentWithTransport(allocator: std.mem.Allocator, config: config_mod.Con
     defer allocator.free(query);
 
     var response = try execute(allocator, config, transport, .{ .method = .GET, .path = path, .query = query, .accept = "application/octet-stream" }, request_options);
-    if (errors.isErrorStatus(@intFromEnum(response.status))) {
+    if (errors.isErrorStatus(@backingInt(response.status))) {
         response.deinit();
         return error.ApiError;
     }
@@ -192,7 +192,7 @@ fn execute(allocator: std.mem.Allocator, config: config_mod.Config, transport: a
 }
 
 pub fn parseListResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !ListResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
@@ -201,7 +201,7 @@ pub fn parseListResponse(allocator: std.mem.Allocator, response: http.HttpRespon
 }
 
 pub fn parseMetadataResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !MetadataResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
@@ -210,7 +210,7 @@ pub fn parseMetadataResponse(allocator: std.mem.Allocator, response: http.HttpRe
 }
 
 pub fn parseDeleteResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !DeleteResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();

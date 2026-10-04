@@ -3,6 +3,8 @@
 ## v1.1.1-dev - Unreleased
 
 - Development resumed after `v1.1.0`.
+- Updated the minimum supported Zig version and CI toolchain to `0.17.0`.
+- Migrated example argument forwarding, OAuth test array initialization, and enum conversions to Zig 0.17 syntax without changing the public API.
 
 ## v1.1.0 - 2026-06-27
 

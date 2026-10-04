@@ -4,7 +4,7 @@ Guidance for AI coding agents working on this repository.
 
 ## Project Goal
 
-Implement an idiomatic Zig `0.16.x` client for the OpenRouter API.
+Implement an idiomatic Zig `0.17.x` client for the OpenRouter API.
 
 Prioritize:
 
@@ -17,7 +17,7 @@ Prioritize:
 
 ## Zig Version
 
-Target Zig `0.16.x`.
+Target Zig `0.17.x`.
 
 Before relying on language or standard-library behavior, verify it works with the installed Zig version:
 
@@ -50,7 +50,7 @@ zig build test
 
 ## HTTP/API Notes
 
-Zig `0.16.x` uses I/O as an explicit interface. The OpenRouter client should use `std.http.Client` with caller-provided `std.Io`, for example from application-owned `std.Io.Threaded`.
+Zig `0.17.x` uses I/O as an explicit interface. The OpenRouter client should use `std.http.Client` with caller-provided `std.Io`, for example from application-owned `std.Io.Threaded`.
 
 Do not hard-code an async runtime or event-loop backend into the library.
 

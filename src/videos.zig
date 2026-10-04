@@ -238,7 +238,7 @@ pub fn contentWithTransport(
     defer prepared.deinit();
 
     var response = try transport.execute(allocator, prepared);
-    if (errors.isErrorStatus(@intFromEnum(response.status))) {
+    if (errors.isErrorStatus(@backingInt(response.status))) {
         response.deinit();
         return error.ApiError;
     }
@@ -269,7 +269,7 @@ pub fn listModelsWithTransport(
 }
 
 pub fn parseJobResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !JobResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
@@ -290,7 +290,7 @@ pub fn parseJobResponse(allocator: std.mem.Allocator, response: http.HttpRespons
 }
 
 pub fn parseModelsListResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !ModelsListResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();

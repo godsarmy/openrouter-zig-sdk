@@ -50,7 +50,7 @@ pub fn getWithTransport(
 }
 
 pub fn parseGetResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !GetResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();

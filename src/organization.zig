@@ -50,7 +50,7 @@ pub fn listMembersWithTransport(allocator: std.mem.Allocator, config: config_mod
 }
 
 pub fn parseMembersListResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !MembersListResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
     const parsed = try json.parseResponseLeaky(WireMembersListResponse, arena.allocator(), try arena.allocator().dupe(u8, response.body));

@@ -99,11 +99,11 @@ pub fn buildApiError(allocator: std.mem.Allocator, response: http_mod.HttpRespon
         extractErrorFields(arena_allocator, value, &code, &message) catch {};
     } else |_| {}
 
-    const fallback_message = try std.fmt.allocPrint(arena_allocator, "OpenRouter API error {d}", .{@intFromEnum(response.status)});
+    const fallback_message = try std.fmt.allocPrint(arena_allocator, "OpenRouter API error {d}", .{@backingInt(response.status)});
 
     return .{
         .arena = arena,
-        .status = @intFromEnum(response.status),
+        .status = @backingInt(response.status),
         .code = code,
         .message = message orelse fallback_message,
         .raw_body = try arena_allocator.dupe(u8, response.body),

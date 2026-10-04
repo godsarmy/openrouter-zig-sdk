@@ -278,7 +278,7 @@ pub fn countWithTransport(
 }
 
 pub fn parseListResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !ListResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
@@ -293,7 +293,7 @@ pub fn parseListResponse(allocator: std.mem.Allocator, response: http.HttpRespon
 }
 
 pub fn parseCountResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !CountResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
@@ -308,7 +308,7 @@ pub fn parseCountResponse(allocator: std.mem.Allocator, response: http.HttpRespo
 }
 
 pub fn parseGetResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !GetResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
@@ -323,7 +323,7 @@ pub fn parseGetResponse(allocator: std.mem.Allocator, response: http.HttpRespons
 }
 
 pub fn parseEndpointsListResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !EndpointsListResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();

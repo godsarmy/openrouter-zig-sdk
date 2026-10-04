@@ -302,7 +302,7 @@ pub fn parseChatCompletionsCreateResponse(allocator: std.mem.Allocator, response
 }
 
 pub fn parsePresetCreateResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !PresetCreateResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
@@ -318,7 +318,7 @@ pub fn parsePresetCreateResponse(allocator: std.mem.Allocator, response: http.Ht
 }
 
 pub fn parseListResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !ListResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
@@ -334,7 +334,7 @@ pub fn parseListResponse(allocator: std.mem.Allocator, response: http.HttpRespon
 }
 
 pub fn parseGetResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !GetResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
@@ -349,7 +349,7 @@ pub fn parseGetResponse(allocator: std.mem.Allocator, response: http.HttpRespons
 }
 
 pub fn parseVersionsListResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !VersionsListResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
@@ -365,7 +365,7 @@ pub fn parseVersionsListResponse(allocator: std.mem.Allocator, response: http.Ht
 }
 
 pub fn parseVersionGetResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !VersionGetResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();

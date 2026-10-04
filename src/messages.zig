@@ -352,7 +352,7 @@ pub fn streamWithHttpClient(
         },
         else => |e| return e,
     };
-    if (errors.isErrorStatus(@intFromEnum(response.head.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.head.status))) return error.ApiError;
 
     const state = try allocator.create(sse.State);
     state.* = .{
@@ -393,7 +393,7 @@ pub fn createWithTransport(
 }
 
 pub fn parseCreateResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !CreateResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();

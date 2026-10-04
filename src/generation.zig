@@ -171,7 +171,7 @@ pub fn contentWithTransport(
 }
 
 pub fn parseGetResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !GetResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
@@ -186,7 +186,7 @@ pub fn parseGetResponse(allocator: std.mem.Allocator, response: http.HttpRespons
 }
 
 pub fn parseContentResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !ContentResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();

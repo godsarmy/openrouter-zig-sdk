@@ -1,12 +1,12 @@
 # openrouter-zig
 
-A Zig 0.16 client for the [OpenRouter API](https://openrouter.ai/docs).
+A Zig 0.17 client for the [OpenRouter API](https://openrouter.ai/docs).
 
 This project provides a small, idiomatic Zig wrapper around OpenRouter's HTTP API with explicit allocator and I/O ownership.
 
 ## Requirements
 
-- Zig `0.16.x`
+- Zig `0.17.x`
 - An OpenRouter API key
 
 ## Installation

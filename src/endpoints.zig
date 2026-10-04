@@ -46,7 +46,7 @@ pub fn listZdrWithTransport(
 }
 
 pub fn parseZdrListResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !ZdrListResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();

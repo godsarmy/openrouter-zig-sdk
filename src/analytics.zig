@@ -158,7 +158,7 @@ pub fn queryWithTransport(
 }
 
 pub fn parseMetaGetResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !MetaGetResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
@@ -170,7 +170,7 @@ pub fn parseMetaGetResponse(allocator: std.mem.Allocator, response: http.HttpRes
 }
 
 pub fn parseQueryResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !QueryResponse {
-    if (errors.isErrorStatus(@intFromEnum(response.status))) return error.ApiError;
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();

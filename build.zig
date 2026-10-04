@@ -98,6 +98,6 @@ fn addExample(
 
     const run_step = b.step(run_step_name, run_step_description);
     const run_cmd = b.addRunArtifact(exe);
-    if (b.args) |args| run_cmd.addArgs(args);
+    run_cmd.addPassthruArgs();
     run_step.dependOn(&run_cmd.step);
 }
