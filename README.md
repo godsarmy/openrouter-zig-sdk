@@ -1,17 +1,8 @@
 # openrouter-zig
 
-A Zig 0.17 client for the [OpenRouter API](https://openrouter.ai/docs).
+A Zig `0.17.x` client for the [OpenRouter API](https://openrouter.ai/docs), with explicit allocator and I/O ownership.
 
-This project provides a small, idiomatic Zig wrapper around OpenRouter's HTTP API with explicit allocator and I/O ownership.
-
-## Requirements
-
-- Zig `0.17.x`
-- An OpenRouter API key
-
-## Installation
-
-Add this package to your Zig project:
+## Install
 
 ```sh
 zig fetch --save https://github.com/godsarmy/openrouter-zig-sdk/archive/refs/tags/v1.2.0.tar.gz
@@ -19,22 +10,7 @@ zig fetch --save https://github.com/godsarmy/openrouter-zig-sdk/archive/refs/tag
 
 Then import it from your `build.zig` dependency graph.
 
-## Environment
-
-Set your OpenRouter API key:
-
-```sh
-export OPENROUTER_API_KEY="sk-or-v1-..."
-```
-
-Optional OpenRouter attribution headers:
-
-```sh
-export OPENROUTER_HTTP_REFERER="https://your-site.example"
-export OPENROUTER_APP_TITLE="Your App"
-```
-
-## Usage
+## Quick start
 
 ```zig
 const std = @import("std");
@@ -65,63 +41,14 @@ pub fn main() !void {
 }
 ```
 
-## API Scope
+**Ownership warning:** callers own the allocator and `std.Io`; call `client.deinit()` and deinitialize returned responses, chunks, and streams. Do not share a client between threads without external synchronization.
 
-The SDK covers chat completions, streaming, Messages, Responses, embeddings, rerank, audio, video, files, presets, model/provider discovery, usage metadata, datasets, analytics, and management APIs.
+## Documentation
 
-See [APIs.md](APIs.md) for the full endpoint tracker and endpoint-specific notes.
-
-## Ownership and Lifecycle
-
-The caller provides the allocator and `std.Io` used by `Client.init`. The client owns its internal HTTP client and must be closed with `client.deinit()`.
-
-Response values and stream chunks own parsed data or buffered bytes. Call `deinit()` when finished. Streaming responses use a pull iterator; call `stream.deinit()` even if you stop reading early.
-
-Inference create responses expose `response_metadata` for headers such as request ID, generation ID, and rate-limit values when OpenRouter returns them.
-
-`Client` is not thread-safe unless access is externally synchronized. Prefer one client per worker when issuing concurrent requests.
-
-## Retry and Errors
-
-Requests use the client retry policy by default and can override it per request with `RequestOptions.retry`. Retryable responses include `429` and common transient `5xx` OpenRouter statuses when enabled.
-
-Public endpoint methods return `!T`. HTTP/API failures map to Zig errors such as `error.ApiError`; API keys are redacted from error/debug output.
-
-## Examples
-
-Build all examples with:
-
-```sh
-zig build examples
-```
-
-See [EXAMPLES.md](EXAMPLES.md) for streaming, concurrent I/O, OAuth PKCE, endpoint examples, and integration-test notes.
-
-## Development
-
-Build:
-
-```sh
-zig build
-```
-
-Run tests:
-
-```sh
-zig build test
-```
-
-Run opt-in integration tests against OpenRouter. Without `OPENROUTER_API_KEY`, these tests do nothing:
-
-```sh
-zig build integration-test
-```
-
-Format Zig files:
-
-```sh
-zig fmt .
-```
+- [Getting started](docs/getting-started.md)
+- [Configuration](docs/client/configuration.md), [memory and lifecycle](docs/client/memory-and-lifecycle.md), [streaming](docs/client/streaming.md), and [retries and errors](docs/client/retries-and-errors.md)
+- [API reference](APIs.md) and [examples](EXAMPLES.md)
+- [Verification](docs/development/verification.md) and [release process](docs/development/release-process.md)
 
 ## License
 

@@ -34,6 +34,10 @@ zig build test
 - Do not commit generated build artifacts.
 - Do not commit API keys, `.env` files, logs, or local editor settings.
 
+## Documentation
+
+`docs/` is this repository's OKF knowledge bundle. Read [its index](docs/index.md) before documentation work and keep relevant concepts and indexes synchronized with source changes.
+
 ## API Design Guidelines
 
 - Require callers to pass an allocator for owned data.
@@ -102,6 +106,8 @@ If network behavior changes, include tests that avoid requiring real API credent
 
 ## Development Commands
 
+Detailed command intent and credential behavior: [verification](docs/development/verification.md). Keep the commands below available when working in this repository.
+
 Build and test:
 
 ```sh
@@ -138,6 +144,8 @@ zig build run-providers
 See `build.zig` for the full example command list.
 
 ## Release Checklist
+
+Release context and the same required checklist: [release process](docs/development/release-process.md).
 
 1. Update `src/version.zig`, `build.zig.zon`, `CHANGELOG.md`, and the install tag in `README.md`.
 2. For `1.0.0` and later, review public root exports in `src/openrouter.zig` and treat public API changes as breaking changes.
