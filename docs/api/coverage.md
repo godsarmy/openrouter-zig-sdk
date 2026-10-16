@@ -19,7 +19,7 @@ Every row is implemented and registered on `openrouter.Client`; method names are
 | Method | Path | Client call | Notes |
 |---|---|---|---|
 | POST | `/chat/completions` | `chat.completions.create`, `.stream` | Chat; stream is SSE. |
-| POST | `/responses` | `responses.create` | Non-streaming Responses API. |
+| POST | `/responses` | `responses.create`, `.stream` | Responses API; stream is SSE. |
 | POST | `/messages` | `messages.create`, `.stream` | Anthropic-compatible; stream is SSE. |
 | POST | `/embeddings` | `embeddings.create` | Text embeddings. |
 | GET | `/embeddings/models` | `embeddings.models.list` | Embedding model discovery. |

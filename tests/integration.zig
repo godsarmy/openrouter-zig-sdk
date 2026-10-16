@@ -223,6 +223,39 @@ test "messages streaming integration" {
     try std.testing.expect(saw_content);
 }
 
+test "responses streaming integration" {
+    var threaded: std.Io.Threaded = .init_single_threaded;
+    defer threaded.deinit();
+    const maybe_client = try initPublicClient(&threaded);
+    var client = maybe_client orelse return;
+    defer client.deinit();
+
+    var stream = try client.responses.stream(.{
+        .model = env("OPENROUTER_RESPONSES_MODEL") orelse "openai/gpt-4o-mini",
+        .input = .{ .text = "Reply with only: ok" },
+        .max_output_tokens = 4,
+    }, .{});
+    defer stream.deinit();
+
+    var events_seen: usize = 0;
+    var saw_text = false;
+    var saw_success = false;
+    while (events_seen < 64) {
+        var event = (try stream.next()) orelse break;
+        defer event.deinit();
+        events_seen += 1;
+        if (event.textDelta()) |text| saw_text = saw_text or text.len > 0;
+        if (event.isTerminal()) {
+            if (!event.isSuccess()) return error.ResponseFailed;
+            saw_success = true;
+            break;
+        }
+    }
+    if (!saw_success) return error.StreamLimitExceeded;
+    try std.testing.expect(events_seen > 0);
+    try std.testing.expect(saw_text);
+}
+
 test "credits integration with management key" {
     var threaded: std.Io.Threaded = .init_single_threaded;
     defer threaded.deinit();

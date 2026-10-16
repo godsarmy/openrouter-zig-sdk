@@ -1,7 +1,7 @@
 ---
 type: Example Catalog
 title: Runnable example catalog
-description: Complete mapping of the 35 build.zig run steps to their purpose and authentication requirement.
+description: Complete mapping of the 36 build.zig run steps to their purpose and authentication requirement.
 tags: [examples, build, authentication]
 generated: { by: openai/gpt-6.1-sol, at: 2026-10-15T22:45:26Z }
 sources:
@@ -35,6 +35,7 @@ Build all examples with `zig build examples`. The commands below make network re
 | `run-audio-speech` | `audio_speech.zig` | Text-to-speech | API key |
 | `run-audio-transcriptions` | `audio_transcriptions.zig` | Audio transcription | API key |
 | `run-responses` | `responses.zig` | Responses API | API key |
+| `run-responses-stream` | `responses_stream.zig` | Streaming Responses API | API key |
 | `run-messages` | `messages.zig` | Messages API | API key |
 | `run-messages-stream` | `messages_stream.zig` | Streaming Messages API | API key |
 | `run-embeddings` | `embeddings.zig` | Create embeddings | API key |

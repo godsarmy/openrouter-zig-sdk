@@ -10,7 +10,7 @@ Paths below are normally relative to `https://openrouter.ai/api/v1`. `/api/alpha
 
 ### Phase 1 — inference fidelity and routing
 
-1. Add Responses streaming using the shared SSE infrastructure, with typed requests, events, function-call outputs, and reasoning. Review the [basic Responses usage](https://openrouter.ai/docs/api_reference/responses/basic-usage) and [Responses tool calling](https://openrouter.ai/docs/api_reference/responses/tool-calling) documentation.
+1. **Done: Responses streaming** uses the shared SSE infrastructure with typed common event fields, raw event preservation, text/reasoning helpers, function-call argument separation, and terminal-state handling. Typed full request/input/output expansion remains follow-up work. Review the [basic Responses usage](https://openrouter.ai/docs/api_reference/responses/basic-usage) and [Responses tool calling](https://openrouter.ai/docs/api_reference/responses/tool-calling) documentation.
 2. Expand Chat response and streaming fidelity beyond the current assistant `role`/`content` shape: returned `tool_calls`, reasoning, annotations, refusal, and multimodal typed content parts.
 3. Add provider-routing privacy, filter, sort, price, latency, and throughput options, plus deliberately scoped raw escape hatches. Follow the [provider-selection guide](https://openrouter.ai/docs/guides/routing/provider-selection) and [parameter reference](https://openrouter.ai/docs/api_reference/parameters).
 

@@ -29,6 +29,7 @@ pub fn build(b: *std.Build) void {
     addExample(b, examples_step, target, optimize, openrouter, "audio_speech", "examples/audio_speech.zig", "run-audio-speech", "Run audio speech example");
     addExample(b, examples_step, target, optimize, openrouter, "audio_transcriptions", "examples/audio_transcriptions.zig", "run-audio-transcriptions", "Run audio transcriptions example");
     addExample(b, examples_step, target, optimize, openrouter, "responses", "examples/responses.zig", "run-responses", "Run responses example");
+    addExample(b, examples_step, target, optimize, openrouter, "responses_stream", "examples/responses_stream.zig", "run-responses-stream", "Run Responses streaming example");
     addExample(b, examples_step, target, optimize, openrouter, "messages", "examples/messages.zig", "run-messages", "Run messages example");
     addExample(b, examples_step, target, optimize, openrouter, "messages_stream", "examples/messages_stream.zig", "run-messages-stream", "Run messages streaming example");
     addExample(b, examples_step, target, optimize, openrouter, "embeddings", "examples/embeddings.zig", "run-embeddings", "Run embeddings example");

@@ -1,8 +1,8 @@
 ---
 type: Guide
-title: Streaming chat completions
-description: Consume chat-completion Server-Sent Event chunks through the pull-based completion stream.
-tags: [client, streaming, sse, chat]
+title: Streaming inference APIs
+description: Consume chat-completion and Responses Server-Sent Events through pull-based streams.
+tags: [client, streaming, sse, chat, responses]
 generated: { by: openai/gpt-6.1-sol, at: 2026-10-15T22:44:12Z }
 sources:
   - id: client
@@ -37,6 +37,26 @@ while (try stream.next()) |chunk| {
 The parser ignores SSE comments and non-data fields, joins multiple `data:` lines, and treats `[DONE]` as completion. It reports malformed SSE, oversized events, unexpected end of stream, cancellation, API, and allocation errors.[^sse]
 
 Always defer `stream.deinit()` so its request, headers, prepared request, and request body are released if a loop exits early. See [memory and lifecycle](memory-and-lifecycle.md).
+
+# Stream Responses
+
+`client.responses.stream` sends `POST /responses` with `stream: true` and returns an owned `ResponsesStream`. Each returned `ResponsesStreamEvent` owns an event arena and must be deinitialized. The event keeps its complete parsed payload in `raw`, including unknown event types and fields; common correlation fields and scalar payloads are exposed directly.
+
+```zig
+var stream = try client.responses.stream(.{
+    .model = "openai/gpt-4o-mini",
+    .input = .{ .text = "Reply with only: ok" },
+}, .{});
+defer stream.deinit();
+
+while (try stream.next()) |event| {
+    defer event.deinit();
+    if (event.textDelta()) |text| std.debug.print("{s}", .{text});
+    if (event.isTerminal() and !event.isSuccess()) return error.ResponseFailed;
+}
+```
+
+Function-call argument deltas are intentionally not returned by `textDelta()`; use `event.functionArgumentsDelta()`. Completed JSON arguments on `response.function_call_arguments.done` are exposed as `event.arguments`. `reasoningDelta()` accepts `response.reasoning_text.delta`, `response.reasoning_summary_text.delta`, and the documented `response.reasoning.delta` alias. `response.completed` and `response.done` are successful terminals; failed, incomplete, and `error` events are returned before the stream stops. A terminal event ends iteration even when a trailing `[DONE]` is absent. The current surface preserves item, part, response, and unknown payloads as `std.json.Value`; richer typed Responses request/input/output models remain planned. See [`responses_stream.zig`](../../examples/responses_stream.zig) or run `zig build run-responses-stream`.
 
 [^stream]: Completion stream implementation.
 [^sse]: Server-Sent Events parser.

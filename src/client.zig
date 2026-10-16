@@ -286,6 +286,11 @@ pub const ResponsesResource = struct {
         const client: *Client = @alignCast(@fieldParentPtr("responses", self));
         return responses_mod.create(client, request, request_options);
     }
+
+    pub fn stream(self: *ResponsesResource, request: responses_mod.CreateRequest, request_options: options_mod.RequestOptions) !responses_mod.ResponsesStream {
+        const client: *Client = @alignCast(@fieldParentPtr("responses", self));
+        return responses_mod.stream(client, request, request_options);
+    }
 };
 pub const MessagesResource = struct {
     pub fn create(self: *MessagesResource, request: messages_mod.CreateRequest, request_options: options_mod.RequestOptions) !messages_mod.CreateResponse {
