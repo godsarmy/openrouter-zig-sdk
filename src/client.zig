@@ -578,6 +578,15 @@ pub const GenerationResource = struct {
         const client: *Client = @alignCast(@fieldParentPtr("generation", self));
         return generation_mod.content(client, request, request_options);
     }
+
+    pub fn feedback(
+        self: *GenerationResource,
+        request: generation_mod.FeedbackRequest,
+        request_options: options_mod.RequestOptions,
+    ) !generation_mod.FeedbackResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("generation", self));
+        return generation_mod.feedback(client, request, request_options);
+    }
 };
 pub const ActivityResource = struct {
     pub fn get(self: *ActivityResource, request: activity_mod.GetRequest, request_options: options_mod.RequestOptions) !activity_mod.GetResponse {
@@ -879,6 +888,7 @@ test "client initializes resource namespaces" {
     _ = client.classifications;
     _ = client.classifications.task;
     _ = client.generation;
+    _ = GenerationResource.feedback;
     _ = client.activity;
     _ = client.analytics;
     _ = client.analytics.meta;

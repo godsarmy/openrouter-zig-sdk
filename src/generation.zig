@@ -37,6 +37,38 @@ pub const ContentResponse = struct {
     }
 };
 
+pub const FeedbackCategory = enum {
+    latency,
+    incoherence,
+    incorrect_response,
+    formatting,
+    billing,
+    api_error,
+    other,
+};
+
+pub const FeedbackRequest = struct {
+    generation_id: []const u8,
+    category: FeedbackCategory,
+    comment: ?[]const u8 = null,
+};
+
+/// The response and its metadata are owned until `deinit`.
+pub const FeedbackResponse = struct {
+    arena: std.heap.ArenaAllocator,
+    data: FeedbackData,
+    response_metadata: http.ResponseMetadata = .{},
+
+    pub fn deinit(self: *FeedbackResponse) void {
+        self.arena.deinit();
+        self.* = undefined;
+    }
+};
+
+pub const FeedbackData = struct {
+    success: bool,
+};
+
 pub const Generation = struct {
     api_type: ?[]const u8,
     app_id: ?u64,
@@ -116,6 +148,10 @@ const WireContentResponse = struct {
     data: GenerationContent,
 };
 
+const WireFeedbackResponse = struct {
+    data: FeedbackData,
+};
+
 pub fn get(client: anytype, request: GetRequest, request_options: options_mod.RequestOptions) !GetResponse {
     return getWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, request, request_options);
 }
@@ -145,6 +181,32 @@ pub fn getWithTransport(
 
 pub fn content(client: anytype, request: ContentRequest, request_options: options_mod.RequestOptions) !ContentResponse {
     return contentWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, request, request_options);
+}
+
+pub fn feedback(client: anytype, request: FeedbackRequest, request_options: options_mod.RequestOptions) !FeedbackResponse {
+    return feedbackWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, request, request_options);
+}
+
+pub fn feedbackWithTransport(
+    allocator: std.mem.Allocator,
+    config: config_mod.Config,
+    transport: anytype,
+    request: FeedbackRequest,
+    request_options: options_mod.RequestOptions,
+) !FeedbackResponse {
+    const body = try json.stringifyRequest(allocator, request);
+    defer allocator.free(body);
+
+    var prepared = try http.prepareRequest(allocator, config, .{
+        .method = .POST,
+        .path = "/generation/feedback",
+        .body = body,
+    }, request_options);
+    defer prepared.deinit();
+
+    var response = try transport.execute(allocator, prepared);
+    defer response.deinit();
+    return parseFeedbackResponse(allocator, response);
 }
 
 pub fn contentWithTransport(
@@ -197,6 +259,23 @@ pub fn parseContentResponse(allocator: std.mem.Allocator, response: http.HttpRes
     return .{
         .arena = arena,
         .data = parsed.data,
+    };
+}
+
+pub fn parseFeedbackResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !FeedbackResponse {
+    if (response.status != .ok) return error.ApiError;
+
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    errdefer arena.deinit();
+    const arena_allocator = arena.allocator();
+    const owned_body = try arena_allocator.dupe(u8, response.body);
+    const parsed = try json.parseResponseLeaky(WireFeedbackResponse, arena_allocator, owned_body);
+    if (!parsed.data.success) return error.InvalidResponse;
+
+    return .{
+        .arena = arena,
+        .data = parsed.data,
+        .response_metadata = try http.ResponseMetadata.fromHttpResponse(arena_allocator, response),
     };
 }
 
@@ -371,4 +450,214 @@ test "generation content maps error status to ApiError" {
         .{ .id = "gen-missing" },
         .{},
     ));
+}
+
+test "generation feedback serializes every category and optional comments" {
+    const categories = [_]FeedbackCategory{
+        .latency,
+        .incoherence,
+        .incorrect_response,
+        .formatting,
+        .billing,
+        .api_error,
+        .other,
+    };
+    for (categories) |category| {
+        const body = try json.stringifyRequest(std.testing.allocator, FeedbackRequest{
+            .generation_id = "gen-123",
+            .category = category,
+        });
+        defer std.testing.allocator.free(body);
+        const parsed = try std.json.parseFromSliceLeaky(struct {
+            generation_id: []const u8,
+            category: []const u8,
+            comment: ?[]const u8 = null,
+        }, std.testing.allocator, body, .{});
+        try std.testing.expectEqualStrings("gen-123", parsed.generation_id);
+        try std.testing.expectEqualStrings(@tagName(category), parsed.category);
+        try std.testing.expectEqual(@as(?[]const u8, null), parsed.comment);
+    }
+
+    const empty_comment = try json.stringifyRequest(std.testing.allocator, FeedbackRequest{
+        .generation_id = "gen-123",
+        .category = .other,
+        .comment = "",
+    });
+    defer std.testing.allocator.free(empty_comment);
+    const parsed_empty_comment = try std.json.parseFromSliceLeaky(struct {
+        generation_id: []const u8,
+        category: []const u8,
+        comment: ?[]const u8,
+    }, std.testing.allocator, empty_comment, .{});
+    try std.testing.expectEqualStrings("", parsed_empty_comment.comment.?);
+
+    const nonempty_comment = try json.stringifyRequest(std.testing.allocator, FeedbackRequest{
+        .generation_id = "gen-123",
+        .category = .other,
+        .comment = "Incorrect total",
+    });
+    defer std.testing.allocator.free(nonempty_comment);
+    const parsed_nonempty_comment = try std.json.parseFromSliceLeaky(struct {
+        comment: []const u8,
+    }, std.testing.allocator, nonempty_comment, .{ .ignore_unknown_fields = true });
+    try std.testing.expectEqualStrings("Incorrect total", parsed_nonempty_comment.comment);
+}
+
+test "generation feedback parses success and rejects invalid responses" {
+    var result = try feedbackWithTransport(
+        std.testing.allocator,
+        .{ .api_key = "test-key" },
+        http.FakeTransport{
+            .body =
+            \\{
+            \\  "data": { "success": true },
+            \\  "unknown": true
+            \\}
+            ,
+            .headers = &.{.{ .name = "X-Request-ID", .value = "req_feedback" }},
+        },
+        .{ .generation_id = "gen-123", .category = .latency },
+        .{},
+    );
+    defer result.deinit();
+    try std.testing.expect(result.data.success);
+    try std.testing.expectEqualStrings("req_feedback", result.response_metadata.request_id.?);
+
+    const invalid_bodies = [_][]const u8{
+        "{\"data\":{\"success\":false}}",
+    };
+    for (invalid_bodies) |body| {
+        var response = try feedbackFakeResponse(std.testing.allocator, .ok, body);
+        defer response.deinit();
+        try std.testing.expectError(error.InvalidResponse, parseFeedbackResponse(std.testing.allocator, response));
+    }
+
+    var missing_success = try feedbackFakeResponse(std.testing.allocator, .ok, "{\"data\":{}}");
+    defer missing_success.deinit();
+    try std.testing.expectError(error.MissingField, parseFeedbackResponse(std.testing.allocator, missing_success));
+
+    var missing_data = try feedbackFakeResponse(std.testing.allocator, .ok, "{}");
+    defer missing_data.deinit();
+    try std.testing.expectError(error.MissingField, parseFeedbackResponse(std.testing.allocator, missing_data));
+
+    for ([_][]const u8{ "{\"data\":{\"success\":null}}", "{\"data\":{\"success\":1}}" }) |body| {
+        var scalar_success = try feedbackFakeResponse(std.testing.allocator, .ok, body);
+        defer scalar_success.deinit();
+        try std.testing.expectError(error.UnexpectedToken, parseFeedbackResponse(std.testing.allocator, scalar_success));
+    }
+}
+
+test "generation feedback maps documented errors and does not retry" {
+    const statuses = [_]std.http.Status{ .bad_request, .unauthorized, .forbidden, .not_found, .too_many_requests, .internal_server_error, .service_unavailable, .no_content };
+    for (statuses) |status| {
+        try std.testing.expectError(error.ApiError, feedbackWithTransport(
+            std.testing.allocator,
+            .{ .api_key = "test-key" },
+            http.FakeTransport{ .status = status },
+            .{ .generation_id = "gen-123", .category = .other },
+            .{},
+        ));
+    }
+}
+
+test "generation feedback sends POST JSON headers and request options" {
+    var state = FeedbackRecordingState{};
+    var transport = FeedbackRecordingTransport{ .state = &state };
+    var result = try feedbackWithTransport(
+        std.testing.allocator,
+        .{
+            .api_key = "management-key",
+            .http_referer = "https://example.test/app",
+            .x_title = "Feedback test",
+        },
+        &transport,
+        .{
+            .generation_id = "gen-123",
+            .category = .billing,
+            .comment = "Incorrect total",
+        },
+        .{ .extra_headers = &.{.{ .name = "X-Test-Header", .value = "present" }} },
+    );
+    defer result.deinit();
+
+    try std.testing.expect(result.data.success);
+    try std.testing.expectEqual(@as(usize, 1), state.calls);
+}
+
+test "generation feedback rejects reserved authorization request options before execute" {
+    var state = FeedbackRecordingState{};
+    var transport = FeedbackRecordingTransport{ .state = &state };
+    try std.testing.expectError(error.OptionsInvalid, feedbackWithTransport(
+        std.testing.allocator,
+        .{ .api_key = "management-key" },
+        &transport,
+        .{ .generation_id = "gen-123", .category = .other },
+        .{ .extra_headers = &.{.{ .name = "Authorization", .value = "Bearer override" }} },
+    ));
+    try std.testing.expectEqual(@as(usize, 0), state.calls);
+}
+
+test "generation feedback does not retry a service unavailable response" {
+    var state = FeedbackRecordingState{};
+    var transport = FeedbackRecordingTransport{
+        .state = &state,
+        .status = .service_unavailable,
+    };
+    try std.testing.expectError(error.ApiError, feedbackWithTransport(
+        std.testing.allocator,
+        .{ .api_key = "management-key" },
+        &transport,
+        .{ .generation_id = "gen-123", .category = .other },
+        .{},
+    ));
+    try std.testing.expectEqual(@as(usize, 1), state.calls);
+}
+
+const FeedbackRecordingState = struct {
+    calls: usize = 0,
+};
+
+const FeedbackRecordingTransport = struct {
+    state: *FeedbackRecordingState,
+    status: std.http.Status = .ok,
+
+    fn execute(self: *FeedbackRecordingTransport, allocator: std.mem.Allocator, prepared: http.PreparedRequest) !http.HttpResponse {
+        self.state.calls += 1;
+        try std.testing.expectEqual(std.http.Method.POST, prepared.method);
+        try std.testing.expectEqualStrings("https://openrouter.ai/api/v1/generation/feedback", prepared.url);
+        try std.testing.expectEqualStrings("application/json", findFeedbackHeader(prepared.headers, "content-type").?);
+        try std.testing.expectEqualStrings("Bearer management-key", findFeedbackHeader(prepared.headers, "authorization").?);
+
+        const body = try std.json.parseFromSliceLeaky(struct {
+            generation_id: []const u8,
+            category: []const u8,
+            comment: ?[]const u8 = null,
+        }, allocator, prepared.body.?, .{});
+        if (self.status == .ok) {
+            try std.testing.expectEqualStrings("https://example.test/app", findFeedbackHeader(prepared.headers, "http-referer").?);
+            try std.testing.expectEqualStrings("Feedback test", findFeedbackHeader(prepared.headers, "x-title").?);
+            try std.testing.expectEqualStrings("present", findFeedbackHeader(prepared.headers, "x-test-header").?);
+            try std.testing.expectEqualStrings("gen-123", body.generation_id);
+            try std.testing.expectEqualStrings("billing", body.category);
+            try std.testing.expectEqualStrings("Incorrect total", body.comment.?);
+        }
+
+        return (http.FakeTransport{ .status = self.status, .body = "{\"data\":{\"success\":true}}" }).execute(allocator, prepared);
+    }
+};
+
+fn findFeedbackHeader(headers: []const options_mod.Header, name: []const u8) ?[]const u8 {
+    for (headers) |header| {
+        if (std.ascii.eqlIgnoreCase(header.name, name)) return header.value;
+    }
+    return null;
+}
+
+fn feedbackFakeResponse(allocator: std.mem.Allocator, status: std.http.Status, body: []const u8) !http.HttpResponse {
+    var prepared = try http.prepareRequest(allocator, .{ .api_key = "test-key" }, .{
+        .method = .POST,
+        .path = "/generation/feedback",
+    }, .{});
+    defer prepared.deinit();
+    return (http.FakeTransport{ .status = status, .body = body }).execute(allocator, prepared);
 }

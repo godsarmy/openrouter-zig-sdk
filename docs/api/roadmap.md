@@ -29,7 +29,7 @@ sources:
 
 # API audit and implementation roadmap
 
-This is a planning document, not an endpoint-coverage claim. The audit was retrieved on 2026-10-15 from the [official OpenAPI specification](https://openrouter.ai/openapi.json) and the [API reference overview](https://openrouter.ai/docs/api_reference/overview). It found 151 method/path operations, including 3 deprecated operations, or **148 non-deprecated operations**. Of the canonical [90 implemented operations](coverage.md), **88 overlap with the current specification**, leaving **60 current specification gaps**. This comparison normalizes path-parameter names and does not establish when any API was introduced.
+This is a planning document, not an endpoint-coverage claim. The audit was retrieved on 2026-10-15 from the [official OpenAPI specification](https://openrouter.ai/openapi.json) and the [API reference overview](https://openrouter.ai/docs/api_reference/overview). It found 151 method/path operations, including 3 deprecated operations, or **148 non-deprecated operations**. Of the canonical [91 implemented operations](coverage.md), **89 overlap with the current specification**, leaving **59 current specification gaps**. This comparison normalizes path-parameter names and does not establish when any API was introduced.
 
 Two implemented operations, `GET /datasets/benchmarks/artificial-analysis` and `GET /datasets/benchmarks/design-arena`, are absent from the retrieved OpenAPI. Their absence does not establish server-side removal or deprecation; verify their current support before changing the client. `GET /benchmarks`, `GET /classifications/task`, `GET /workspaces/{id}/members`, `GET /workspaces/{workspace_ref}/budgets/{interval}`, `GET /datasets/session-cost`, and `GET /tools` plus `GET /tools/{name}` were added since this historical audit; the current accounting reflects them but does not claim a fresh full audit. The gap calculation therefore uses the 88-operation intersection, not direct subtraction of all 90 implemented operations.
 
@@ -62,7 +62,7 @@ Evaluate private endpoints, SCIM, vault, interns, OAuth infrastructure, organiza
 - Use opt-in integration tests only with configured credentials.
 - Update [endpoint coverage](coverage.md) only when an operation is implemented, and repeat this specification-drift comparison for future audits.
 
-## Current non-deprecated gap inventory (60 operations)
+## Current non-deprecated gap inventory (59 operations)
 
 The following confirmed audit baseline is verb-expanded: every listed verb/path pair is one operation.
 
@@ -78,7 +78,6 @@ The following confirmed audit baseline is verb-expanded: every listed verb/path 
 | GET | `/end-users/{user}` | P2 |
 | PATCH | `/end-users/{user}` | P2 |
 | DELETE | `/end-users/{user}` | P2 |
-| POST | `/generation/feedback` | P2 |
 | POST | `/images` | P2 |
 | GET | `/images/models` | P2 |
 | GET | `/images/models/{author}/{slug}/endpoints` | P2 |

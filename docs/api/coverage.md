@@ -1,7 +1,7 @@
 ---
 type: API Reference
 title: OpenRouter Zig endpoint coverage
-description: Canonical categorized inventory of the 90 HTTP endpoint operations exported by the client.
+description: Canonical categorized inventory of the 91 HTTP endpoint operations exported by the client.
 tags: [api, endpoints, coverage]
 generated: { by: openai/gpt-5.6-terra, at: 2026-10-17T00:00:00Z }
 sources:
@@ -77,6 +77,7 @@ Every row is implemented and registered on `openrouter.Client`; method names are
 | GET | `/credits` | `credits.get` | management |
 | GET | `/generation` | `generation.get` | Generation metadata. |
 | GET | `/generation/content` | `generation.content` | Stored generation content. |
+| POST | `/generation/feedback` | `generation.feedback` | management; mutating feedback for an authenticated account's generation. Server validates request-length constraints; no documented deduplication or idempotency, so callers must not blindly retry ambiguous failures. |
 | GET | `/activity` | `activity.get` | management |
 | GET | `/datasets/rankings-daily` | `datasets.rankings_daily.get` | Daily model token totals. |
 | GET | `/datasets/app-rankings` | `datasets.app_rankings.get` | App rankings. |
@@ -134,4 +135,4 @@ Every row is implemented and registered on `openrouter.Client`; method names are
 | GET/POST | `/observability/destinations` | `observability.destinations.list`, `.create` | management |
 | GET/PATCH/DELETE | `/observability/destinations/{id}` | `observability.destinations.get`, `.update`, `.delete` | management |
 
-The matrix represents **90 distinct method/path operations**: rows combining verbs are expanded for that count. It excludes the upstream-deprecated `POST /credits/coinbase`, which is intentionally not exported. For audited specification gaps and implementation priorities, see the [API audit and roadmap](roadmap.md); planned operations are not coverage claims.
+The matrix represents **91 distinct method/path operations**: rows combining verbs are expanded for that count. It excludes the upstream-deprecated `POST /credits/coinbase`, which is intentionally not exported. For audited specification gaps and implementation priorities, see the [API audit and roadmap](roadmap.md); planned operations are not coverage claims.
