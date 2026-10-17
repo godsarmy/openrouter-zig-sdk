@@ -29,6 +29,7 @@ const providers_mod = @import("providers.zig");
 const rerank_mod = @import("rerank.zig");
 const responses_mod = @import("responses.zig");
 const stream_mod = @import("stream.zig");
+const tools_mod = @import("tools.zig");
 const videos_mod = @import("videos.zig");
 const workspaces_mod = @import("workspaces.zig");
 
@@ -41,6 +42,17 @@ pub const Error = error{
 
 pub const ChatResource = struct {
     completions: ChatCompletionsResource = .{},
+};
+pub const ToolsResource = struct {
+    pub fn list(self: *ToolsResource, request: tools_mod.ListRequest, request_options: options_mod.RequestOptions) !tools_mod.ListResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("tools", self));
+        return tools_mod.list(client, request, request_options);
+    }
+
+    pub fn get(self: *ToolsResource, request: tools_mod.GetRequest, request_options: options_mod.RequestOptions) !tools_mod.GetResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("tools", self));
+        return tools_mod.get(client, request, request_options);
+    }
 };
 
 pub const ChatCompletionsResource = struct {
@@ -693,6 +705,7 @@ pub const Client = struct {
     activity: ActivityResource,
     analytics: AnalyticsResource,
     datasets: DatasetsResource,
+    tools: ToolsResource,
 
     pub fn init(allocator: std.mem.Allocator, io: std.Io, config: Config) Error!Client {
         if (config.api_key.len == 0) return error.EmptyApiKey;
@@ -735,6 +748,7 @@ pub const Client = struct {
             .activity = .{},
             .analytics = .{},
             .datasets = .{},
+            .tools = .{},
         };
     }
 
@@ -875,6 +889,16 @@ test "client initializes resource namespaces" {
     _ = client.datasets.benchmarks.design_arena;
     _ = client.datasets.rankings_daily;
     _ = client.datasets.session_cost;
+    _ = client.tools;
+}
+
+test "client.tools namespace exposes list and get" {
+    var client = try Client.init(std.testing.allocator, std.testing.io, .{ .api_key = "test-key" });
+    defer client.deinit();
+
+    _ = client.tools;
+    _ = ToolsResource.list;
+    _ = ToolsResource.get;
 }
 
 test "client.datasets.session_cost namespace exposes get" {

@@ -1,9 +1,9 @@
 ---
 type: API Reference
 title: OpenRouter Zig endpoint coverage
-description: Canonical categorized inventory of the 88 HTTP endpoint operations exported by the client.
+description: Canonical categorized inventory of the 90 HTTP endpoint operations exported by the client.
 tags: [api, endpoints, coverage]
-generated: { by: openai/gpt-6.1-sol, at: 2026-10-17T00:00:00Z }
+generated: { by: openai/gpt-5.6-terra, at: 2026-10-17T00:00:00Z }
 sources:
   - id: client
     resource: ../../src/client.zig
@@ -23,6 +23,9 @@ sources:
   - id: data-api
     resource: https://openrouter.ai/docs/cookbook/administration/data-api
     title: OpenRouter Data API
+  - id: server-tools
+    resource: https://openrouter.ai/docs/guides/features/server-tools
+    title: Server tools guide
 ---
 
 # Scope
@@ -59,6 +62,8 @@ Every row is implemented and registered on `openrouter.Client`; method names are
 | GET | `/model/{author}/{slug}` | `models.get` | A single model. |
 | GET | `/models/{author}/{slug}/endpoints` | `models.endpoints.list` | A model's endpoints. |
 | GET | `/endpoints/zdr` | `endpoints.zdr.list` | Zero-data-retention availability preview. |
+| GET | `/tools` | `tools.list` | Beta management-key server-tool catalog, which may change; preserves `links.next` without pagination or default assumptions. |
+| GET | `/tools/{name}` | `tools.get` | Beta management-key catalog detail, which may change and is distinct from inference request tool types. Aliases use the existing GET redirect behavior (up to 3 redirects); no manual redirect following. |
 | GET | `/providers` | `providers.list` | Provider discovery. |
 | GET | `/presets` | `presets.list` | Presets. |
 | GET | `/presets/{slug}` | `presets.get` | One preset. |
@@ -129,4 +134,4 @@ Every row is implemented and registered on `openrouter.Client`; method names are
 | GET/POST | `/observability/destinations` | `observability.destinations.list`, `.create` | management |
 | GET/PATCH/DELETE | `/observability/destinations/{id}` | `observability.destinations.get`, `.update`, `.delete` | management |
 
-The matrix represents **88 distinct method/path operations**: rows combining verbs are expanded for that count. It excludes the upstream-deprecated `POST /credits/coinbase`, which is intentionally not exported. For audited specification gaps and implementation priorities, see the [API audit and roadmap](roadmap.md); planned operations are not coverage claims.
+The matrix represents **90 distinct method/path operations**: rows combining verbs are expanded for that count. It excludes the upstream-deprecated `POST /credits/coinbase`, which is intentionally not exported. For audited specification gaps and implementation priorities, see the [API audit and roadmap](roadmap.md); planned operations are not coverage claims.
