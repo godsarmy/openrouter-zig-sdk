@@ -5,7 +5,9 @@ const activity_mod = @import("activity.zig");
 const analytics_mod = @import("analytics.zig");
 const audio_mod = @import("audio.zig");
 const byok_mod = @import("byok.zig");
+const benchmarks_mod = @import("benchmarks.zig");
 const chat_mod = @import("chat.zig");
+const classifications_mod = @import("classifications.zig");
 const config_mod = @import("config.zig");
 const credits_mod = @import("credits.zig");
 const auth_keys_mod = @import("auth_keys.zig");
@@ -519,6 +521,20 @@ pub const ProvidersResource = struct {
         return providers_mod.list(client, request_options);
     }
 };
+pub const BenchmarksResource = struct {
+    pub fn list(self: *BenchmarksResource, request: benchmarks_mod.ListRequest, request_options: options_mod.RequestOptions) !benchmarks_mod.ListResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("benchmarks", self));
+        return benchmarks_mod.list(client, request, request_options);
+    }
+};
+pub const ClassificationsResource = struct { task: ClassificationsTaskResource = .{} };
+pub const ClassificationsTaskResource = struct {
+    pub fn get(self: *ClassificationsTaskResource, request: classifications_mod.TaskGetRequest, request_options: options_mod.RequestOptions) !classifications_mod.TaskGetResponse {
+        const classifications: *ClassificationsResource = @alignCast(@fieldParentPtr("task", self));
+        const client: *Client = @alignCast(@fieldParentPtr("classifications", classifications));
+        return classifications_mod.get(client, request, request_options);
+    }
+};
 pub const GenerationResource = struct {
     pub fn get(
         self: *GenerationResource,
@@ -646,6 +662,8 @@ pub const Client = struct {
     key: KeyResource,
     keys: KeysResource,
     providers: ProvidersResource,
+    benchmarks: BenchmarksResource,
+    classifications: ClassificationsResource,
     generation: GenerationResource,
     activity: ActivityResource,
     analytics: AnalyticsResource,
@@ -686,6 +704,8 @@ pub const Client = struct {
             .key = .{},
             .keys = .{},
             .providers = .{},
+            .benchmarks = .{},
+            .classifications = .{},
             .generation = .{},
             .activity = .{},
             .analytics = .{},
@@ -815,6 +835,9 @@ test "client initializes resource namespaces" {
     _ = client.key;
     _ = client.keys;
     _ = client.providers;
+    _ = client.benchmarks;
+    _ = client.classifications;
+    _ = client.classifications.task;
     _ = client.generation;
     _ = client.activity;
     _ = client.analytics;
