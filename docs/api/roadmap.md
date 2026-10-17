@@ -15,6 +15,14 @@ sources:
     title: Chat completion response types and parser
   - resource: ../../src/stream.zig
     title: Chat completion streaming parser
+  - resource: ../../src/batches.zig
+    title: Batch API
+  - resource: ../../src/end_users.zig
+    title: End-user management API
+  - resource: ../../src/images.zig
+    title: Buffered image generation API
+  - resource: https://openrouter.ai/openapi.json
+    title: OpenRouter OpenAPI specification
   - resource: https://openrouter.ai/docs/api/api-reference/chat/create-a-chat-completion
     title: Chat completion API reference
   - resource: https://openrouter.ai/docs/api_reference/streaming
@@ -29,9 +37,9 @@ sources:
 
 # API audit and implementation roadmap
 
-This is a planning document, not an endpoint-coverage claim. The audit was retrieved on 2026-10-15 from the [official OpenAPI specification](https://openrouter.ai/openapi.json) and the [API reference overview](https://openrouter.ai/docs/api_reference/overview). It found 151 method/path operations, including 3 deprecated operations, or **148 non-deprecated operations**. Of the canonical [91 implemented operations](coverage.md), **89 overlap with the current specification**, leaving **59 current specification gaps**. This comparison normalizes path-parameter names and does not establish when any API was introduced.
+This is a planning document, not an endpoint-coverage claim. The audit was retrieved on 2026-10-15 from the [official OpenAPI specification](https://openrouter.ai/openapi.json) and the [API reference overview](https://openrouter.ai/docs/api_reference/overview). It found 151 method/path operations, including 3 deprecated operations, or **148 non-deprecated operations**. Of the canonical [103 implemented operations](coverage.md), **101 overlap with the current specification**, leaving **47 current specification gaps**. This comparison normalizes path-parameter names and does not establish when any API was introduced.
 
-Two implemented operations, `GET /datasets/benchmarks/artificial-analysis` and `GET /datasets/benchmarks/design-arena`, are absent from the retrieved OpenAPI. Their absence does not establish server-side removal or deprecation; verify their current support before changing the client. `GET /benchmarks`, `GET /classifications/task`, `GET /workspaces/{id}/members`, `GET /workspaces/{workspace_ref}/budgets/{interval}`, `GET /datasets/session-cost`, and `GET /tools` plus `GET /tools/{name}` were added since this historical audit; the current accounting reflects them but does not claim a fresh full audit. The gap calculation therefore uses the 88-operation intersection, not direct subtraction of all 90 implemented operations.
+Two implemented operations, `GET /datasets/benchmarks/artificial-analysis` and `GET /datasets/benchmarks/design-arena`, are absent from the retrieved OpenAPI. Their absence does not establish server-side removal or deprecation; verify their current support before changing the client. The discovery, workspace, session-cost, tools, generation-feedback, end-user, batch, and image operations completed in Phase 2 were added since this historical audit; the current accounting reflects them but does not claim a fresh full audit. The gap calculation therefore uses the 101-operation intersection, not direct subtraction of all 103 implemented operations.
 
 Paths below are normally relative to `https://openrouter.ai/api/v1`. `/api/alpha/decisions` is recorded exactly as specified: it is a special path and must not be normalized blindly. Verify its base URL before implementation.
 
@@ -47,7 +55,16 @@ Do not promise `store` or `previous_response_id` for Responses until the documen
 
 ### Phase 2 — broad supported product surface
 
-Implement images, batches, tools, end users, generation feedback, and missing discovery, data, and workspace reads. Prioritize stable, generally available APIs and share pagination, error, and request-option machinery where possible.
+**Done (endpoint scope):** images, batches, tools, end users, generation feedback, and the planned discovery, data, and workspace reads. Images are buffered only: `images.create` forces `stream: false`; image SSE remains a follow-up. Batch request and result bodies deliberately remain raw JSON because they are endpoint-polymorphic. Image capability maps also remain raw JSON. Phase 2 completion does not promise full field parity for these APIs.
+
+```zig
+var image = try client.images.create(.{ .model = "provider/model", .prompt = "A sunset" }, .{});
+defer image.deinit();
+var batch = try client.batches.create(request, .{}); // queued: HTTP 202
+defer batch.deinit();
+```
+
+End-user lifecycle endpoints require a management API key; `end_users.create` returns `201` and `end_users.delete` soft-deactivates with `204`. Registration state does not block inference. Batch deletion removes terminal batches and is not cancellation. Image model GET endpoints are anonymous per the specification, but the SDK's existing client credential policy is unchanged. No live mutations were used for verification.
 
 ### Phase 3 — enterprise and specialized APIs
 
@@ -62,25 +79,13 @@ Evaluate private endpoints, SCIM, vault, interns, OAuth infrastructure, organiza
 - Use opt-in integration tests only with configured credentials.
 - Update [endpoint coverage](coverage.md) only when an operation is implemented, and repeat this specification-drift comparison for future audits.
 
-## Current non-deprecated gap inventory (59 operations)
+## Current non-deprecated gap inventory (47 operations)
 
 The following confirmed audit baseline is verb-expanded: every listed verb/path pair is one operation.
 
 | Method | Path | Phase / notes |
 |---|---|---|
 | POST | `/api/alpha/decisions` | P3; special alpha path; verify base and access. |
-| GET | `/batches` | P2 |
-| POST | `/batches` | P2 |
-| GET | `/batches/{id}` | P2 |
-| DELETE | `/batches/{id}` | P2 |
-| GET | `/end-users` | P2 |
-| POST | `/end-users` | P2 |
-| GET | `/end-users/{user}` | P2 |
-| PATCH | `/end-users/{user}` | P2 |
-| DELETE | `/end-users/{user}` | P2 |
-| POST | `/images` | P2 |
-| GET | `/images/models` | P2 |
-| GET | `/images/models/{author}/{slug}/endpoints` | P2 |
 | GET | `/containers/{container_id}/files` | P3 |
 | GET | `/containers/{container_id}/files/{file_id}` | P3 |
 | GET | `/containers/{container_id}/files/{file_id}/content` | P3 |

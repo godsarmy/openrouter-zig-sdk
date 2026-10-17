@@ -1,13 +1,25 @@
 ---
 type: API Reference
 title: OpenRouter Zig endpoint coverage
-description: Canonical categorized inventory of the 91 HTTP endpoint operations exported by the client.
+description: Canonical categorized inventory of the 103 HTTP endpoint operations exported by the client.
 tags: [api, endpoints, coverage]
 generated: { by: openai/gpt-5.6-terra, at: 2026-10-17T00:00:00Z }
 sources:
   - id: client
     resource: ../../src/client.zig
     title: Client resource registration
+  - id: batches
+    resource: ../../src/batches.zig
+    title: Batch API
+  - id: end-users
+    resource: ../../src/end_users.zig
+    title: End-user management API
+  - id: images
+    resource: ../../src/images.zig
+    title: Buffered image generation API
+  - id: openrouter-api
+    resource: https://openrouter.ai/openapi.json
+    title: OpenRouter OpenAPI specification
   - id: workspaces
     resource: ../../src/workspaces.zig
     title: Workspace management API
@@ -44,6 +56,9 @@ Every row is implemented and registered on `openrouter.Client`; method names are
 | POST | `/rerank` | `rerank.create` | Document reranking. |
 | POST | `/audio/speech` | `audio.speech.create` | Raw synthesized audio. |
 | POST | `/audio/transcriptions` | `audio.transcriptions.create` | Base64 audio transcription. |
+| POST | `/images` | `images.create` | Buffered JSON image generation; requests force `stream: false`. |
+| GET | `/images/models` | `images.models.list` | Image model discovery. |
+| GET | `/images/models/{author}/{slug}/endpoints` | `images.models.endpoints.list` | Image model endpoint capabilities. |
 | POST | `/videos` | `videos.create` | Create a generation job. |
 | GET | `/videos/{jobId}` | `videos.get` | Poll a job. |
 | GET | `/videos/{jobId}/content` | `videos.content` | Download generated content. |
@@ -101,6 +116,15 @@ Every row is implemented and registered on `openrouter.Client`; method names are
 | GET/POST | `/byok` | `byok.list`, `.create` | management; provider secrets are request-only. |
 | GET/PATCH/DELETE | `/byok/{id}` | `byok.get`, `.update`, `.delete` | management |
 
+# Batches and end users
+
+| Method | Path | Client call | Notes |
+|---|---|---|---|
+| GET/POST | `/batches` | `batches.list`, `.create` | Batch creation queues with `202`; request bodies are raw JSON objects, not file uploads. |
+| GET/DELETE | `/batches/{id}` | `batches.get`, `.delete` | Delete is terminal-result deletion, not cancellation; do not blindly retry ambiguous mutations. |
+| GET/POST | `/end-users` | `end_users.list`, `.create` | management; end-user lifecycle API; create returns `201`. |
+| GET/PATCH/DELETE | `/end-users/{user}` | `end_users.get`, `.update`, `.delete` | management; delete is soft deactivation and returns `204`, not an inference access restriction. |
+
 # Guardrails, workspaces, and organization
 
 | Method | Path | Client call | Notes |
@@ -135,4 +159,4 @@ Every row is implemented and registered on `openrouter.Client`; method names are
 | GET/POST | `/observability/destinations` | `observability.destinations.list`, `.create` | management |
 | GET/PATCH/DELETE | `/observability/destinations/{id}` | `observability.destinations.get`, `.update`, `.delete` | management |
 
-The matrix represents **91 distinct method/path operations**: rows combining verbs are expanded for that count. It excludes the upstream-deprecated `POST /credits/coinbase`, which is intentionally not exported. For audited specification gaps and implementation priorities, see the [API audit and roadmap](roadmap.md); planned operations are not coverage claims.
+The matrix represents **103 distinct method/path operations**: rows combining verbs are expanded for that count. It excludes the upstream-deprecated `POST /credits/coinbase`, which is intentionally not exported. For audited specification gaps and implementation priorities, see the [API audit and roadmap](roadmap.md); planned operations are not coverage claims.

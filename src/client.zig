@@ -12,11 +12,14 @@ const config_mod = @import("config.zig");
 const credits_mod = @import("credits.zig");
 const auth_keys_mod = @import("auth_keys.zig");
 const datasets_mod = @import("datasets.zig");
+const end_users_mod = @import("end_users.zig");
 const embeddings_mod = @import("embeddings.zig");
+const batches_mod = @import("batches.zig");
 const endpoints_mod = @import("endpoints.zig");
 const files_mod = @import("files.zig");
 const generation_mod = @import("generation.zig");
 const guardrails_mod = @import("guardrails.zig");
+const images_mod = @import("images.zig");
 const key_mod = @import("key.zig");
 const keys_mod = @import("keys.zig");
 const messages_mod = @import("messages.zig");
@@ -156,6 +159,69 @@ pub const EmbeddingsModelsResource = struct {
         const embeddings: *EmbeddingsResource = @alignCast(@fieldParentPtr("models", self));
         const client: *Client = @alignCast(@fieldParentPtr("embeddings", embeddings));
         return embeddings_mod.listModels(client, request_options);
+    }
+};
+pub const EndUsersResource = struct {
+    pub fn list(self: *EndUsersResource, request: end_users_mod.ListRequest, request_options: options_mod.RequestOptions) !end_users_mod.ListResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("end_users", self));
+        return end_users_mod.list(client, request, request_options);
+    }
+    pub fn create(self: *EndUsersResource, request: end_users_mod.CreateRequest, request_options: options_mod.RequestOptions) !end_users_mod.CreateResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("end_users", self));
+        return end_users_mod.create(client, request, request_options);
+    }
+    pub fn get(self: *EndUsersResource, user: []const u8, request_options: options_mod.RequestOptions) !end_users_mod.GetResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("end_users", self));
+        return end_users_mod.get(client, user, request_options);
+    }
+    pub fn update(self: *EndUsersResource, user: []const u8, request: end_users_mod.UpdateRequest, request_options: options_mod.RequestOptions) !end_users_mod.UpdateResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("end_users", self));
+        return end_users_mod.update(client, user, request, request_options);
+    }
+    pub fn delete(self: *EndUsersResource, user: []const u8, request_options: options_mod.RequestOptions) !end_users_mod.DeleteResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("end_users", self));
+        return end_users_mod.delete(client, user, request_options);
+    }
+};
+pub const BatchesResource = struct {
+    pub fn list(self: *BatchesResource, request: batches_mod.ListRequest, request_options: options_mod.RequestOptions) !batches_mod.ListResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("batches", self));
+        return batches_mod.list(client, request, request_options);
+    }
+    pub fn create(self: *BatchesResource, request: batches_mod.CreateRequest, request_options: options_mod.RequestOptions) !batches_mod.BatchResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("batches", self));
+        return batches_mod.create(client, request, request_options);
+    }
+    pub fn get(self: *BatchesResource, id: []const u8, request_options: options_mod.RequestOptions) !batches_mod.BatchResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("batches", self));
+        return batches_mod.get(client, id, request_options);
+    }
+    pub fn delete(self: *BatchesResource, id: []const u8, request_options: options_mod.RequestOptions) !batches_mod.DeleteResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("batches", self));
+        return batches_mod.delete(client, id, request_options);
+    }
+};
+pub const ImagesResource = struct {
+    models: ImagesModelsResource = .{},
+    pub fn create(self: *ImagesResource, request: images_mod.CreateRequest, request_options: options_mod.RequestOptions) !images_mod.CreateResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("images", self));
+        return images_mod.create(client, request, request_options);
+    }
+};
+pub const ImagesModelsResource = struct {
+    endpoints: ImagesModelsEndpointsResource = .{},
+    pub fn list(self: *ImagesModelsResource, request_options: options_mod.RequestOptions) !images_mod.ModelsListResponse {
+        const images: *ImagesResource = @alignCast(@fieldParentPtr("models", self));
+        const client: *Client = @alignCast(@fieldParentPtr("images", images));
+        return images_mod.listModels(client, request_options);
+    }
+};
+pub const ImagesModelsEndpointsResource = struct {
+    pub fn list(self: *ImagesModelsEndpointsResource, request: images_mod.ListModelEndpointsRequest, request_options: options_mod.RequestOptions) !images_mod.ModelEndpointsResponse {
+        const models: *ImagesModelsResource = @alignCast(@fieldParentPtr("endpoints", self));
+        const images: *ImagesResource = @alignCast(@fieldParentPtr("models", models));
+        const client: *Client = @alignCast(@fieldParentPtr("images", images));
+        return images_mod.listModelEndpoints(client, request, request_options);
     }
 };
 pub const EndpointsResource = struct {
@@ -691,6 +757,9 @@ pub const Client = struct {
     audio: AudioResource,
     models: ModelsResource,
     embeddings: EmbeddingsResource,
+    end_users: EndUsersResource,
+    batches: BatchesResource,
+    images: ImagesResource,
     endpoints: EndpointsResource,
     files: FilesResource,
     videos: VideosResource,
@@ -734,6 +803,9 @@ pub const Client = struct {
             .audio = .{},
             .models = .{},
             .embeddings = .{},
+            .end_users = .{},
+            .batches = .{},
+            .images = .{},
             .endpoints = .{},
             .files = .{},
             .videos = .{},
@@ -859,6 +931,23 @@ test "client initializes resource namespaces" {
     _ = client.models.endpoints;
     _ = client.embeddings;
     _ = client.embeddings.models;
+    _ = client.end_users;
+    _ = EndUsersResource.list;
+    _ = EndUsersResource.create;
+    _ = EndUsersResource.get;
+    _ = EndUsersResource.update;
+    _ = EndUsersResource.delete;
+    _ = client.batches;
+    _ = BatchesResource.list;
+    _ = BatchesResource.create;
+    _ = BatchesResource.get;
+    _ = BatchesResource.delete;
+    _ = client.images;
+    _ = client.images.models;
+    _ = client.images.models.endpoints;
+    _ = ImagesResource.create;
+    _ = ImagesModelsResource.list;
+    _ = ImagesModelsEndpointsResource.list;
     _ = client.endpoints;
     _ = client.endpoints.zdr;
     _ = client.files;
