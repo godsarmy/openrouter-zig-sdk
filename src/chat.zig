@@ -459,6 +459,62 @@ pub const Choice = struct {
 pub const AssistantMessage = struct {
     role: Role,
     content: ?[]const u8 = null,
+    /// Typed array-valued content. `content` remains the compatible string form.
+    content_parts: ?[]AssistantContentPart = null,
+    tool_calls: ?[]ResponseToolCall = null,
+    reasoning: ?[]const u8 = null,
+    reasoning_details: ?[]ReasoningDetail = null,
+    annotations: ?[]Annotation = null,
+    refusal: ?[]const u8 = null,
+    images: ?[]GeneratedImage = null,
+    audio: ?std.json.Value = null,
+    /// Original decoded message object, owned by the parent response arena.
+    raw: std.json.Value = .null,
+};
+
+pub const ResponseToolCall = struct {
+    id: ?[]const u8 = null,
+    type: ?[]const u8 = null,
+    function: Function = .{},
+    index: ?u32 = null,
+
+    pub const Function = struct { name: ?[]const u8 = null, arguments: ?[]const u8 = null };
+};
+
+/// A streaming tool call. Unlike full calls, OpenRouter guarantees `index`.
+pub const ToolCallDelta = struct {
+    index: u32,
+    id: ?[]const u8 = null,
+    type: ?[]const u8 = null,
+    function: Function = .{},
+
+    pub const Function = struct { name: ?[]const u8 = null, arguments: ?[]const u8 = null };
+};
+
+/// Parts and raw values are owned by the parent response or chunk arena.
+pub const AssistantContentPart = union(enum) {
+    text: []const u8,
+    image_url: ImageUrl,
+    refusal: []const u8,
+    audio: std.json.Value,
+    raw: std.json.Value,
+};
+
+pub const ImageUrl = struct { url: []const u8 };
+pub const GeneratedImage = struct { type: ?[]const u8 = null, image_url: ImageUrl };
+
+pub const ReasoningDetail = union(enum) {
+    summary: struct { summary: ?[]const u8 = null, id: ?[]const u8 = null, format: ?[]const u8 = null, index: ?u32 = null },
+    text: struct { text: ?[]const u8 = null, signature: ?[]const u8 = null, id: ?[]const u8 = null, format: ?[]const u8 = null, index: ?u32 = null },
+    encrypted: struct { data: ?[]const u8 = null, id: ?[]const u8 = null, format: ?[]const u8 = null, index: ?u32 = null },
+    server_tool_call: struct { tool_name: ?[]const u8 = null, arguments: ?[]const u8 = null, result: ?[]const u8 = null, tool_call_id: ?[]const u8 = null, id: ?[]const u8 = null, format: ?[]const u8 = null, index: ?u32 = null },
+    raw: std.json.Value,
+};
+
+pub const Annotation = union(enum) {
+    url_citation: struct { url: ?[]const u8 = null, title: ?[]const u8 = null, start_index: ?u32 = null, end_index: ?u32 = null, content: ?[]const u8 = null },
+    web_search_citation: struct { url: ?[]const u8 = null, title: ?[]const u8 = null, cited_text: ?[]const u8 = null, encrypted_index: ?[]const u8 = null },
+    raw: std.json.Value,
 };
 
 pub const Usage = struct {
@@ -467,12 +523,7 @@ pub const Usage = struct {
     total_tokens: ?u32 = null,
 };
 
-const WireCompletionResponse = struct {
-    id: []const u8,
-    model: []const u8,
-    choices: []Choice,
-    usage: ?Usage = null,
-};
+const WireCompletionResponse = struct { id: []const u8, model: []const u8, choices: []std.json.Value, usage: ?Usage = null };
 
 pub fn create(client: anytype, request: CompletionRequest, request_options: options_mod.RequestOptions) !CompletionResponse {
     return createWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, request, request_options);
@@ -510,14 +561,191 @@ pub fn parseCompletionResponse(allocator: std.mem.Allocator, response: http.Http
 
     const owned_body = try arena_allocator.dupe(u8, response.body);
     const parsed = try json.parseResponseLeaky(WireCompletionResponse, arena_allocator, owned_body);
+    const choices = try parseChoices(arena_allocator, parsed.choices);
+    const response_metadata = try http.ResponseMetadata.fromHttpResponse(arena_allocator, response);
     return .{
         .arena = arena,
-        .response_metadata = try http.ResponseMetadata.fromHttpResponse(arena_allocator, response),
+        .response_metadata = response_metadata,
         .id = parsed.id,
         .model = parsed.model,
-        .choices = parsed.choices,
+        .choices = choices,
         .usage = parsed.usage,
     };
+}
+
+fn parseChoices(allocator: std.mem.Allocator, values: []std.json.Value) ![]Choice {
+    const choices = try allocator.alloc(Choice, values.len);
+    for (values, choices) |value, *choice| {
+        const object = objectValue(value) orelse return error.UnexpectedToken;
+        choice.* = .{
+            .index = uintField(object, "index") orelse 0,
+            .message = try parseAssistantMessage(allocator, object.get("message") orelse return error.UnexpectedToken),
+            .finish_reason = stringField(object, "finish_reason"),
+            .native_finish_reason = stringField(object, "native_finish_reason"),
+        };
+    }
+    return choices;
+}
+
+pub fn parseAssistantMessage(allocator: std.mem.Allocator, value: std.json.Value) !AssistantMessage {
+    const object = objectValue(value) orelse return error.UnexpectedToken;
+    const role_name = stringField(object, "role") orelse return error.UnexpectedToken;
+    const content_value = object.get("content");
+    var message: AssistantMessage = .{ .role = std.meta.stringToEnum(Role, role_name) orelse return error.InvalidEnumTag, .raw = value };
+    if (content_value) |content| switch (content) {
+        .string => |text| message.content = text,
+        .array => |parts| message.content_parts = try parseAssistantContentParts(allocator, parts.items),
+        .null => {},
+        else => return error.UnexpectedToken,
+    };
+    message.tool_calls = try parseResponseToolCalls(allocator, object.get("tool_calls"));
+    message.reasoning = stringField(object, "reasoning");
+    message.reasoning_details = try parseReasoningDetails(allocator, object.get("reasoning_details"));
+    message.annotations = try parseAnnotations(allocator, object.get("annotations"));
+    message.refusal = stringField(object, "refusal");
+    message.images = try parseImages(allocator, object.get("images"));
+    message.audio = object.get("audio");
+    return message;
+}
+
+pub fn parseToolCallDeltas(allocator: std.mem.Allocator, value: ?std.json.Value) !?[]ToolCallDelta {
+    const array = try optionalArray(value) orelse return null;
+    const result = try allocator.alloc(ToolCallDelta, array.items.len);
+    for (array.items, result) |item, *call| {
+        const object = objectValue(item) orelse return error.UnexpectedToken;
+        const function = objectValue(object.get("function") orelse .null) orelse std.json.ObjectMap.empty;
+        call.* = .{ .index = uintField(object, "index") orelse return error.UnexpectedToken, .id = stringField(object, "id"), .type = stringField(object, "type"), .function = .{ .name = stringField(function, "name"), .arguments = stringField(function, "arguments") } };
+    }
+    return result;
+}
+
+fn parseResponseToolCalls(allocator: std.mem.Allocator, value: ?std.json.Value) !?[]ResponseToolCall {
+    const array = try optionalArray(value) orelse return null;
+    const result = try allocator.alloc(ResponseToolCall, array.items.len);
+    for (array.items, result) |item, *call| {
+        const object = objectValue(item) orelse return error.UnexpectedToken;
+        const function = objectValue(object.get("function") orelse .null) orelse std.json.ObjectMap.empty;
+        call.* = .{ .id = stringField(object, "id"), .type = stringField(object, "type"), .index = uintField(object, "index"), .function = .{ .name = stringField(function, "name"), .arguments = stringField(function, "arguments") } };
+    }
+    return result;
+}
+
+pub fn parseAssistantContentParts(allocator: std.mem.Allocator, values: []std.json.Value) ![]AssistantContentPart {
+    const result = try allocator.alloc(AssistantContentPart, values.len);
+    for (values, result) |value, *part| {
+        const object = objectValue(value) orelse {
+            part.* = .{ .raw = value };
+            continue;
+        };
+        const kind = stringField(object, "type") orelse {
+            part.* = .{ .raw = value };
+            continue;
+        };
+        if (std.mem.eql(u8, kind, "text")) if (stringField(object, "text")) |text| {
+            part.* = .{ .text = text };
+            continue;
+        };
+        if (std.mem.eql(u8, kind, "image_url")) if (objectValue(object.get("image_url") orelse .null)) |image| if (stringField(image, "url")) |url| {
+            part.* = .{ .image_url = .{ .url = url } };
+            continue;
+        };
+        if (std.mem.eql(u8, kind, "refusal")) if (stringField(object, "refusal")) |text| {
+            part.* = .{ .refusal = text };
+            continue;
+        };
+        if (std.mem.eql(u8, kind, "audio")) {
+            part.* = .{ .audio = value };
+            continue;
+        }
+        part.* = .{ .raw = value };
+    }
+    return result;
+}
+
+pub fn parseReasoningDetails(allocator: std.mem.Allocator, value: ?std.json.Value) !?[]ReasoningDetail {
+    const array = try optionalArray(value) orelse return null;
+    const result = try allocator.alloc(ReasoningDetail, array.items.len);
+    for (array.items, result) |item, *detail| {
+        const o = objectValue(item) orelse {
+            detail.* = .{ .raw = item };
+            continue;
+        };
+        const common = CommonDetail{ .id = stringField(o, "id"), .format = stringField(o, "format"), .index = uintField(o, "index") };
+        const kind = stringField(o, "type") orelse {
+            detail.* = .{ .raw = item };
+            continue;
+        };
+        if (std.mem.eql(u8, kind, "reasoning.summary")) {
+            detail.* = .{ .summary = .{ .summary = stringField(o, "summary"), .id = common.id, .format = common.format, .index = common.index } };
+        } else if (std.mem.eql(u8, kind, "reasoning.text")) {
+            detail.* = .{ .text = .{ .text = stringField(o, "text"), .signature = stringField(o, "signature"), .id = common.id, .format = common.format, .index = common.index } };
+        } else if (std.mem.eql(u8, kind, "reasoning.encrypted")) {
+            detail.* = .{ .encrypted = .{ .data = stringField(o, "data"), .id = common.id, .format = common.format, .index = common.index } };
+        } else if (std.mem.eql(u8, kind, "reasoning.server_tool_call")) {
+            detail.* = .{ .server_tool_call = .{ .tool_name = stringField(o, "tool_name"), .arguments = stringField(o, "arguments"), .result = stringField(o, "result"), .tool_call_id = stringField(o, "tool_call_id"), .id = common.id, .format = common.format, .index = common.index } };
+        } else {
+            detail.* = .{ .raw = item };
+        }
+    }
+    return result;
+}
+const CommonDetail = struct { id: ?[]const u8, format: ?[]const u8, index: ?u32 };
+pub fn parseAnnotations(allocator: std.mem.Allocator, value: ?std.json.Value) !?[]Annotation {
+    const array = try optionalArray(value) orelse return null;
+    const result = try allocator.alloc(Annotation, array.items.len);
+    for (array.items, result) |item, *annotation| {
+        const o = objectValue(item) orelse {
+            annotation.* = .{ .raw = item };
+            continue;
+        };
+        const kind = stringField(o, "type") orelse {
+            annotation.* = .{ .raw = item };
+            continue;
+        };
+        if (std.mem.eql(u8, kind, "url_citation")) {
+            const citation = objectValue(o.get("url_citation") orelse .null) orelse {
+                annotation.* = .{ .raw = item };
+                continue;
+            };
+            annotation.* = .{ .url_citation = .{ .url = stringField(citation, "url"), .title = stringField(citation, "title"), .start_index = uintField(citation, "start_index"), .end_index = uintField(citation, "end_index"), .content = stringField(citation, "content") } };
+        } else if (std.mem.eql(u8, kind, "web_search_citation")) {
+            const citation = objectValue(o.get("web_search_citation") orelse .null) orelse {
+                annotation.* = .{ .raw = item };
+                continue;
+            };
+            annotation.* = .{ .web_search_citation = .{ .url = stringField(citation, "url"), .title = stringField(citation, "title"), .cited_text = stringField(citation, "cited_text"), .encrypted_index = stringField(citation, "encrypted_index") } };
+        } else annotation.* = .{ .raw = item };
+    }
+    return result;
+}
+pub fn parseImages(allocator: std.mem.Allocator, value: ?std.json.Value) !?[]GeneratedImage {
+    const array = try optionalArray(value) orelse return null;
+    const result = try allocator.alloc(GeneratedImage, array.items.len);
+    for (array.items, result) |item, *image| {
+        const o = objectValue(item) orelse return error.UnexpectedToken;
+        const image_url = objectValue(o.get("image_url") orelse return error.UnexpectedToken) orelse return error.UnexpectedToken;
+        image.* = .{ .type = stringField(o, "type"), .image_url = .{ .url = stringField(image_url, "url") orelse return error.UnexpectedToken } };
+    }
+    return result;
+}
+fn objectValue(value: std.json.Value) ?std.json.ObjectMap {
+    return if (value == .object) value.object else null;
+}
+fn arrayValue(value: std.json.Value) ?std.json.Array {
+    return if (value == .array) value.array else null;
+}
+fn optionalArray(value: ?std.json.Value) !?std.json.Array {
+    const present = value orelse return null;
+    if (present == .null) return null;
+    return arrayValue(present) orelse error.UnexpectedToken;
+}
+fn stringField(object: std.json.ObjectMap, key: []const u8) ?[]const u8 {
+    const value = object.get(key) orelse return null;
+    return if (value == .string) value.string else null;
+}
+fn uintField(object: std.json.ObjectMap, key: []const u8) ?u32 {
+    const value = object.get(key) orelse return null;
+    return if (value == .integer and value.integer >= 0 and value.integer <= std.math.maxInt(u32)) @intCast(value.integer) else null;
 }
 
 fn forceNonStreaming(request: CompletionRequest) CompletionRequest {
@@ -772,4 +1000,45 @@ test "chat create maps error status to ApiError" {
         .{ .model = "openai/gpt-4o-mini", .messages = messages },
         .{},
     ));
+}
+
+test "chat completion parses rich assistant response fields" {
+    const body = try std.testing.allocator.dupe(u8,
+        \\{"id":"gen","model":"m","choices":[{"message":{"role":"assistant","content":[{"type":"text","text":"hello"},{"type":"image_url","image_url":{"url":"https://example.com/a.png"}},{"type":"audio","data":"a"},{"type":"future","x":1}],"tool_calls":[{"id":"call","type":"function","function":{"name":"weather","arguments":"{}"}}],"reasoning":"think","reasoning_details":[{"type":"reasoning.summary","summary":"sum"},{"type":"reasoning.text","text":null,"signature":"sig"},{"type":"reasoning.encrypted","data":"enc"},{"type":"reasoning.server_tool_call","tool_name":"search","arguments":"{}","result":"ok","tool_call_id":"server"},{"type":"future"}],"annotations":[{"type":"url_citation","url_citation":{"url":"https://example.com","title":"Example","start_index":0,"end_index":1,"content":"quote"}},{"type":"web_search_citation","web_search_citation":{"url":"https://search.example","title":null,"cited_text":"cited","encrypted_index":"enc"}},{"type":"future"}],"refusal":"no","images":[{"type":"image_url","image_url":{"url":"https://example.com/out.png"}}],"audio":{"id":"audio"}}}]}
+    );
+    var result = try parseCompletionResponse(std.testing.allocator, .{ .allocator = std.testing.allocator, .status = .ok, .body = body });
+    std.testing.allocator.free(body);
+    defer result.deinit();
+
+    const message = result.choices[0].message;
+    try std.testing.expect(message.content == null);
+    try std.testing.expectEqual(@as(usize, 4), message.content_parts.?.len);
+    try std.testing.expect(message.content_parts.?[2] == .audio);
+    try std.testing.expect(message.content_parts.?[3] == .raw);
+    try std.testing.expectEqualStrings("weather", message.tool_calls.?[0].function.name.?);
+    try std.testing.expect(message.reasoning_details.?[0] == .summary);
+    try std.testing.expect(message.reasoning_details.?[1] == .text);
+    try std.testing.expect(message.reasoning_details.?[2] == .encrypted);
+    try std.testing.expect(message.reasoning_details.?[3] == .server_tool_call);
+    try std.testing.expect(message.reasoning_details.?[4] == .raw);
+    try std.testing.expectEqualStrings("https://example.com", message.annotations.?[0].url_citation.url.?);
+    try std.testing.expectEqualStrings("quote", message.annotations.?[0].url_citation.content.?);
+    try std.testing.expectEqualStrings("https://search.example", message.annotations.?[1].web_search_citation.url.?);
+    try std.testing.expectEqualStrings("cited", message.annotations.?[1].web_search_citation.cited_text.?);
+    try std.testing.expect(message.annotations.?[2] == .raw);
+    try std.testing.expectEqualStrings("no", message.refusal.?);
+    try std.testing.expectEqualStrings("https://example.com/out.png", message.images.?[0].image_url.url);
+}
+
+test "chat completion accepts null and omitted optional response fields" {
+    const body = try std.testing.allocator.dupe(u8,
+        \\{"id":"gen","model":"m","choices":[{"index":0,"message":{"role":"assistant","content":null,"tool_calls":null,"reasoning_details":null,"annotations":null,"images":null}},{"index":1,"message":{"role":"assistant"}}]}
+    );
+    var result = try parseCompletionResponse(std.testing.allocator, .{ .allocator = std.testing.allocator, .status = .ok, .body = body });
+    std.testing.allocator.free(body);
+    defer result.deinit();
+    try std.testing.expect(result.choices[0].message.content == null);
+    try std.testing.expect(result.choices[0].message.tool_calls == null);
+    try std.testing.expect(result.choices[0].message.images == null);
+    try std.testing.expect(result.choices[1].message.content == null);
 }

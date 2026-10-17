@@ -3,7 +3,7 @@ type: Guide
 title: Streaming inference APIs
 description: Consume chat-completion and Responses Server-Sent Events through pull-based streams.
 tags: [client, streaming, sse, chat, responses]
-generated: { by: openai/gpt-6.1-sol, at: 2026-10-15T22:44:12Z }
+generated: { by: openai/gpt-6.1-sol, at: 2026-10-16T00:00:00Z }
 sources:
   - id: client
     resource: ../../src/client.zig
@@ -31,6 +31,8 @@ while (try stream.next()) |chunk| {
 ```
 
 `next()` returns `null` once the stream is done. Chunks without choices are skipped; each returned chunk owns its parsed data and requires `deinit()`.[^stream]
+
+Chat chunk deltas retain legacy `content` and expose additive typed `content_parts`, `tool_calls`, `reasoning`, `reasoning_details`, `annotations`, `refusal`, images, and raw JSON. Tool-call argument fragments are delivered exactly as received with their required `index`; callers that need a completed call must accumulate fragments themselves. `delta.raw` and all typed values remain valid only until that chunk is deinitialized. Generated audio is retained as raw JSON.
 
 # Event handling and failures
 

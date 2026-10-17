@@ -1,3 +1,20 @@
+---
+type: Reference
+title: API audit and implementation roadmap
+description: Specification audit baseline, implementation priorities, and fidelity caveats.
+tags: [api, roadmap, coverage]
+generated: { by: openai/gpt-6.1-sol, at: 2026-10-16T00:00:00Z }
+sources:
+  - resource: ../../src/chat.zig
+    title: Chat completion response types and parser
+  - resource: ../../src/stream.zig
+    title: Chat completion streaming parser
+  - resource: https://openrouter.ai/docs/api/api-reference/chat/create-a-chat-completion
+    title: Chat completion API reference
+  - resource: https://openrouter.ai/docs/api_reference/streaming
+    title: Streaming API reference
+---
+
 # API audit and implementation roadmap
 
 This is a planning document, not an endpoint-coverage claim. The audit was retrieved on 2026-10-15 from the [official OpenAPI specification](https://openrouter.ai/openapi.json) and the [API reference overview](https://openrouter.ai/docs/api_reference/overview). It found 151 method/path operations, including 3 deprecated operations, or **148 non-deprecated operations**. Of the canonical [83 implemented operations](coverage.md), **81 overlap with the current specification**, leaving **67 current specification gaps**. This comparison normalizes path-parameter names and does not establish when any API was introduced.
@@ -11,7 +28,7 @@ Paths below are normally relative to `https://openrouter.ai/api/v1`. `/api/alpha
 ### Phase 1 — inference fidelity and routing
 
 1. **Done: Responses streaming** uses the shared SSE infrastructure with typed common event fields, raw event preservation, text/reasoning helpers, function-call argument separation, and terminal-state handling. Typed full request/input/output expansion remains follow-up work. Review the [basic Responses usage](https://openrouter.ai/docs/api_reference/responses/basic-usage) and [Responses tool calling](https://openrouter.ai/docs/api_reference/responses/tool-calling) documentation.
-2. Expand Chat response and streaming fidelity beyond the current assistant `role`/`content` shape: returned `tool_calls`, reasoning, annotations, refusal, and multimodal typed content parts.
+2. **Done: Chat response and streaming fidelity** adds typed response tool calls, reasoning details, nested citations, refusal, generated images, and additive typed content parts while retaining legacy string `content`. Streaming deltas expose indexed tool-call fragments without accumulation helpers and preserve raw message/delta values. Generated audio remains raw JSON. This expands existing `POST /chat/completions` representations only; endpoint coverage remains unchanged. Review the [chat completion reference](https://openrouter.ai/docs/api/api-reference/chat/create-a-chat-completion), [reasoning guide](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens), and [streaming reference](https://openrouter.ai/docs/api_reference/streaming).
 3. Add provider-routing privacy, filter, sort, price, latency, and throughput options, plus deliberately scoped raw escape hatches. Follow the [provider-selection guide](https://openrouter.ai/docs/guides/routing/provider-selection) and [parameter reference](https://openrouter.ai/docs/api_reference/parameters).
 
 Do not promise `store` or `previous_response_id` for Responses until the documentation/schema conflict is resolved: the Responses documentation rejects them while the schema lists them. Prefer `reasoning` over deprecated `include_reasoning`.
