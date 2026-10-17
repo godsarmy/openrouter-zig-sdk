@@ -180,6 +180,19 @@ pub const ProviderRouting = struct {
     order: ?[]const []const u8 = null,
     allow_fallbacks: ?bool = null,
     require_parameters: ?bool = null,
+    data_collection: ?ProviderDataCollection = null,
+    zdr: ?bool = null,
+    enforce_distillable_text: ?bool = null,
+    /// Hard provider filter. Named `only_providers` to retain the existing `only()` helper.
+    only_providers: ?[]const []const u8 = null,
+    ignore: ?[]const []const u8 = null,
+    quantizations: ?[]const ProviderQuantization = null,
+    sort: ?ProviderSort = null,
+    preferred_min_throughput: ?ProviderPreference = null,
+    preferred_max_latency: ?ProviderPreference = null,
+    max_price: ?ProviderMaxPrice = null,
+    /// Provider-specific options object keyed by provider slug. Borrowed until request serialization completes.
+    options: ?std.json.Value = null,
 
     pub fn prefer(order: []const []const u8) ProviderRouting {
         return .{ .order = order };
@@ -194,7 +207,67 @@ pub const ProviderRouting = struct {
         copy.require_parameters = true;
         return copy;
     }
+
+    pub fn jsonStringify(self: ProviderRouting, jws: anytype) !void {
+        try jws.beginObject();
+        inline for (.{
+            .{ "order", self.order },                     .{ "allow_fallbacks", self.allow_fallbacks },                   .{ "require_parameters", self.require_parameters },
+            .{ "data_collection", self.data_collection }, .{ "zdr", self.zdr },                                           .{ "enforce_distillable_text", self.enforce_distillable_text },
+            .{ "only", self.only_providers },             .{ "ignore", self.ignore },                                     .{ "quantizations", self.quantizations },
+            .{ "sort", self.sort },                       .{ "preferred_min_throughput", self.preferred_min_throughput }, .{ "preferred_max_latency", self.preferred_max_latency },
+            .{ "max_price", self.max_price },
+        }) |field| {
+            if (field[1]) |value| {
+                try jws.objectField(field[0]);
+                try jws.write(value);
+            }
+        }
+        if (self.options) |options| {
+            if (options != .object) return error.WriteFailed;
+            try jws.objectField("options");
+            try jws.write(options);
+        }
+        try jws.endObject();
+    }
 };
+
+pub const ProviderDataCollection = enum { allow, deny };
+pub const ProviderQuantization = enum { int4, int8, fp4, mxfp4, nvfp4, fp6, fp8, mxfp8, fp16, bf16, fp32, unknown };
+pub const ProviderSortBy = enum { price, throughput, latency, exacto };
+pub const ProviderSortPartition = enum { model, none };
+pub const ProviderSort = union(enum) {
+    value: ProviderSortBy,
+    config: Config,
+    pub const Config = struct { by: ?ProviderSortBy = null, partition: ?ProviderSortPartition = null };
+    pub fn jsonStringify(self: ProviderSort, jws: anytype) !void {
+        switch (self) {
+            .value => |value| try jws.write(value),
+            .config => |config| try jws.write(config),
+        }
+    }
+};
+pub const ProviderPreference = union(enum) {
+    value: f64,
+    percentiles: Percentiles,
+    pub const Percentiles = struct { p50: ?f64 = null, p75: ?f64 = null, p90: ?f64 = null, p99: ?f64 = null };
+    pub fn jsonStringify(self: ProviderPreference, jws: anytype) !void {
+        switch (self) {
+            .value => |value| try jws.write(value),
+            .percentiles => |value| try jws.write(value),
+        }
+    }
+};
+pub const ProviderPrice = union(enum) {
+    number: f64,
+    string: []const u8,
+    pub fn jsonStringify(self: ProviderPrice, jws: anytype) !void {
+        switch (self) {
+            .number => |value| try jws.write(value),
+            .string => |value| try jws.write(value),
+        }
+    }
+};
+pub const ProviderMaxPrice = struct { prompt: ?ProviderPrice = null, completion: ?ProviderPrice = null, request: ?ProviderPrice = null, image: ?ProviderPrice = null, audio: ?ProviderPrice = null };
 
 pub const Plugin = union(enum) {
     fusion: FusionPlugin,
@@ -795,6 +868,80 @@ test "chat request serializes provider routing helpers" {
     try std.testing.expect(std.mem.indexOf(u8, body, "\"order\":[\"openai\",\"azure\"]") != null);
     try std.testing.expect(std.mem.indexOf(u8, body, "\"allow_fallbacks\":false") != null);
     try std.testing.expect(std.mem.indexOf(u8, body, "\"require_parameters\":true") != null);
+}
+
+test "chat request serializes typed provider routing" {
+    const messages = &.{Message{ .role = .user, .content = .{ .text = "Hello" } }};
+    const quantizations = &.{ .int4, .int8, .fp4, .mxfp4, .nvfp4, .fp6, .fp8, .mxfp8, .fp16, .bf16, .fp32, .unknown };
+    var provider_options: std.json.ObjectMap = .empty;
+    defer provider_options.deinit(std.testing.allocator);
+    try provider_options.put(std.testing.allocator, "openai", .{ .object = .empty });
+    const body = try json.stringifyRequest(std.testing.allocator, CompletionRequest{
+        .model = "m",
+        .messages = messages,
+        .provider = .{
+            .data_collection = .deny,
+            .zdr = false,
+            .enforce_distillable_text = true,
+            .only_providers = &.{ "openai", "azure" },
+            .ignore = &.{"slow"},
+            .quantizations = quantizations,
+            .sort = .{ .config = .{ .by = .exacto, .partition = .none } },
+            .preferred_min_throughput = .{ .value = 1.5 },
+            .preferred_max_latency = .{ .percentiles = .{ .p75 = 2, .p90 = 3, .p99 = 4 } },
+            .max_price = .{ .prompt = .{ .number = 1.5 }, .completion = .{ .string = "2" }, .request = .{ .number = 3 }, .image = .{ .string = "4" }, .audio = .{ .number = 5 } },
+            .options = .{ .object = provider_options },
+        },
+    });
+    defer std.testing.allocator.free(body);
+    var parsed = try std.json.parseFromSlice(std.json.Value, std.testing.allocator, body, .{});
+    defer parsed.deinit();
+    const provider = parsed.value.object.get("provider").?.object;
+    try std.testing.expectEqualStrings("deny", provider.get("data_collection").?.string);
+    try std.testing.expectEqual(false, provider.get("zdr").?.bool);
+    try std.testing.expectEqual(@as(usize, 2), provider.get("only").?.array.items.len);
+    try std.testing.expectEqualStrings("slow", provider.get("ignore").?.array.items[0].string);
+    const expected_quantizations = [_][]const u8{ "int4", "int8", "fp4", "mxfp4", "nvfp4", "fp6", "fp8", "mxfp8", "fp16", "bf16", "fp32", "unknown" };
+    for (provider.get("quantizations").?.array.items, expected_quantizations) |value, expected| try std.testing.expectEqualStrings(expected, value.string);
+    try std.testing.expectEqualStrings("exacto", provider.get("sort").?.object.get("by").?.string);
+    try std.testing.expectEqualStrings("none", provider.get("sort").?.object.get("partition").?.string);
+    try std.testing.expectEqual(@as(f64, 1.5), provider.get("preferred_min_throughput").?.float);
+    const latency = provider.get("preferred_max_latency").?.object;
+    try std.testing.expect(latency.get("p50") == null);
+    try std.testing.expectEqual(@as(i64, 2), latency.get("p75").?.integer);
+    try std.testing.expectEqual(@as(i64, 3), latency.get("p90").?.integer);
+    try std.testing.expectEqual(@as(i64, 4), latency.get("p99").?.integer);
+    try std.testing.expectEqualStrings("2", provider.get("max_price").?.object.get("completion").?.string);
+    try std.testing.expectEqual(@as(f64, 1.5), provider.get("max_price").?.object.get("prompt").?.float);
+    try std.testing.expect(provider.get("options").?.object.get("openai") != null);
+    try std.testing.expect(parsed.value.object.get("openai") == null);
+}
+
+test "provider routing omits nulls and confines raw options" {
+    const messages = &.{Message{ .role = .user, .content = .{ .text = "Hello" } }};
+    const without_provider = try json.stringifyRequest(std.testing.allocator, CompletionRequest{ .model = "m", .messages = messages });
+    defer std.testing.allocator.free(without_provider);
+    var parsed_without = try std.json.parseFromSlice(std.json.Value, std.testing.allocator, without_provider, .{});
+    defer parsed_without.deinit();
+    try std.testing.expect(parsed_without.value.object.get("provider") == null);
+
+    const empty = try json.stringifyRequest(std.testing.allocator, CompletionRequest{ .model = "m", .messages = messages, .provider = .{} });
+    defer std.testing.allocator.free(empty);
+    var parsed_empty = try std.json.parseFromSlice(std.json.Value, std.testing.allocator, empty, .{});
+    defer parsed_empty.deinit();
+    try std.testing.expectEqual(@as(usize, 0), parsed_empty.value.object.get("provider").?.object.count());
+
+    try std.testing.expectError(error.WriteFailed, json.stringifyRequest(std.testing.allocator, CompletionRequest{ .model = "m", .messages = messages, .provider = .{ .options = .{ .string = "not-an-object" } } }));
+
+    const scalar = try json.stringifyRequest(std.testing.allocator, CompletionRequest{ .model = "m", .messages = messages, .provider = .{ .data_collection = .allow, .zdr = true, .enforce_distillable_text = false, .sort = .{ .value = .price } } });
+    defer std.testing.allocator.free(scalar);
+    var parsed_scalar = try std.json.parseFromSlice(std.json.Value, std.testing.allocator, scalar, .{});
+    defer parsed_scalar.deinit();
+    const provider = parsed_scalar.value.object.get("provider").?.object;
+    try std.testing.expectEqualStrings("allow", provider.get("data_collection").?.string);
+    try std.testing.expectEqual(true, provider.get("zdr").?.bool);
+    try std.testing.expectEqual(false, provider.get("enforce_distillable_text").?.bool);
+    try std.testing.expectEqualStrings("price", provider.get("sort").?.string);
 }
 
 test "chat request merges extra body object fields" {

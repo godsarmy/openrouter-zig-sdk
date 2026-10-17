@@ -13,6 +13,8 @@ sources:
     title: Chat completion API reference
   - resource: https://openrouter.ai/docs/api_reference/streaming
     title: Streaming API reference
+  - resource: https://openrouter.ai/docs/guides/routing/provider-selection
+    title: Provider selection guide
 ---
 
 # API audit and implementation roadmap
@@ -29,7 +31,7 @@ Paths below are normally relative to `https://openrouter.ai/api/v1`. `/api/alpha
 
 1. **Done: Responses streaming** uses the shared SSE infrastructure with typed common event fields, raw event preservation, text/reasoning helpers, function-call argument separation, and terminal-state handling. Typed full request/input/output expansion remains follow-up work. Review the [basic Responses usage](https://openrouter.ai/docs/api_reference/responses/basic-usage) and [Responses tool calling](https://openrouter.ai/docs/api_reference/responses/tool-calling) documentation.
 2. **Done: Chat response and streaming fidelity** adds typed response tool calls, reasoning details, nested citations, refusal, generated images, and additive typed content parts while retaining legacy string `content`. Streaming deltas expose indexed tool-call fragments without accumulation helpers and preserve raw message/delta values. Generated audio remains raw JSON. This expands existing `POST /chat/completions` representations only; endpoint coverage remains unchanged. Review the [chat completion reference](https://openrouter.ai/docs/api/api-reference/chat/create-a-chat-completion), [reasoning guide](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens), and [streaming reference](https://openrouter.ai/docs/api_reference/streaming).
-3. Add provider-routing privacy, filter, sort, price, latency, and throughput options, plus deliberately scoped raw escape hatches. Follow the [provider-selection guide](https://openrouter.ai/docs/guides/routing/provider-selection) and [parameter reference](https://openrouter.ai/docs/api_reference/parameters).
+3. **Done: Chat provider routing** adds typed privacy, hard-filter, quantization, sort, soft throughput/latency preference, and maximum-price fields, plus scoped `provider.options`. Existing routing helpers remain compatible; other endpoint provider fields remain raw JSON. This expands the existing chat completion request only, so endpoint coverage is unchanged. See the [provider-selection guide](https://openrouter.ai/docs/guides/routing/provider-selection) and [chat completion reference](https://openrouter.ai/docs/api/api-reference/chat/create-a-chat-completion).
 
 Do not promise `store` or `previous_response_id` for Responses until the documentation/schema conflict is resolved: the Responses documentation rejects them while the schema lists them. Prefer `reasoning` over deprecated `include_reasoning`.
 
