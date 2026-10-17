@@ -389,6 +389,7 @@ pub const GuardrailsResource = struct {
 };
 pub const WorkspacesResource = struct {
     budgets: WorkspaceBudgetsResource = .{},
+    members: WorkspaceMembersResource = .{},
 
     pub fn list(self: *WorkspacesResource, request: workspaces_mod.ListRequest, request_options: options_mod.RequestOptions) !workspaces_mod.ListResponse {
         const client: *Client = @alignCast(@fieldParentPtr("workspaces", self));
@@ -419,11 +420,23 @@ pub const WorkspacesResource = struct {
         return workspaces_mod.bulkRemoveMembers(client, id, request, request_options);
     }
 };
+pub const WorkspaceMembersResource = struct {
+    pub fn list(self: *WorkspaceMembersResource, workspace_ref: []const u8, request: workspaces_mod.MembersListRequest, request_options: options_mod.RequestOptions) !workspaces_mod.MembersListResponse {
+        const workspaces: *WorkspacesResource = @alignCast(@fieldParentPtr("members", self));
+        const client: *Client = @alignCast(@fieldParentPtr("workspaces", workspaces));
+        return workspaces_mod.listMembers(client, workspace_ref, request, request_options);
+    }
+};
 pub const WorkspaceBudgetsResource = struct {
     pub fn list(self: *WorkspaceBudgetsResource, id: []const u8, request_options: options_mod.RequestOptions) !workspaces_mod.BudgetListResponse {
         const workspaces: *WorkspacesResource = @alignCast(@fieldParentPtr("budgets", self));
         const client: *Client = @alignCast(@fieldParentPtr("workspaces", workspaces));
         return workspaces_mod.listBudgets(client, id, request_options);
+    }
+    pub fn get(self: *WorkspaceBudgetsResource, workspace_ref: []const u8, interval: workspaces_mod.BudgetInterval, request_options: options_mod.RequestOptions) !workspaces_mod.BudgetGetResponse {
+        const workspaces: *WorkspacesResource = @alignCast(@fieldParentPtr("budgets", self));
+        const client: *Client = @alignCast(@fieldParentPtr("workspaces", workspaces));
+        return workspaces_mod.getBudget(client, workspace_ref, interval, request_options);
     }
     pub fn upsert(self: *WorkspaceBudgetsResource, id: []const u8, interval: workspaces_mod.BudgetInterval, request: workspaces_mod.BudgetUpsertRequest, request_options: options_mod.RequestOptions) !workspaces_mod.BudgetUpsertResponse {
         const workspaces: *WorkspacesResource = @alignCast(@fieldParentPtr("budgets", self));
@@ -830,6 +843,7 @@ test "client initializes resource namespaces" {
     _ = client.guardrails;
     _ = client.workspaces;
     _ = client.workspaces.budgets;
+    _ = client.workspaces.members;
     _ = client.organization;
     _ = client.organization.members;
     _ = client.key;

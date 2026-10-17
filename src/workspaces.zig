@@ -57,6 +57,12 @@ pub const BudgetUpsertRequest = struct {
     limit_usd: f64,
 };
 
+pub const MembersListRequest = struct {
+    /// The management API paginates results; this SDK does not auto-paginate.
+    offset: ?i64 = null,
+    limit: ?i64 = null,
+};
+
 pub const Workspace = struct {
     id: ?[]const u8 = null,
     name: ?[]const u8 = null,
@@ -98,6 +104,32 @@ pub const GetResponse = responseWithData(Workspace);
 pub const UpdateResponse = responseWithData(Workspace);
 pub const BudgetListResponse = responseWithList(WorkspaceBudget);
 pub const BudgetUpsertResponse = responseWithData(WorkspaceBudget);
+
+pub const MembersListResponse = struct {
+    /// Owned by `arena`, including `response_metadata`, until `deinit`.
+    arena: std.heap.ArenaAllocator,
+    data: []WorkspaceMember,
+    total_count: i64,
+    response_metadata: http.ResponseMetadata = .{},
+
+    pub fn deinit(self: *MembersListResponse) void {
+        self.arena.deinit();
+        self.* = undefined;
+    }
+};
+
+pub const BudgetGetResponse = struct {
+    /// `include_byok_in_budgets` is a workspace-wide setting and preserves false.
+    arena: std.heap.ArenaAllocator,
+    data: WorkspaceBudget,
+    include_byok_in_budgets: ?bool = null,
+    response_metadata: http.ResponseMetadata = .{},
+
+    pub fn deinit(self: *BudgetGetResponse) void {
+        self.arena.deinit();
+        self.* = undefined;
+    }
+};
 
 pub const DeleteResponse = struct {
     arena: std.heap.ArenaAllocator,
@@ -173,6 +205,14 @@ const WireBulkRemoveMembersResponse = struct { removed_count: ?i64 = null };
 const WireBudgetListResponse = struct { data: []WorkspaceBudget, total_count: ?i64 = null };
 const WireBudgetDataResponse = struct { data: WorkspaceBudget };
 const WireBudgetDeleteResponse = struct { deleted: bool };
+const WireMembersListResponse = struct {
+    data: []WorkspaceMember,
+    total_count: i64,
+};
+const WireBudgetGetResponse = struct {
+    data: WorkspaceBudget,
+    include_byok_in_budgets: ?bool = null,
+};
 
 pub fn list(client: anytype, request: ListRequest, request_options: options_mod.RequestOptions) !ListResponse {
     return listWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, request, request_options);
@@ -266,6 +306,32 @@ pub fn bulkRemoveMembersWithTransport(allocator: std.mem.Allocator, config: conf
 
 pub fn listBudgets(client: anytype, id: []const u8, request_options: options_mod.RequestOptions) !BudgetListResponse {
     return listBudgetsWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, id, request_options);
+}
+
+pub fn listMembers(client: anytype, workspace_ref: []const u8, request: MembersListRequest, request_options: options_mod.RequestOptions) !MembersListResponse {
+    return listMembersWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, workspace_ref, request, request_options);
+}
+
+pub fn listMembersWithTransport(allocator: std.mem.Allocator, config: config_mod.Config, transport: anytype, workspace_ref: []const u8, request: MembersListRequest, request_options: options_mod.RequestOptions) !MembersListResponse {
+    const path = try workspacePath(allocator, workspace_ref, "/members");
+    defer allocator.free(path);
+    const query = try membersListQueryString(allocator, request);
+    defer allocator.free(query);
+    var response = try execute(allocator, config, transport, .{ .method = .GET, .path = path, .query = query }, request_options);
+    defer response.deinit();
+    return parseMembersListResponse(allocator, response);
+}
+
+pub fn getBudget(client: anytype, workspace_ref: []const u8, interval: BudgetInterval, request_options: options_mod.RequestOptions) !BudgetGetResponse {
+    return getBudgetWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, workspace_ref, interval, request_options);
+}
+
+pub fn getBudgetWithTransport(allocator: std.mem.Allocator, config: config_mod.Config, transport: anytype, workspace_ref: []const u8, interval: BudgetInterval, request_options: options_mod.RequestOptions) !BudgetGetResponse {
+    const path = try workspaceBudgetPath(allocator, workspace_ref, interval);
+    defer allocator.free(path);
+    var response = try execute(allocator, config, transport, .{ .method = .GET, .path = path }, request_options);
+    defer response.deinit();
+    return parseBudgetGetResponse(allocator, response);
 }
 
 pub fn listBudgetsWithTransport(allocator: std.mem.Allocator, config: config_mod.Config, transport: anytype, id: []const u8, request_options: options_mod.RequestOptions) !BudgetListResponse {
@@ -377,6 +443,34 @@ pub fn parseBudgetUpsertResponse(allocator: std.mem.Allocator, response: http.Ht
     return .{ .arena = arena, .data = parsed.data };
 }
 
+pub fn parseMembersListResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !MembersListResponse {
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    errdefer arena.deinit();
+    const arena_allocator = arena.allocator();
+    const parsed = try json.parseResponseLeaky(WireMembersListResponse, arena_allocator, try arena_allocator.dupe(u8, response.body));
+    return .{
+        .arena = arena,
+        .data = parsed.data,
+        .total_count = parsed.total_count,
+        .response_metadata = try http.ResponseMetadata.fromHttpResponse(arena_allocator, response),
+    };
+}
+
+pub fn parseBudgetGetResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !BudgetGetResponse {
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    errdefer arena.deinit();
+    const arena_allocator = arena.allocator();
+    const parsed = try json.parseResponseLeaky(WireBudgetGetResponse, arena_allocator, try arena_allocator.dupe(u8, response.body));
+    return .{
+        .arena = arena,
+        .data = parsed.data,
+        .include_byok_in_budgets = parsed.include_byok_in_budgets,
+        .response_metadata = try http.ResponseMetadata.fromHttpResponse(arena_allocator, response),
+    };
+}
+
 pub fn parseBudgetDeleteResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !BudgetDeleteResponse {
     if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
     var arena = std.heap.ArenaAllocator.init(allocator);
@@ -396,12 +490,41 @@ fn listQueryString(allocator: std.mem.Allocator, request: ListRequest) ![]u8 {
     });
 }
 
+fn membersListQueryString(allocator: std.mem.Allocator, request: MembersListRequest) ![]u8 {
+    const offset = if (request.offset) |value| try std.fmt.allocPrint(allocator, "{d}", .{value}) else null;
+    defer if (offset) |value| allocator.free(value);
+    const limit = if (request.limit) |value| try std.fmt.allocPrint(allocator, "{d}", .{value}) else null;
+    defer if (limit) |value| allocator.free(value);
+    return query_mod.build(allocator, &.{
+        .{ .name = "offset", .value = offset },
+        .{ .name = "limit", .value = limit },
+    });
+}
+
 fn workspacePath(allocator: std.mem.Allocator, id: []const u8, suffix: []const u8) ![]u8 {
-    return std.fmt.allocPrint(allocator, "/workspaces/{s}{s}", .{ id, suffix });
+    var path: std.ArrayList(u8) = .empty;
+    errdefer path.deinit(allocator);
+    try path.appendSlice(allocator, "/workspaces/");
+    try appendPathSegment(allocator, &path, id);
+    try path.appendSlice(allocator, suffix);
+    return path.toOwnedSlice(allocator);
 }
 
 fn workspaceBudgetPath(allocator: std.mem.Allocator, id: []const u8, interval: BudgetInterval) ![]u8 {
-    return std.fmt.allocPrint(allocator, "/workspaces/{s}/budgets/{s}", .{ id, @tagName(interval) });
+    const base = try workspacePath(allocator, id, "/budgets/");
+    defer allocator.free(base);
+    return std.fmt.allocPrint(allocator, "{s}{s}", .{ base, @tagName(interval) });
+}
+
+fn appendPathSegment(allocator: std.mem.Allocator, output: *std.ArrayList(u8), value: []const u8) !void {
+    const hex = "0123456789ABCDEF";
+    for (value) |byte| {
+        if (std.ascii.isAlphanumeric(byte) or byte == '-' or byte == '_' or byte == '.' or byte == '~') {
+            try output.append(allocator, byte);
+        } else {
+            try output.appendSlice(allocator, &.{ '%', hex[byte >> 4], hex[byte & 0x0F] });
+        }
+    }
 }
 
 test "workspaces list serializes query params" {
@@ -458,6 +581,94 @@ test "workspaces paths and errors" {
     defer std.testing.allocator.free(path);
     try std.testing.expectEqualStrings("/workspaces/ws_123/members/add", path);
     try std.testing.expectError(error.ApiError, listWithTransport(std.testing.allocator, .{ .api_key = "test-key" }, http.FakeTransport{ .status = .forbidden, .body = "{}" }, .{}, .{}));
+}
+
+test "workspace members list parses pagination and retains owned response data" {
+    const body =
+        \\{
+        \\  "data": [{
+        \\    "id": "member_1",
+        \\    "workspace_id": "workspace_1",
+        \\    "user_id": "user_1",
+        \\    "role": "future-role",
+        \\    "created_at": "2026-01-01T00:00:00Z",
+        \\    "unknown": true
+        \\  }],
+        \\  "total_count": 12
+        \\}
+    ;
+    var result = try listMembersWithTransport(
+        std.testing.allocator,
+        .{ .api_key = "test-key" },
+        http.FakeTransport{ .body = body },
+        "workspace_1",
+        .{},
+        .{},
+    );
+    defer result.deinit();
+
+    try std.testing.expectEqual(@as(i64, 12), result.total_count);
+    try std.testing.expectEqualStrings("future-role", result.data[0].role.?);
+    try std.testing.expectEqualStrings("user_1", result.data[0].user_id.?);
+}
+
+test "workspace members list supports empty data and query paths" {
+    const empty_body =
+        \\{ "data": [], "total_count": 0 }
+    ;
+    var result = try listMembersWithTransport(
+        std.testing.allocator,
+        .{ .api_key = "test-key" },
+        http.FakeTransport{ .body = empty_body },
+        "workspace_1",
+        .{},
+        .{},
+    );
+    defer result.deinit();
+    try std.testing.expectEqual(@as(usize, 0), result.data.len);
+
+    const omitted = try membersListQueryString(std.testing.allocator, .{});
+    defer std.testing.allocator.free(omitted);
+    try std.testing.expectEqualStrings("", omitted);
+    const query = try membersListQueryString(std.testing.allocator, .{ .offset = 0, .limit = 50 });
+    defer std.testing.allocator.free(query);
+    try std.testing.expectEqualStrings("offset=0&limit=50", query);
+    const path = try workspacePath(std.testing.allocator, "team/a b:c", "/members");
+    defer std.testing.allocator.free(path);
+    var prepared = try http.prepareRequest(std.testing.allocator, .{ .api_key = "test-key" }, .{ .method = .GET, .path = path, .query = query }, .{});
+    defer prepared.deinit();
+    try std.testing.expectEqualStrings("https://openrouter.ai/api/v1/workspaces/team%2Fa%20b%3Ac/members?offset=0&limit=50", prepared.url);
+}
+
+test "workspace budget get parses settings and lifetime interval" {
+    const monthly_body =
+        \\{
+        \\  "data": { "id": "budget_1", "workspace_id": "workspace_1", "limit_usd": 10, "reset_interval": "monthly", "created_at": "now", "updated_at": "later" },
+        \\  "include_byok_in_budgets": false
+        \\}
+    ;
+    var monthly = try getBudgetWithTransport(std.testing.allocator, .{ .api_key = "test-key" }, http.FakeTransport{ .body = monthly_body }, "workspace_1", .monthly, .{});
+    defer monthly.deinit();
+    try std.testing.expectEqual(false, monthly.include_byok_in_budgets.?);
+    try std.testing.expectEqualStrings("monthly", monthly.data.reset_interval.?);
+
+    const lifetime_body =
+        \\{ "data": { "id": "budget_2", "workspace_id": "workspace_1", "limit_usd": 1, "reset_interval": null, "created_at": "now", "updated_at": "later" }, "include_byok_in_budgets": true }
+    ;
+    var lifetime = try getBudgetWithTransport(std.testing.allocator, .{ .api_key = "test-key" }, http.FakeTransport{ .body = lifetime_body }, "team/a b:c", .lifetime, .{});
+    defer lifetime.deinit();
+    try std.testing.expectEqual(null, lifetime.data.reset_interval);
+    try std.testing.expectEqual(true, lifetime.include_byok_in_budgets.?);
+    const path = try workspaceBudgetPath(std.testing.allocator, "team/a b:c", .lifetime);
+    defer std.testing.allocator.free(path);
+    try std.testing.expectEqualStrings("/workspaces/team%2Fa%20b%3Ac/budgets/lifetime", path);
+}
+
+test "workspace read errors and malformed required roots fail" {
+    try std.testing.expectError(error.ApiError, listMembersWithTransport(std.testing.allocator, .{ .api_key = "test-key" }, http.FakeTransport{ .status = .unauthorized }, "workspace_1", .{}, .{}));
+    try std.testing.expectError(error.ApiError, getBudgetWithTransport(std.testing.allocator, .{ .api_key = "test-key" }, http.FakeTransport{ .status = .not_found }, "workspace_1", .daily, .{}));
+    try std.testing.expectError(error.MissingField, listMembersWithTransport(std.testing.allocator, .{ .api_key = "test-key" }, http.FakeTransport{ .body = "{\"data\":[]}" }, "workspace_1", .{}, .{}));
+    try std.testing.expectError(error.MissingField, getBudgetWithTransport(std.testing.allocator, .{ .api_key = "test-key" }, http.FakeTransport{ .body = "{}" }, "workspace_1", .daily, .{}));
 }
 
 test "workspace budgets list parses response" {
