@@ -1,10 +1,14 @@
 ---
 type: API Reference
 title: OpenRouter Zig endpoint coverage
-description: Canonical categorized inventory of the 103 HTTP endpoint operations exported by the client.
+description: Canonical categorized inventory of the 107 HTTP endpoint operations exported by the client.
 tags: [api, endpoints, coverage]
 generated: { by: openai/gpt-5.6-terra, at: 2026-10-17T00:00:00Z }
 sources:
+  - resource: ../../src/organization.zig
+    title: Organization settings and members
+  - resource: ../../src/private_endpoints.zig
+    title: Private endpoint reads
   - id: client
     resource: ../../src/client.zig
     title: Client resource registration
@@ -147,6 +151,10 @@ Every row is implemented and registered on `openrouter.Client`; method names are
 | GET | `/workspaces/{workspace_ref}/budgets/{interval}` | `workspaces.budgets.get` | management |
 | GET | `/workspaces/{id}/members` | `workspaces.members.list` | management |
 | PUT/DELETE | `/workspaces/{id}/budgets/{interval}` | `workspaces.budgets.upsert`, `.delete` | management |
+| GET | `/organization/settings` | `organization.settings.get` | management |
+| PATCH | `/organization/settings` | `organization.settings.update` | management; controls authenticated model-catalog filtering. |
+| GET | `/private-endpoints` | `private_endpoints.list` | management plus private-endpoint entitlement; includes drafts. |
+| GET | `/private-endpoints/{id}` | `private_endpoints.get` | management plus private-endpoint entitlement; upstream configuration and decimal-string pricing. |
 | GET | `/organization/members` | `organization.members.list` | management |
 
 # Files and observability
@@ -159,4 +167,4 @@ Every row is implemented and registered on `openrouter.Client`; method names are
 | GET/POST | `/observability/destinations` | `observability.destinations.list`, `.create` | management |
 | GET/PATCH/DELETE | `/observability/destinations/{id}` | `observability.destinations.get`, `.update`, `.delete` | management |
 
-The matrix represents **103 distinct method/path operations**: rows combining verbs are expanded for that count. It excludes the upstream-deprecated `POST /credits/coinbase`, which is intentionally not exported. For audited specification gaps and implementation priorities, see the [API audit and roadmap](roadmap.md); planned operations are not coverage claims.
+The matrix represents **107 distinct method/path operations**: rows combining verbs are expanded for that count. It excludes the upstream-deprecated `POST /credits/coinbase`, which is intentionally not exported. For audited specification gaps and implementation priorities, see the [API audit and roadmap](roadmap.md); planned operations are not coverage claims.

@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Added organization settings get/update and private-endpoint list/get calls, with owned response metadata and typed data.
+- Audited Phase 3 access and lifecycle requirements; private-endpoint mutations and the remaining specialized APIs are still planned.
+
 ## v1.2.0 - 2026-10-04
 
 - Updated the minimum supported Zig version and CI toolchain to `0.17.0`.

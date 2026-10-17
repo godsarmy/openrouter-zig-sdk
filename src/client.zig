@@ -28,6 +28,7 @@ const observability_mod = @import("observability.zig");
 const options_mod = @import("options.zig");
 const organization_mod = @import("organization.zig");
 const presets_mod = @import("presets.zig");
+const private_endpoints_mod = @import("private_endpoints.zig");
 const providers_mod = @import("providers.zig");
 const rerank_mod = @import("rerank.zig");
 const responses_mod = @import("responses.zig");
@@ -557,8 +558,31 @@ pub const ObservabilityDestinationsResource = struct {
         return observability_mod.delete(client, id, request_options);
     }
 };
+pub const PrivateEndpointsResource = struct {
+    pub fn list(self: *PrivateEndpointsResource, request_options: options_mod.RequestOptions) !private_endpoints_mod.ListResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("private_endpoints", self));
+        return private_endpoints_mod.list(client, request_options);
+    }
+    pub fn get(self: *PrivateEndpointsResource, id: []const u8, request_options: options_mod.RequestOptions) !private_endpoints_mod.GetResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("private_endpoints", self));
+        return private_endpoints_mod.get(client, id, request_options);
+    }
+};
 pub const OrganizationResource = struct {
     members: OrganizationMembersResource = .{},
+    settings: OrganizationSettingsResource = .{},
+};
+pub const OrganizationSettingsResource = struct {
+    pub fn get(self: *OrganizationSettingsResource, request_options: options_mod.RequestOptions) !organization_mod.SettingsResponse {
+        const organization: *OrganizationResource = @alignCast(@fieldParentPtr("settings", self));
+        const client: *Client = @alignCast(@fieldParentPtr("organization", organization));
+        return organization_mod.getSettings(client, request_options);
+    }
+    pub fn update(self: *OrganizationSettingsResource, request: organization_mod.SettingsUpdateRequest, request_options: options_mod.RequestOptions) !organization_mod.SettingsResponse {
+        const organization: *OrganizationResource = @alignCast(@fieldParentPtr("settings", self));
+        const client: *Client = @alignCast(@fieldParentPtr("organization", organization));
+        return organization_mod.updateSettings(client, request, request_options);
+    }
 };
 pub const OrganizationMembersResource = struct {
     pub fn list(self: *OrganizationMembersResource, request: organization_mod.MembersListRequest, request_options: options_mod.RequestOptions) !organization_mod.MembersListResponse {
@@ -773,6 +797,7 @@ pub const Client = struct {
     workspaces: WorkspacesResource,
     observability: ObservabilityResource,
     organization: OrganizationResource,
+    private_endpoints: PrivateEndpointsResource,
     oauth: OAuthResource,
     key: KeyResource,
     keys: KeysResource,
@@ -819,6 +844,7 @@ pub const Client = struct {
             .workspaces = .{},
             .observability = .{},
             .organization = .{},
+            .private_endpoints = .{},
             .oauth = .{},
             .key = .{},
             .keys = .{},
@@ -968,8 +994,10 @@ test "client initializes resource namespaces" {
     _ = client.workspaces;
     _ = client.workspaces.budgets;
     _ = client.workspaces.members;
+    _ = client.private_endpoints;
     _ = client.organization;
     _ = client.organization.members;
+    _ = client.organization.settings;
     _ = client.key;
     _ = client.keys;
     _ = client.providers;
