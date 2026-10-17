@@ -592,6 +592,7 @@ pub const DatasetsResource = struct {
     app_rankings: AppRankingsResource = .{},
     benchmarks: DatasetBenchmarksResource = .{},
     rankings_daily: RankingsDailyResource = .{},
+    session_cost: SessionCostResource = .{},
 };
 pub const AppRankingsResource = struct {
     pub fn get(
@@ -641,6 +642,17 @@ pub const RankingsDailyResource = struct {
         const datasets: *DatasetsResource = @alignCast(@fieldParentPtr("rankings_daily", self));
         const client: *Client = @alignCast(@fieldParentPtr("datasets", datasets));
         return datasets_mod.getRankingsDaily(client, request, request_options);
+    }
+};
+pub const SessionCostResource = struct {
+    pub fn get(
+        self: *SessionCostResource,
+        request: datasets_mod.SessionCostRequest,
+        request_options: options_mod.RequestOptions,
+    ) !datasets_mod.SessionCostResponse {
+        const datasets: *DatasetsResource = @alignCast(@fieldParentPtr("session_cost", self));
+        const client: *Client = @alignCast(@fieldParentPtr("datasets", datasets));
+        return datasets_mod.getSessionCost(client, request, request_options);
     }
 };
 
@@ -862,4 +874,15 @@ test "client initializes resource namespaces" {
     _ = client.datasets.benchmarks.artificial_analysis;
     _ = client.datasets.benchmarks.design_arena;
     _ = client.datasets.rankings_daily;
+    _ = client.datasets.session_cost;
+}
+
+test "client.datasets.session_cost namespace exposes get" {
+    var client = try Client.init(std.testing.allocator, std.testing.io, .{
+        .api_key = "test-key",
+    });
+    defer client.deinit();
+
+    _ = client.datasets.session_cost;
+    _ = SessionCostResource.get;
 }

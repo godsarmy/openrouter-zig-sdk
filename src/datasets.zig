@@ -34,6 +34,16 @@ pub const BenchmarksDesignArenaGetRequest = struct {
     max_results: ?u64 = null,
 };
 
+/// Filters weekly aggregate session-cost data. All fields are optional and
+/// omitted from the request when unset.
+pub const SessionCostRequest = struct {
+    app_slug: ?[]const u8 = null,
+    model: ?[]const u8 = null,
+    turn_range: ?[]const u8 = null,
+    limit: ?u64 = null,
+    offset: ?u64 = null,
+};
+
 pub const RankingsDailyGetResponse = struct {
     arena: std.heap.ArenaAllocator,
     data: []RankingDailyItem,
@@ -73,6 +83,20 @@ pub const BenchmarksDesignArenaGetResponse = struct {
     meta: BenchmarkDesignArenaMeta,
 
     pub fn deinit(self: *BenchmarksDesignArenaGetResponse) void {
+        self.arena.deinit();
+        self.* = undefined;
+    }
+};
+
+/// Weekly aggregate session-cost data. All fields, including
+/// `response_metadata`, are owned by this response until `deinit`.
+pub const SessionCostResponse = struct {
+    arena: std.heap.ArenaAllocator,
+    data: []SessionCostItem,
+    meta: SessionCostMeta,
+    response_metadata: http.ResponseMetadata = .{},
+
+    pub fn deinit(self: *SessionCostResponse) void {
         self.arena.deinit();
         self.* = undefined;
     }
@@ -159,6 +183,21 @@ pub const BenchmarkDesignArenaMeta = struct {
     version: []const u8,
 };
 
+pub const SessionCostItem = struct {
+    app_slug: []const u8,
+    app_name: []const u8,
+    turn_range: []const u8,
+    model_permaslug: []const u8,
+    median_session_cost_usd: f64,
+};
+
+pub const SessionCostMeta = struct {
+    as_of: []const u8,
+    version: []const u8,
+    window_days: ?f64,
+    window_end_date: ?[]const u8,
+};
+
 const WireRankingsDailyGetResponse = struct {
     data: []RankingDailyItem,
     meta: RankingDailyMeta,
@@ -179,6 +218,11 @@ const WireBenchmarksDesignArenaGetResponse = struct {
     meta: BenchmarkDesignArenaMeta,
 };
 
+const WireSessionCostResponse = struct {
+    data: []SessionCostItem,
+    meta: SessionCostMeta,
+};
+
 pub fn getRankingsDaily(client: anytype, request: RankingsDailyGetRequest, request_options: options_mod.RequestOptions) !RankingsDailyGetResponse {
     return getRankingsDailyWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, request, request_options);
 }
@@ -193,6 +237,10 @@ pub fn getBenchmarksArtificialAnalysis(client: anytype, request: BenchmarksArtif
 
 pub fn getBenchmarksDesignArena(client: anytype, request: BenchmarksDesignArenaGetRequest, request_options: options_mod.RequestOptions) !BenchmarksDesignArenaGetResponse {
     return getBenchmarksDesignArenaWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, request, request_options);
+}
+
+pub fn getSessionCost(client: anytype, request: SessionCostRequest, request_options: options_mod.RequestOptions) !SessionCostResponse {
+    return getSessionCostWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, request, request_options);
 }
 
 pub fn getRankingsDailyWithTransport(
@@ -287,6 +335,29 @@ pub fn getBenchmarksDesignArenaWithTransport(
     return parseBenchmarksDesignArenaGetResponse(allocator, response);
 }
 
+pub fn getSessionCostWithTransport(
+    allocator: std.mem.Allocator,
+    config: config_mod.Config,
+    transport: anytype,
+    request: SessionCostRequest,
+    request_options: options_mod.RequestOptions,
+) !SessionCostResponse {
+    const query = try sessionCostQueryString(allocator, request);
+    defer allocator.free(query);
+
+    var prepared = try http.prepareRequest(allocator, config, .{
+        .method = .GET,
+        .path = "/datasets/session-cost",
+        .query = query,
+    }, request_options);
+    defer prepared.deinit();
+
+    var response = try transport.execute(allocator, prepared);
+    defer response.deinit();
+
+    return parseSessionCostResponse(allocator, response);
+}
+
 pub fn parseRankingsDailyGetResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !RankingsDailyGetResponse {
     if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
 
@@ -351,6 +422,23 @@ pub fn parseBenchmarksDesignArenaGetResponse(allocator: std.mem.Allocator, respo
     };
 }
 
+pub fn parseSessionCostResponse(allocator: std.mem.Allocator, response: http.HttpResponse) !SessionCostResponse {
+    if (errors.isErrorStatus(@backingInt(response.status))) return error.ApiError;
+
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    errdefer arena.deinit();
+    const arena_allocator = arena.allocator();
+
+    const owned_body = try arena_allocator.dupe(u8, response.body);
+    const parsed = try json.parseResponseLeaky(WireSessionCostResponse, arena_allocator, owned_body);
+    return .{
+        .arena = arena,
+        .data = parsed.data,
+        .meta = parsed.meta,
+        .response_metadata = try http.ResponseMetadata.fromHttpResponse(arena_allocator, response),
+    };
+}
+
 pub fn rankingsDailyQueryString(allocator: std.mem.Allocator, request: RankingsDailyGetRequest) ![]u8 {
     return query_mod.build(allocator, &.{
         .{ .name = "start_date", .value = request.start_date },
@@ -391,6 +479,185 @@ pub fn benchmarksDesignArenaQueryString(allocator: std.mem.Allocator, request: B
         .{ .name = "category", .value = request.category },
         .{ .name = "max_results", .value = max_results },
     });
+}
+
+pub fn sessionCostQueryString(allocator: std.mem.Allocator, request: SessionCostRequest) ![]u8 {
+    const limit = if (request.limit) |value| try std.fmt.allocPrint(allocator, "{}", .{value}) else null;
+    defer if (limit) |value| allocator.free(value);
+    const offset = if (request.offset) |value| try std.fmt.allocPrint(allocator, "{}", .{value}) else null;
+    defer if (offset) |value| allocator.free(value);
+
+    return query_mod.build(allocator, &.{
+        .{ .name = "app_slug", .value = request.app_slug },
+        .{ .name = "model", .value = request.model },
+        .{ .name = "turn_range", .value = request.turn_range },
+        .{ .name = "limit", .value = limit },
+        .{ .name = "offset", .value = offset },
+    });
+}
+
+test "session cost parses aggregates, metadata, and unknown future values" {
+    const body =
+        \\{
+        \\  "data": [
+        \\    {
+        \\      "app_slug": "example-app",
+        \\      "app_name": "Example App",
+        \\      "turn_range": "future-turn-bucket",
+        \\      "model_permaslug": "openai/gpt-4o",
+        \\      "median_session_cost_usd": 0.0125,
+        \\      "unknown": true
+        \\    }
+        \\  ],
+        \\  "meta": {
+        \\    "as_of": "2026-10-17T00:00:00Z",
+        \\    "version": "v2",
+        \\    "window_days": 7,
+        \\    "window_end_date": "2026-10-16",
+        \\    "unknown": true
+        \\  }
+        \\}
+    ;
+
+    var result = try getSessionCostWithTransport(
+        std.testing.allocator,
+        .{ .api_key = "test-key" },
+        http.FakeTransport{
+            .body = body,
+            .headers = &.{.{ .name = "X-Request-ID", .value = "req_session_cost" }},
+        },
+        .{},
+        .{},
+    );
+    defer result.deinit();
+
+    try std.testing.expectEqual(@as(usize, 1), result.data.len);
+    try std.testing.expectEqualStrings("future-turn-bucket", result.data[0].turn_range);
+    try std.testing.expectEqual(@as(f64, 0.0125), result.data[0].median_session_cost_usd);
+    try std.testing.expectEqualStrings("v2", result.meta.version);
+    try std.testing.expectEqual(@as(?f64, 7), result.meta.window_days);
+    try std.testing.expectEqualStrings("req_session_cost", result.response_metadata.request_id.?);
+}
+
+test "session cost accepts an empty null snapshot" {
+    const body =
+        \\{
+        \\  "data": [],
+        \\  "meta": {
+        \\    "as_of": "2026-10-17T00:00:00Z",
+        \\    "version": "v1",
+        \\    "window_days": null,
+        \\    "window_end_date": null
+        \\  }
+        \\}
+    ;
+
+    var result = try getSessionCostWithTransport(
+        std.testing.allocator,
+        .{ .api_key = "test-key" },
+        http.FakeTransport{ .body = body },
+        .{},
+        .{},
+    );
+    defer result.deinit();
+
+    try std.testing.expectEqual(@as(usize, 0), result.data.len);
+    try std.testing.expectEqual(@as(?f64, null), result.meta.window_days);
+    try std.testing.expectEqual(@as(?[]const u8, null), result.meta.window_end_date);
+}
+
+test "session cost rejects missing required fields including nullable metadata" {
+    const missing_item_field =
+        \\{
+        \\  "data": [
+        \\    {
+        \\      "app_slug": "example-app",
+        \\      "app_name": "Example App",
+        \\      "turn_range": "1-turn",
+        \\      "median_session_cost_usd": 0.01
+        \\    }
+        \\  ],
+        \\  "meta": {
+        \\    "as_of": "2026-10-17",
+        \\    "version": "v1",
+        \\    "window_days": null,
+        \\    "window_end_date": null
+        \\  }
+        \\}
+    ;
+    const missing_nullable_meta_field =
+        \\{
+        \\  "data": [],
+        \\  "meta": {
+        \\    "as_of": "2026-10-17",
+        \\    "version": "v1",
+        \\    "window_end_date": null
+        \\  }
+        \\}
+    ;
+
+    try std.testing.expectError(error.MissingField, getSessionCostWithTransport(
+        std.testing.allocator,
+        .{ .api_key = "test-key" },
+        http.FakeTransport{ .body = missing_item_field },
+        .{},
+        .{},
+    ));
+
+    try std.testing.expectError(error.MissingField, getSessionCostWithTransport(
+        std.testing.allocator,
+        .{ .api_key = "test-key" },
+        http.FakeTransport{ .body = missing_nullable_meta_field },
+        .{},
+        .{},
+    ));
+}
+
+test "session cost sends GET with all escaped query parameters" {
+    const query = try sessionCostQueryString(std.testing.allocator, .{
+        .app_slug = "my app&team",
+        .model = "openai/gpt 4",
+        .turn_range = "2-9-turns",
+        .limit = 500,
+        .offset = 0,
+    });
+    defer std.testing.allocator.free(query);
+
+    var prepared = try http.prepareRequest(std.testing.allocator, .{ .api_key = "test-key" }, .{
+        .method = .GET,
+        .path = "/datasets/session-cost",
+        .query = query,
+    }, .{});
+    defer prepared.deinit();
+
+    try std.testing.expectEqual(std.http.Method.GET, prepared.method);
+    try std.testing.expectEqualStrings("https://openrouter.ai/api/v1/datasets/session-cost?app_slug=my%20app%26team&model=openai%2Fgpt%204&turn_range=2-9-turns&limit=500&offset=0", prepared.url);
+}
+
+test "session cost omits unset query parameters" {
+    const query = try sessionCostQueryString(std.testing.allocator, .{});
+    defer std.testing.allocator.free(query);
+
+    try std.testing.expectEqualStrings("", query);
+}
+
+test "session cost maps documented error statuses to ApiError" {
+    const statuses = [_]std.http.Status{
+        .bad_request,
+        .unauthorized,
+        .too_many_requests,
+        .internal_server_error,
+    };
+
+    for (statuses) |status| {
+        try std.testing.expectError(error.ApiError, getSessionCostWithTransport(
+            std.testing.allocator,
+            .{ .api_key = "test-key" },
+            http.FakeTransport{ .status = status, .body = "{\"error\":{\"message\":\"request failed\"}}" },
+            .{},
+            .{},
+        ));
+    }
 }
 
 test "rankings daily get parses response and ignores unknown fields" {

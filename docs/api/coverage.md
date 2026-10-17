@@ -1,7 +1,7 @@
 ---
 type: API Reference
 title: OpenRouter Zig endpoint coverage
-description: Canonical categorized inventory of the 87 HTTP endpoint operations exported by the client.
+description: Canonical categorized inventory of the 88 HTTP endpoint operations exported by the client.
 tags: [api, endpoints, coverage]
 generated: { by: openai/gpt-6.1-sol, at: 2026-10-17T00:00:00Z }
 sources:
@@ -17,6 +17,12 @@ sources:
   - id: classifications
     resource: ../../src/classifications.zig
     title: Task classifications API
+  - id: datasets
+    resource: ../../src/datasets.zig
+    title: Dataset APIs
+  - id: data-api
+    resource: https://openrouter.ai/docs/cookbook/administration/data-api
+    title: OpenRouter Data API
 ---
 
 # Scope
@@ -71,6 +77,7 @@ Every row is implemented and registered on `openrouter.Client`; method names are
 | GET | `/datasets/app-rankings` | `datasets.app_rankings.get` | App rankings. |
 | GET | `/datasets/benchmarks/artificial-analysis` | `datasets.benchmarks.artificial_analysis.get` | Benchmark data. |
 | GET | `/datasets/benchmarks/design-arena` | `datasets.benchmarks.design_arena.get` | Benchmark data. |
+| GET | `/datasets/session-cost` | `datasets.session_cost.get` | Weekly aggregate session costs, without individual session rows or user IDs; available with any inference API key. Source: [OpenRouter Data API](https://openrouter.ai/docs/cookbook/administration/data-api), as of `meta.as_of`. Data CC BY 4.0; when republishing the dataset itself, append “Licensed under CC BY 4.0.” |
 | GET | `/benchmarks` | `benchmarks.list` | Unified benchmark discovery. |
 | GET | `/classifications/task` | `classifications.task.get` | Task-classification shares; Source: OpenRouter (openrouter.ai/rankings). |
 | GET | `/analytics/meta` | `analytics.meta.get` | management |
@@ -122,4 +129,4 @@ Every row is implemented and registered on `openrouter.Client`; method names are
 | GET/POST | `/observability/destinations` | `observability.destinations.list`, `.create` | management |
 | GET/PATCH/DELETE | `/observability/destinations/{id}` | `observability.destinations.get`, `.update`, `.delete` | management |
 
-The matrix represents **87 distinct method/path operations**: rows combining verbs are expanded for that count. It excludes the upstream-deprecated `POST /credits/coinbase`, which is intentionally not exported. For audited specification gaps and implementation priorities, see the [API audit and roadmap](roadmap.md); planned operations are not coverage claims.
+The matrix represents **88 distinct method/path operations**: rows combining verbs are expanded for that count. It excludes the upstream-deprecated `POST /credits/coinbase`, which is intentionally not exported. For audited specification gaps and implementation priorities, see the [API audit and roadmap](roadmap.md); planned operations are not coverage claims.

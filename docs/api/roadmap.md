@@ -21,13 +21,15 @@ sources:
     title: Streaming API reference
   - resource: https://openrouter.ai/docs/guides/routing/provider-selection
     title: Provider selection guide
+  - resource: https://openrouter.ai/docs/cookbook/administration/data-api
+    title: OpenRouter Data API
 ---
 
 # API audit and implementation roadmap
 
-This is a planning document, not an endpoint-coverage claim. The audit was retrieved on 2026-10-15 from the [official OpenAPI specification](https://openrouter.ai/openapi.json) and the [API reference overview](https://openrouter.ai/docs/api_reference/overview). It found 151 method/path operations, including 3 deprecated operations, or **148 non-deprecated operations**. Of the canonical [87 implemented operations](coverage.md), **85 overlap with the current specification**, leaving **63 current specification gaps**. This comparison normalizes path-parameter names and does not establish when any API was introduced.
+This is a planning document, not an endpoint-coverage claim. The audit was retrieved on 2026-10-15 from the [official OpenAPI specification](https://openrouter.ai/openapi.json) and the [API reference overview](https://openrouter.ai/docs/api_reference/overview). It found 151 method/path operations, including 3 deprecated operations, or **148 non-deprecated operations**. Of the canonical [88 implemented operations](coverage.md), **86 overlap with the current specification**, leaving **62 current specification gaps**. This comparison normalizes path-parameter names and does not establish when any API was introduced.
 
-Two implemented operations, `GET /datasets/benchmarks/artificial-analysis` and `GET /datasets/benchmarks/design-arena`, are absent from the retrieved OpenAPI. Their absence does not establish server-side removal or deprecation; verify their current support before changing the client. `GET /benchmarks`, `GET /classifications/task`, `GET /workspaces/{id}/members`, and `GET /workspaces/{workspace_ref}/budgets/{interval}` were added since this historical audit; the current accounting reflects them but does not claim a fresh audit. The gap calculation therefore uses the 85-operation intersection, not direct subtraction of all 87 implemented operations.
+Two implemented operations, `GET /datasets/benchmarks/artificial-analysis` and `GET /datasets/benchmarks/design-arena`, are absent from the retrieved OpenAPI. Their absence does not establish server-side removal or deprecation; verify their current support before changing the client. `GET /benchmarks`, `GET /classifications/task`, `GET /workspaces/{id}/members`, `GET /workspaces/{workspace_ref}/budgets/{interval}`, and `GET /datasets/session-cost` were added since this historical audit; the current accounting reflects them but does not claim a fresh full audit. The gap calculation therefore uses the 86-operation intersection, not direct subtraction of all 88 implemented operations.
 
 Paths below are normally relative to `https://openrouter.ai/api/v1`. `/api/alpha/decisions` is recorded exactly as specified: it is a special path and must not be normalized blindly. Verify its base URL before implementation.
 
@@ -58,7 +60,7 @@ Evaluate private endpoints, SCIM, vault, interns, OAuth infrastructure, organiza
 - Use opt-in integration tests only with configured credentials.
 - Update [endpoint coverage](coverage.md) only when an operation is implemented, and repeat this specification-drift comparison for future audits.
 
-## Current non-deprecated gap inventory (63 operations)
+## Current non-deprecated gap inventory (62 operations)
 
 The following confirmed audit baseline is verb-expanded: every listed verb/path pair is one operation.
 
@@ -69,7 +71,6 @@ The following confirmed audit baseline is verb-expanded: every listed verb/path 
 | POST | `/batches` | P2 |
 | GET | `/batches/{id}` | P2 |
 | DELETE | `/batches/{id}` | P2 |
-| GET | `/datasets/session-cost` | P2 data |
 | GET | `/end-users` | P2 |
 | POST | `/end-users` | P2 |
 | GET | `/end-users/{user}` | P2 |
