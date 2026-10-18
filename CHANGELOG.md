@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added all eight SCIM operations: group discovery, mapping management with explicit membership retention, and asynchronous sync creation/polling; includes typed owned responses and offline transport tests.
+
 - Added organization settings get/update and private-endpoint list/get calls, with owned response metadata and typed data.
 - Audited Phase 3 access and lifecycle requirements; private-endpoint mutations and the remaining specialized APIs are still planned.
 

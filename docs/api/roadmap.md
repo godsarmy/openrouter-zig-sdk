@@ -41,9 +41,9 @@ sources:
 
 # API audit and implementation roadmap
 
-This is a planning document, not an endpoint-coverage claim. The audit was retrieved on 2026-10-15 from the [official OpenAPI specification](https://openrouter.ai/openapi.json) and the [API reference overview](https://openrouter.ai/docs/api_reference/overview). It found 151 method/path operations, including 3 deprecated operations, or **148 non-deprecated operations**. Of the canonical [107 implemented operations](coverage.md), **105 overlap with the current specification**, leaving **43 current specification gaps**. This comparison normalizes path-parameter names and does not establish when any API was introduced.
+This is a planning document, not an endpoint-coverage claim. The audit was retrieved on 2026-10-15 from the [official OpenAPI specification](https://openrouter.ai/openapi.json) and the [API reference overview](https://openrouter.ai/docs/api_reference/overview). It found 151 method/path operations, including 3 deprecated operations, or **148 non-deprecated operations**. Of the canonical [115 implemented operations](coverage.md), **113 overlap with the current specification**, leaving **35 current specification gaps**. This comparison normalizes path-parameter names and does not establish when any API was introduced.
 
-Two implemented operations, `GET /datasets/benchmarks/artificial-analysis` and `GET /datasets/benchmarks/design-arena`, are absent from the retrieved OpenAPI. Their absence does not establish server-side removal or deprecation; verify their current support before changing the client. The Phase 2 additions and the four initial Phase 3 operations are included in these counts. The specification was retrieved again on 2026-10-17 and still contains 151 operations, including 3 deprecated operations. The Phase 3 inventory was rechecked; this is not a fresh field-parity audit of existing implementations. The gap calculation therefore uses the 105-operation intersection, not direct subtraction of all 107 implemented operations.
+Two implemented operations, `GET /datasets/benchmarks/artificial-analysis` and `GET /datasets/benchmarks/design-arena`, are absent from the retrieved OpenAPI. Their absence does not establish server-side removal or deprecation; verify their current support before changing the client. The Phase 2 additions, four initial Phase 3 operations, and eight SCIM operations are included in these counts. The specification was retrieved again on 2026-10-18 and still contains 151 operations, including 3 deprecated operations. The Phase 3 inventory was rechecked; this is not a fresh field-parity audit of existing implementations. The gap calculation therefore uses the 113-operation intersection, not direct subtraction of all 115 implemented operations.
 
 Paths below are normally relative to `https://openrouter.ai/api/v1`. `/api/alpha/decisions` is recorded exactly as specified: it is a special path and must not be normalized blindly. Verify its base URL before implementation.
 
@@ -72,7 +72,7 @@ End-user lifecycle endpoints require a management API key; `end_users.create` re
 
 ### Phase 3 — enterprise and specialized APIs
 
-**Started:** organization settings GET/PATCH and private-endpoint list/get are implemented with typed requests/responses, owned metadata, and offline transport tests. Both groups require management keys; private endpoints additionally require an entitlement. Account access has not been verified with live requests. Phase 3 remains incomplete.
+**Started:** SCIM group discovery, mapping management, sync creation/polling, organization settings GET/PATCH, and private-endpoint list/get are implemented with typed requests/responses, owned metadata, and offline transport tests. All three groups require management keys; private endpoints additionally require an entitlement. Account access has not been verified with live requests. Phase 3 remains incomplete.
 
 The 2026-10-17 specification review establishes the next implementation constraints:
 
@@ -80,7 +80,7 @@ The 2026-10-17 specification review establishes the next implementation constrai
 |---|---|---|
 | Organization settings | Management key; required boolean controls authenticated model discovery. | Implemented. |
 | Private endpoints | Entitlement and management key. Creation makes a draft; validation and activation are separate. Create-with-activate can fail while leaving a draft in response `data`. Creation supports `Idempotency-Key`; draft edits invalidate validation and active edits return 409. | Reads implemented; 8 mutations remain. Preserve partial-failure data before adding them. |
-| SCIM | Management key. Recreating the same mapping and role re-applies it; a different role conflicts. Sync creation requires status polling. | Next management API candidate; account availability unverified. |
+| SCIM | Management key. Recreating the same mapping and role re-applies it; a different role conflicts. Sync creation requires status polling. | All 8 operations implemented with offline tests; account availability unverified. |
 | Containers | List cursor is `last_id`, including scan-boundary pages; file content is binary. Promotion copies into durable Files storage and consumes quota. | Separate file-lifecycle implementation. |
 | Interns | Explicit workspace and caller visibility; regional hosts are refused. Provision/suspend accept no fields. Daemon signing requires a personal OAuth grant with `vault:read`, not an API key, and a rollout gate. | Defer until credential and lifecycle behavior can be validated. Exclude deprecated daemon-access aliases. |
 | Vault | API-key workspace selects scope; no default/fallback. Reads return metadata only. Writes can return 503 when disabled; intern copying is atomic and may reject legacy hostless secrets. | Defer until workspace scope and write availability can be validated. |
@@ -99,7 +99,7 @@ Specification presence alone does not establish endpoint stability or account en
 - Use opt-in integration tests only with configured credentials.
 - Update [endpoint coverage](coverage.md) only when an operation is implemented, and repeat this specification-drift comparison for future audits.
 
-## Current non-deprecated gap inventory (43 operations)
+## Current non-deprecated gap inventory (35 operations)
 
 The following confirmed audit baseline is verb-expanded: every listed verb/path pair is one operation.
 
@@ -131,14 +131,6 @@ The following confirmed audit baseline is verb-expanded: every listed verb/path 
 | POST | `/private-endpoints/{id}/enable` | P3 |
 | POST | `/private-endpoints/{id}/validate` | P3 |
 | PUT | `/private-endpoints/{id}/pricing` | P3 |
-| GET | `/scim/group-mappings` | P3 |
-| POST | `/scim/group-mappings` | P3 |
-| GET | `/scim/group-mappings/{id}` | P3 |
-| PATCH | `/scim/group-mappings/{id}` | P3 |
-| DELETE | `/scim/group-mappings/{id}` | P3 |
-| GET | `/scim/groups` | P3 |
-| POST | `/scim/sync-jobs` | P3 |
-| GET | `/scim/sync-jobs/{id}` | P3 |
 | POST | `/systemone` | P3 |
 | GET | `/vault/secrets` | P3 |
 | PUT | `/vault/secrets/{name}` | P3 |

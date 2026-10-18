@@ -20,3 +20,16 @@ defer endpoints.deinit();
 ```
 
 Private-endpoint lifecycle states and declared regions preserve future string values. Pricing remains decimal strings; list responses include drafts and expose summaries, while `get(id, options)` returns upstream configuration.
+
+SCIM calls require a management key and own their responses. For example:
+
+```zig
+var groups = try client.scim.listGroups(.{ .display_name = "Engineering" }, .{});
+defer groups.deinit();
+var job = try client.scim.createSyncJob(.{});
+defer job.deinit();
+var status = try client.scim.getSyncJob(job.data.id, .{});
+defer status.deinit();
+```
+
+Poll sync jobs explicitly until `succeeded` or `failed`; unknown status values are preserved. Mapping deletion takes `.{ .keep_members = true }` to retain workspace membership, or `false` to remove memberships granted by the mapping. Recreating an existing mapping with the same role re-applies it; a different role returns an API error. Live account access has not been verified.

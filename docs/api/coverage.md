@@ -1,10 +1,12 @@
 ---
 type: API Reference
 title: OpenRouter Zig endpoint coverage
-description: Canonical categorized inventory of the 107 HTTP endpoint operations exported by the client.
+description: Canonical categorized inventory of the 115 HTTP endpoint operations exported by the client.
 tags: [api, endpoints, coverage]
 generated: { by: openai/gpt-5.6-terra, at: 2026-10-17T00:00:00Z }
 sources:
+  - resource: ../../src/scim.zig
+    title: SCIM directory management
   - resource: ../../src/organization.zig
     title: Organization settings and members
   - resource: ../../src/private_endpoints.zig
@@ -157,6 +159,16 @@ Every row is implemented and registered on `openrouter.Client`; method names are
 | GET | `/private-endpoints/{id}` | `private_endpoints.get` | management plus private-endpoint entitlement; upstream configuration and decimal-string pricing. |
 | GET | `/organization/members` | `organization.members.list` | management |
 
+# SCIM directory management
+
+| Method | Path | Client call | Notes |
+|---|---|---|---|
+| GET | `/scim/groups` | `scim.listGroups` | management; pagination and exact name/external-ID filters. |
+| GET/POST | `/scim/group-mappings` | `scim.listMappings`, `.createMapping` | management; same-role creation re-applies membership, different role conflicts. |
+| GET/PATCH/DELETE | `/scim/group-mappings/{id}` | `scim.getMapping`, `.updateMapping`, `.deleteMapping` | management; deletion requires an explicit `keep_members` boolean. |
+| POST | `/scim/sync-jobs` | `scim.createSyncJob` | management; queues work with HTTP 202, no request body. |
+| GET | `/scim/sync-jobs/{id}` | `scim.getSyncJob` | management; caller polls status by job ID. |
+
 # Files and observability
 
 | Method | Path | Client call | Notes |
@@ -167,4 +179,4 @@ Every row is implemented and registered on `openrouter.Client`; method names are
 | GET/POST | `/observability/destinations` | `observability.destinations.list`, `.create` | management |
 | GET/PATCH/DELETE | `/observability/destinations/{id}` | `observability.destinations.get`, `.update`, `.delete` | management |
 
-The matrix represents **107 distinct method/path operations**: rows combining verbs are expanded for that count. It excludes the upstream-deprecated `POST /credits/coinbase`, which is intentionally not exported. For audited specification gaps and implementation priorities, see the [API audit and roadmap](roadmap.md); planned operations are not coverage claims.
+The matrix represents **115 distinct method/path operations**: rows combining verbs are expanded for that count. It excludes the upstream-deprecated `POST /credits/coinbase`, which is intentionally not exported. For audited specification gaps and implementation priorities, see the [API audit and roadmap](roadmap.md); planned operations are not coverage claims.

@@ -28,6 +28,7 @@ const observability_mod = @import("observability.zig");
 const options_mod = @import("options.zig");
 const organization_mod = @import("organization.zig");
 const presets_mod = @import("presets.zig");
+const scim_mod = @import("scim.zig");
 const private_endpoints_mod = @import("private_endpoints.zig");
 const providers_mod = @import("providers.zig");
 const rerank_mod = @import("rerank.zig");
@@ -558,6 +559,41 @@ pub const ObservabilityDestinationsResource = struct {
         return observability_mod.delete(client, id, request_options);
     }
 };
+pub const ScimResource = struct {
+    pub fn listMappings(self: *ScimResource, request: scim_mod.ListMappingsRequest, request_options: options_mod.RequestOptions) !scim_mod.ListMappingsResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("scim", self));
+        return scim_mod.listMappings(client, request, request_options);
+    }
+    pub fn listGroups(self: *ScimResource, request: scim_mod.ListGroupsRequest, request_options: options_mod.RequestOptions) !scim_mod.ListGroupsResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("scim", self));
+        return scim_mod.listGroups(client, request, request_options);
+    }
+    pub fn createMapping(self: *ScimResource, request: scim_mod.CreateMappingRequest, request_options: options_mod.RequestOptions) !scim_mod.MappingResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("scim", self));
+        return scim_mod.createMapping(client, request, request_options);
+    }
+    pub fn getMapping(self: *ScimResource, id: []const u8, request_options: options_mod.RequestOptions) !scim_mod.MappingResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("scim", self));
+        return scim_mod.getMapping(client, id, request_options);
+    }
+    pub fn updateMapping(self: *ScimResource, id: []const u8, request: scim_mod.UpdateMappingRequest, request_options: options_mod.RequestOptions) !scim_mod.MappingResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("scim", self));
+        return scim_mod.updateMapping(client, id, request, request_options);
+    }
+    pub fn deleteMapping(self: *ScimResource, id: []const u8, request: scim_mod.DeleteMappingRequest, request_options: options_mod.RequestOptions) !scim_mod.DeleteMappingResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("scim", self));
+        return scim_mod.deleteMapping(client, id, request, request_options);
+    }
+    pub fn createSyncJob(self: *ScimResource, request_options: options_mod.RequestOptions) !scim_mod.SyncJobResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("scim", self));
+        return scim_mod.createSyncJob(client, request_options);
+    }
+    pub fn getSyncJob(self: *ScimResource, id: []const u8, request_options: options_mod.RequestOptions) !scim_mod.SyncJobResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("scim", self));
+        return scim_mod.getSyncJob(client, id, request_options);
+    }
+};
+
 pub const PrivateEndpointsResource = struct {
     pub fn list(self: *PrivateEndpointsResource, request_options: options_mod.RequestOptions) !private_endpoints_mod.ListResponse {
         const client: *Client = @alignCast(@fieldParentPtr("private_endpoints", self));
@@ -797,6 +833,7 @@ pub const Client = struct {
     workspaces: WorkspacesResource,
     observability: ObservabilityResource,
     organization: OrganizationResource,
+    scim: ScimResource,
     private_endpoints: PrivateEndpointsResource,
     oauth: OAuthResource,
     key: KeyResource,
@@ -844,6 +881,7 @@ pub const Client = struct {
             .workspaces = .{},
             .observability = .{},
             .organization = .{},
+            .scim = .{},
             .private_endpoints = .{},
             .oauth = .{},
             .key = .{},
@@ -1036,4 +1074,18 @@ test "client.datasets.session_cost namespace exposes get" {
 
     _ = client.datasets.session_cost;
     _ = SessionCostResource.get;
+}
+
+test "SCIM client calls forward request options before network IO" {
+    var client = try Client.init(std.testing.allocator, std.testing.io, .{ .api_key = "test-key" });
+    defer client.deinit();
+    const invalid: options_mod.RequestOptions = .{ .extra_headers = &.{.{ .name = "Authorization", .value = "invalid" }} };
+    try std.testing.expectError(error.OptionsInvalid, client.scim.listGroups(.{}, invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.scim.listMappings(.{}, invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.scim.createMapping(.{ .scim_group_id = "g", .workspace_id = "w", .role = .member }, invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.scim.getMapping("m", invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.scim.updateMapping("m", .{ .role = .admin }, invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.scim.deleteMapping("m", .{ .keep_members = true }, invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.scim.createSyncJob(invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.scim.getSyncJob("j", invalid));
 }
