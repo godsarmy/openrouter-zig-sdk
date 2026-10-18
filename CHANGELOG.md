@@ -2,12 +2,16 @@
 
 ## Unreleased
 
-- Added all eight SCIM operations: group discovery, mapping management with explicit membership retention, and asynchronous sync creation/polling; includes typed owned responses and offline transport tests.
+## v1.3.0 - 2026-10-18
 
+- Added Responses API streaming and expanded chat response, streaming, and provider-routing types.
+- Added images, batches, end users, server-tool discovery, generation feedback, benchmarks, task classifications, session costs, and workspace member/budget reads.
+- Fixed file-upload multipart encoding compatibility with Zig 0.17.
+- Added all eight SCIM operations: group discovery, mapping management with explicit membership retention, and asynchronous sync creation/polling; includes typed owned responses and offline transport tests.
 - Added organization settings get/update and private-endpoint list/get calls, with owned response metadata and typed data.
 - Completed Phase 3 endpoint coverage: added the 35 remaining operations for private-endpoint lifecycle, container files, interns and chat SSE, Vault, OAuth workload identity, System One, and alpha Decisions.
 - Preserve partial-failure private-endpoint drafts, binary file content, scan-boundary cursors, nullable intern updates, and terminal chat session/usage events. OAuth infrastructure omits API-key authorization and uses form encoding for token exchange.
-- Added offline tests and updated coverage to 150 operations (all 148 non-deprecated specification operations plus two retained dataset routes). Live enterprise, federation, and alpha account access remain unverified.
+- Added offline tests and updated coverage to 150 operations (all 148 non-deprecated specification operations plus two retained dataset routes). Live enterprise, federation, and alpha account access remain unverified. Release integration checks cover credential-free skip paths only; manual credential-file testing is planned for v1.4.0.
 
 ## v1.2.0 - 2026-10-04
 

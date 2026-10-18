@@ -5,7 +5,7 @@ A Zig `0.17.x` client for the [OpenRouter API](https://openrouter.ai/docs), with
 ## Install
 
 ```sh
-zig fetch --save https://github.com/godsarmy/openrouter-zig-sdk/archive/refs/tags/v1.2.0.tar.gz
+zig fetch --save https://github.com/godsarmy/openrouter-zig-sdk/archive/refs/tags/v1.3.0.tar.gz
 ```
 
 Then import it from your `build.zig` dependency graph.
