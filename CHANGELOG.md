@@ -2,12 +2,12 @@
 
 ## Unreleased
 
-- Documented organization-only APIs, management-key scope, private-endpoint entitlements, and the unverified SCIM access requirements.
+## v1.3.1 - 2026-10-18
 
+- Documented organization-only APIs, management-key scope, private-endpoint entitlements, and the unverified SCIM access requirements.
 - Fixed generation metadata parsing when provider-attempt records omit optional fields.
 - Split integration tests into API-focused files with shared support while retaining the same Zig build command.
 - Expanded free-model coverage to buffered/streaming Messages and Responses, model/tool discovery, generation metadata, and early stream cleanup; added management key listing, settings, SCIM, and private-endpoint reads.
-
 - Added manually selected free, management, and paid integration profiles through exported environment variables.
 - Integration tests now report missing credentials and profile exclusions as skipped; free chat checks use bounded requests without paid fallback or automatic retries.
 - Explicit integration invocations always execute tests instead of reusing cached results from a different credential or profile environment.
