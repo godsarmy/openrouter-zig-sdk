@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Documented organization-only APIs, management-key scope, private-endpoint entitlements, and the unverified SCIM access requirements.
+
 - Fixed generation metadata parsing when provider-attempt records omit optional fields.
 - Split integration tests into API-focused files with shared support while retaining the same Zig build command.
 - Expanded free-model coverage to buffered/streaming Messages and Responses, model/tool discovery, generation metadata, and early stream cleanup; added management key listing, settings, SCIM, and private-endpoint reads.

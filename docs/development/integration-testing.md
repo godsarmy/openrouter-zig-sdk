@@ -94,6 +94,8 @@ Tool detail lookups use the catalog entry's canonical `id`, not its display `nam
 
 # Observed account coverage
 
+See [account access and organization-only features](../api/account-access.md) for the access matrix and how to verify organization credentials.
+
 The workspace-key verification exercised all thirteen free-profile cases across full and targeted runs. The generation metadata check exposed an SDK parsing issue with omitted provider-attempt fields; an offline regression and a targeted live rerun passed after the fix.
 
 The management credential passed eight read-only checks. Organization members/settings returned HTTP 404 with an organization-account requirement; SCIM groups/mappings returned HTTP 404 `Not found`; private endpoints returned HTTP 403 requiring an organization management key. These five capabilities are not verified and remain visible as failures for this account. They are not evidence that the other management checks or the free inference key are invalid.

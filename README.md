@@ -47,7 +47,7 @@ pub fn main() !void {
 
 - [Getting started](docs/getting-started.md)
 - [Configuration](docs/client/configuration.md), [memory and lifecycle](docs/client/memory-and-lifecycle.md), [streaming](docs/client/streaming.md), and [retries and errors](docs/client/retries-and-errors.md)
-- [API reference](APIs.md) and [examples](EXAMPLES.md)
+- [API reference](APIs.md), [account and organization access](docs/api/account-access.md), and [examples](EXAMPLES.md)
 - [Verification](docs/development/verification.md) and [release process](docs/development/release-process.md)
 
 ## Manual integration tests

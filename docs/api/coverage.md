@@ -58,7 +58,7 @@ sources:
 
 # Scope
 
-Every row is implemented and registered on `openrouter.Client`; method names are the public resource calls. `management` means a management API key is required by the endpoint documentation or SDK guidance. This replaces the duplicate inventories formerly in `APIs.md`.
+Every row is implemented and registered on `openrouter.Client`; method names are the public resource calls. `management` means a management API key is required by the endpoint documentation or SDK guidance. This replaces the duplicate inventories formerly in `APIs.md`. SDK coverage does not grant account access: see [organization requirements and feature entitlements](account-access.md).
 
 # Inference and media
 
@@ -163,13 +163,15 @@ Every row is implemented and registered on `openrouter.Client`; method names are
 | GET | `/workspaces/{workspace_ref}/budgets/{interval}` | `workspaces.budgets.get` | management |
 | GET | `/workspaces/{id}/members` | `workspaces.members.list` | management |
 | PUT/DELETE | `/workspaces/{id}/budgets/{interval}` | `workspaces.budgets.upsert`, `.delete` | management |
-| GET | `/organization/settings` | `organization.settings.get` | management |
-| PATCH | `/organization/settings` | `organization.settings.update` | management; controls authenticated model-catalog filtering. |
-| GET | `/private-endpoints` | `private_endpoints.list` | management plus private-endpoint entitlement; includes drafts. |
-| GET | `/private-endpoints/{id}` | `private_endpoints.get` | management plus private-endpoint entitlement; upstream configuration and decimal-string pricing. |
-| GET | `/organization/members` | `organization.members.list` | management |
+| GET | `/organization/settings` | `organization.settings.get` | organization account and management key |
+| PATCH | `/organization/settings` | `organization.settings.update` | organization account and management key; controls authenticated model-catalog filtering. |
+| GET | `/private-endpoints` | `private_endpoints.list` | organization management key plus private-endpoint entitlement; includes drafts. |
+| GET | `/private-endpoints/{id}` | `private_endpoints.get` | organization management key plus private-endpoint entitlement; upstream configuration and decimal-string pricing. |
+| GET | `/organization/members` | `organization.members.list` | organization account and management key |
 
 # SCIM directory management
+
+Requires a management key and enabled SCIM access. Account availability is unverified; the tested personal account returned 404. Organization membership alone is not verified to enable SCIM. See [account access](account-access.md).
 
 | Method | Path | Client call | Notes |
 |---|---|---|---|

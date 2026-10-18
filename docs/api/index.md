@@ -1,11 +1,12 @@
 # API Reference
 
+* [Account access](account-access.md) - Organization-only APIs, management keys, and feature entitlements.
 * [Endpoint coverage](coverage.md) - Canonical, categorized matrix of every SDK HTTP endpoint.
 * [API audit and roadmap](roadmap.md) - Current specification gaps, priorities, and implementation caveats.
 
 The base URL is `https://openrouter.ai/api/v1`. Paths in the matrix are relative to it, except alpha Decisions, which replaces the trailing `/v1` with `/alpha`.
 
-Organization settings and private-endpoint operations require a management API key; private endpoints also require an entitlement. Returned values own their data and must be deinitialized:
+Organization settings require an organization account and management key; private endpoints require an organization management key and entitlement. A personal management key does not unlock these APIs. See [account access](account-access.md) for live observations and SCIM access limitations. Returned values own their data and must be deinitialized:
 
 ```zig
 var settings = try client.organization.settings.get(.{});
