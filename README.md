@@ -50,6 +50,16 @@ pub fn main() !void {
 - [API reference](APIs.md) and [examples](EXAMPLES.md)
 - [Verification](docs/development/verification.md) and [release process](docs/development/release-process.md)
 
+## Manual integration tests
+
+```sh
+export OPENROUTER_API_KEY="<your-api-key>"
+export OPENROUTER_TEST_PROFILE=free
+zig build integration-test
+```
+
+See [environment variables and profiles](docs/development/integration-testing.md). Management and paid tests are selected separately.
+
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE).

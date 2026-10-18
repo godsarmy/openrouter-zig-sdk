@@ -33,17 +33,21 @@ pub const ApiKey = struct {
     limit: ?f64 = null,
     limit_remaining: ?f64 = null,
     limit_reset: ?[]const u8 = null,
-    rate_limit: RateLimit,
+    /// Deprecated server field; newer responses may omit it.
+    rate_limit: RateLimit = .{},
+    free_model_daily_requests: ?FreeModelDailyRequests = null,
     usage: f64 = 0,
     usage_daily: f64 = 0,
     usage_monthly: f64 = 0,
     usage_weekly: f64 = 0,
 };
 
+pub const FreeModelDailyRequests = struct { used: u64, limit: u64, remaining: u64 };
+
 pub const RateLimit = struct {
-    interval: []const u8,
-    note: []const u8,
-    requests: i64,
+    interval: []const u8 = "",
+    note: []const u8 = "",
+    requests: i64 = 0,
 };
 
 const WireGetResponse = struct {
@@ -150,4 +154,11 @@ test "key get maps error status to ApiError" {
         http.FakeTransport{ .status = .unauthorized, .body = "{\"error\":{\"message\":\"invalid key\"}}" },
         .{},
     ));
+}
+
+test "key quota parses without deprecated rate limit" {
+    var result = try getWithTransport(std.testing.allocator, .{ .api_key = "test" }, http.FakeTransport{ .body = "{\"data\":{\"label\":\"integration\",\"free_model_daily_requests\":{\"used\":3,\"limit\":50,\"remaining\":47}}}" }, .{});
+    defer result.deinit();
+    try std.testing.expectEqual(@as(u64, 47), result.data.free_model_daily_requests.?.remaining);
+    try std.testing.expectEqual(@as(i64, 0), result.data.rate_limit.requests);
 }

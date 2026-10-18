@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added manually selected free, management, and paid integration profiles through exported environment variables.
+- Integration tests now report missing credentials and profile exclusions as skipped; free chat checks use bounded requests without paid fallback or automatic retries.
+- Explicit integration invocations always execute tests instead of reusing cached results from a different credential or profile environment.
+- Added current-key free-request quota parsing and support for responses that omit the deprecated rate-limit field.
+
 ## v1.3.0 - 2026-10-18
 
 - Added Responses API streaming and expanded chat response, streaming, and provider-routing types.
@@ -11,7 +16,7 @@
 - Added organization settings get/update and private-endpoint list/get calls, with owned response metadata and typed data.
 - Completed Phase 3 endpoint coverage: added the 35 remaining operations for private-endpoint lifecycle, container files, interns and chat SSE, Vault, OAuth workload identity, System One, and alpha Decisions.
 - Preserve partial-failure private-endpoint drafts, binary file content, scan-boundary cursors, nullable intern updates, and terminal chat session/usage events. OAuth infrastructure omits API-key authorization and uses form encoding for token exchange.
-- Added offline tests and updated coverage to 150 operations (all 148 non-deprecated specification operations plus two retained dataset routes). Live enterprise, federation, and alpha account access remain unverified. Release integration checks cover credential-free skip paths only; manual credential-file testing is planned for v1.4.0.
+- Added offline tests and updated coverage to 150 operations (all 148 non-deprecated specification operations plus two retained dataset routes). Live enterprise, federation, and alpha account access remain unverified. Release integration checks cover credential-free skip paths only; manual integration-test improvements are planned for v1.4.0.
 
 ## v1.2.0 - 2026-10-04
 

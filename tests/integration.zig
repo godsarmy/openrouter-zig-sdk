@@ -2,11 +2,11 @@ const std = @import("std");
 const openrouter = @import("openrouter");
 
 test "list models integration" {
+    try requireProfile(.discovery);
     var threaded: std.Io.Threaded = .init_single_threaded;
     defer threaded.deinit();
 
-    const maybe_client = try initPublicClient(&threaded);
-    var client = maybe_client orelse return;
+    var client = try initPublicClient(&threaded);
     defer client.deinit();
 
     var response = try client.models.list(.{});
@@ -16,11 +16,11 @@ test "list models integration" {
 }
 
 test "models count integration" {
+    try requireProfile(.discovery);
     var threaded: std.Io.Threaded = .init_single_threaded;
     defer threaded.deinit();
 
-    const maybe_client = try initPublicClient(&threaded);
-    var client = maybe_client orelse return;
+    var client = try initPublicClient(&threaded);
     defer client.deinit();
 
     var response = try client.models.count(.{}, .{});
@@ -30,11 +30,11 @@ test "models count integration" {
 }
 
 test "providers list integration" {
+    try requireProfile(.discovery);
     var threaded: std.Io.Threaded = .init_single_threaded;
     defer threaded.deinit();
 
-    const maybe_client = try initPublicClient(&threaded);
-    var client = maybe_client orelse return;
+    var client = try initPublicClient(&threaded);
     defer client.deinit();
 
     var response = try client.providers.list(.{});
@@ -44,11 +44,11 @@ test "providers list integration" {
 }
 
 test "datasets rankings daily integration" {
+    try requireProfile(.standard);
     var threaded: std.Io.Threaded = .init_single_threaded;
     defer threaded.deinit();
 
-    const maybe_client = try initPublicClient(&threaded);
-    var client = maybe_client orelse return;
+    var client = try initPublicClient(&threaded);
     defer client.deinit();
 
     var response = try client.datasets.rankings_daily.get(.{}, .{});
@@ -58,12 +58,12 @@ test "datasets rankings daily integration" {
 }
 
 test "generation integration" {
+    try requireProfile(.standard);
     var threaded: std.Io.Threaded = .init_single_threaded;
     defer threaded.deinit();
 
-    const generation_id = env("OPENROUTER_GENERATION_ID") orelse return;
-    const maybe_client = try initPublicClient(&threaded);
-    var client = maybe_client orelse return;
+    const generation_id = env("OPENROUTER_GENERATION_ID") orelse return error.SkipZigTest;
+    var client = try initPublicClient(&threaded);
     defer client.deinit();
 
     var response = try client.generation.get(.{ .id = generation_id }, .{});
@@ -73,12 +73,12 @@ test "generation integration" {
 }
 
 test "generation content integration" {
+    try requireProfile(.standard);
     var threaded: std.Io.Threaded = .init_single_threaded;
     defer threaded.deinit();
 
-    const generation_id = env("OPENROUTER_GENERATION_ID") orelse return;
-    const maybe_client = try initPublicClient(&threaded);
-    var client = maybe_client orelse return;
+    const generation_id = env("OPENROUTER_GENERATION_ID") orelse return error.SkipZigTest;
+    var client = try initPublicClient(&threaded);
     defer client.deinit();
 
     var response = try client.generation.content(.{ .id = generation_id }, .{});
@@ -88,45 +88,52 @@ test "generation content integration" {
 }
 
 test "chat streaming integration" {
+    try requireProfile(.chat);
     var threaded: std.Io.Threaded = .init_single_threaded;
     defer threaded.deinit();
 
-    const maybe_client = try initPublicClient(&threaded);
-    var client = maybe_client orelse return;
+    var client = try initPublicClient(&threaded);
     defer client.deinit();
 
+    try prepareChat(&client, threaded.io());
     var response = try client.chat.completions.stream(.{
-        .model = env("OPENROUTER_CHAT_MODEL") orelse "openai/gpt-4o-mini",
+        .model = try chatModel(),
         .messages = &.{openrouter.ChatMessage{
             .role = .user,
             .content = .{ .text = "Reply with only: ok" },
         }},
-        .max_tokens = 4,
+        .max_tokens = 64,
     }, .{});
     defer response.deinit();
 
     var chunks_seen: usize = 0;
     var saw_content = false;
-    while (chunks_seen < 64) {
+    var saw_finish = false;
+    while (chunks_seen < 256) {
         var chunk = (try response.next()) orelse break;
         defer chunk.deinit();
 
         chunks_seen += 1;
         if (chunk.content()) |text| saw_content = saw_content or text.len > 0;
+        for (chunk.choices) |choice| {
+            if (choice.delta.reasoning) |text| saw_content = saw_content or text.len > 0;
+            if (choice.finish_reason != null) saw_finish = true;
+        }
     }
 
     try std.testing.expect(chunks_seen > 0);
     try std.testing.expect(saw_content);
+    if (!saw_finish) return error.StreamLimitExceeded;
 }
 
 test "chat Fusion plugin integration" {
-    if (!envFlag("OPENROUTER_FUSION_TEST")) return;
+    try requireProfile(.standard);
+    if (!envFlag("OPENROUTER_FUSION_TEST")) return error.SkipZigTest;
 
     var threaded: std.Io.Threaded = .init_single_threaded;
     defer threaded.deinit();
 
-    const maybe_client = try initPublicClient(&threaded);
-    var client = maybe_client orelse return;
+    var client = try initPublicClient(&threaded);
     defer client.deinit();
 
     var response = client.chat.completions.create(.{
@@ -141,7 +148,7 @@ test "chat Fusion plugin integration" {
     }, .{}) catch |err| switch (err) {
         error.ApiError => {
             if (envFlag("OPENROUTER_FUSION_STRICT")) return err;
-            return;
+            return error.SkipZigTest;
         },
         else => |e| return e,
     };
@@ -153,13 +160,13 @@ test "chat Fusion plugin integration" {
 }
 
 test "chat server tools integration" {
-    if (!envFlag("OPENROUTER_CHAT_SERVER_TOOLS_TEST")) return;
+    try requireProfile(.standard);
+    if (!envFlag("OPENROUTER_CHAT_SERVER_TOOLS_TEST")) return error.SkipZigTest;
 
     var threaded: std.Io.Threaded = .init_single_threaded;
     defer threaded.deinit();
 
-    const maybe_client = try initPublicClient(&threaded);
-    var client = maybe_client orelse return;
+    var client = try initPublicClient(&threaded);
     defer client.deinit();
 
     var response = client.chat.completions.create(.{
@@ -178,7 +185,7 @@ test "chat server tools integration" {
     }, .{}) catch |err| switch (err) {
         error.ApiError => {
             if (envFlag("OPENROUTER_CHAT_SERVER_TOOLS_STRICT")) return err;
-            return;
+            return error.SkipZigTest;
         },
         else => |e| return e,
     };
@@ -190,11 +197,11 @@ test "chat server tools integration" {
 }
 
 test "messages streaming integration" {
+    try requireProfile(.standard);
     var threaded: std.Io.Threaded = .init_single_threaded;
     defer threaded.deinit();
 
-    const maybe_client = try initPublicClient(&threaded);
-    var client = maybe_client orelse return;
+    var client = try initPublicClient(&threaded);
     defer client.deinit();
 
     var response = try client.messages.stream(.{
@@ -224,10 +231,10 @@ test "messages streaming integration" {
 }
 
 test "responses streaming integration" {
+    try requireProfile(.standard);
     var threaded: std.Io.Threaded = .init_single_threaded;
     defer threaded.deinit();
-    const maybe_client = try initPublicClient(&threaded);
-    var client = maybe_client orelse return;
+    var client = try initPublicClient(&threaded);
     defer client.deinit();
 
     var stream = try client.responses.stream(.{
@@ -257,11 +264,11 @@ test "responses streaming integration" {
 }
 
 test "credits integration with management key" {
+    try requireProfile(.management);
     var threaded: std.Io.Threaded = .init_single_threaded;
     defer threaded.deinit();
 
-    const maybe_client = try initManagementClient(&threaded);
-    var client = maybe_client orelse return;
+    var client = try initManagementClient(&threaded);
     defer client.deinit();
 
     var response = try client.credits.get(.{});
@@ -271,11 +278,11 @@ test "credits integration with management key" {
 }
 
 test "BYOK list integration with management key" {
+    try requireProfile(.management);
     var threaded: std.Io.Threaded = .init_single_threaded;
     defer threaded.deinit();
 
-    const maybe_client = try initManagementClient(&threaded);
-    var client = maybe_client orelse return;
+    var client = try initManagementClient(&threaded);
     defer client.deinit();
 
     var response = try client.byok.list(.{ .limit = 10 }, .{});
@@ -285,11 +292,11 @@ test "BYOK list integration with management key" {
 }
 
 test "guardrails list integration with management key" {
+    try requireProfile(.management);
     var threaded: std.Io.Threaded = .init_single_threaded;
     defer threaded.deinit();
 
-    const maybe_client = try initManagementClient(&threaded);
-    var client = maybe_client orelse return;
+    var client = try initManagementClient(&threaded);
     defer client.deinit();
 
     var response = try client.guardrails.list(.{ .limit = 10 }, .{});
@@ -299,11 +306,11 @@ test "guardrails list integration with management key" {
 }
 
 test "workspaces list integration with management key" {
+    try requireProfile(.management);
     var threaded: std.Io.Threaded = .init_single_threaded;
     defer threaded.deinit();
 
-    const maybe_client = try initManagementClient(&threaded);
-    var client = maybe_client orelse return;
+    var client = try initManagementClient(&threaded);
     defer client.deinit();
 
     var response = try client.workspaces.list(.{ .limit = 10 }, .{});
@@ -313,11 +320,11 @@ test "workspaces list integration with management key" {
 }
 
 test "observability destinations list integration with management key" {
+    try requireProfile(.management);
     var threaded: std.Io.Threaded = .init_single_threaded;
     defer threaded.deinit();
 
-    const maybe_client = try initManagementClient(&threaded);
-    var client = maybe_client orelse return;
+    var client = try initManagementClient(&threaded);
     defer client.deinit();
 
     var response = try client.observability.destinations.list(.{ .limit = 10 }, .{});
@@ -327,11 +334,11 @@ test "observability destinations list integration with management key" {
 }
 
 test "organization members list integration with management key" {
+    try requireProfile(.management);
     var threaded: std.Io.Threaded = .init_single_threaded;
     defer threaded.deinit();
 
-    const maybe_client = try initManagementClient(&threaded);
-    var client = maybe_client orelse return;
+    var client = try initManagementClient(&threaded);
     defer client.deinit();
 
     var response = try client.organization.members.list(.{ .limit = 10 }, .{});
@@ -341,11 +348,11 @@ test "organization members list integration with management key" {
 }
 
 test "activity integration with management key" {
+    try requireProfile(.management);
     var threaded: std.Io.Threaded = .init_single_threaded;
     defer threaded.deinit();
 
-    const maybe_client = try initManagementClient(&threaded);
-    var client = maybe_client orelse return;
+    var client = try initManagementClient(&threaded);
     defer client.deinit();
 
     var response = try client.activity.get(.{}, .{});
@@ -373,13 +380,13 @@ fn envFlag(name: []const u8) bool {
     return std.mem.eql(u8, value, "1") or std.mem.eql(u8, value, "true") or std.mem.eql(u8, value, "yes");
 }
 
-fn initPublicClient(threaded: *std.Io.Threaded) !?openrouter.Client {
-    const api_key = env("OPENROUTER_API_KEY") orelse return null;
+fn initPublicClient(threaded: *std.Io.Threaded) !openrouter.Client {
+    const api_key = env("OPENROUTER_API_KEY") orelse return error.SkipZigTest;
     return try initClient(threaded, api_key);
 }
 
-fn initManagementClient(threaded: *std.Io.Threaded) !?openrouter.Client {
-    const api_key = env("OPENROUTER_MANAGEMENT_API_KEY") orelse return null;
+fn initManagementClient(threaded: *std.Io.Threaded) !openrouter.Client {
+    const api_key = env("OPENROUTER_MANAGEMENT_API_KEY") orelse return error.SkipZigTest;
     return try initClient(threaded, api_key);
 }
 
@@ -390,5 +397,101 @@ fn initClient(threaded: *std.Io.Threaded, api_key: []const u8) !openrouter.Clien
         .api_key = api_key,
         .http_referer = env("OPENROUTER_HTTP_REFERER"),
         .x_title = env("OPENROUTER_APP_TITLE"),
+        .retry = .{ .max_attempts = 1 },
     });
+}
+
+const Group = enum { discovery, chat, standard, management };
+
+fn allowsProfile(profile: []const u8, group: Group) !bool {
+    if (std.mem.eql(u8, profile, "free")) return group == .discovery or group == .chat;
+    if (std.mem.eql(u8, profile, "management")) return group == .management;
+    if (std.mem.eql(u8, profile, "paid")) return group != .management;
+    return error.InvalidTestProfile;
+}
+
+fn requireProfile(group: Group) !void {
+    const profile = env("OPENROUTER_TEST_PROFILE") orelse return;
+    if (!try allowsProfile(profile, group)) return error.SkipZigTest;
+}
+
+fn freeModelAllowed(model: []const u8) bool {
+    return std.mem.eql(u8, model, "openrouter/free") or std.mem.endsWith(u8, model, ":free");
+}
+
+fn isFreeProfile() bool {
+    return std.mem.eql(u8, env("OPENROUTER_TEST_PROFILE") orelse "", "free");
+}
+
+fn chatModel() ![]const u8 {
+    const fallback = if (isFreeProfile()) "openrouter/free" else "openai/gpt-4o-mini";
+    const model = env("OPENROUTER_CHAT_MODEL") orelse fallback;
+    if (isFreeProfile() and !freeModelAllowed(model)) return error.PaidModelInFreeProfile;
+    return model;
+}
+
+fn prepareChat(client: *openrouter.Client, io: std.Io) !void {
+    _ = try chatModel();
+    if (!isFreeProfile()) return;
+    var key = try client.key.get(.{});
+    defer key.deinit();
+    if (key.data.free_model_daily_requests) |quota| {
+        if (quota.remaining == 0) return error.FreeQuotaExhausted;
+    }
+    // Pace inference without retrying a whole run or changing credentials.
+    try std.Io.sleep(io, .fromMilliseconds(3500), .awake);
+}
+
+test "current API key integration" {
+    try requireProfile(.discovery);
+    var threaded: std.Io.Threaded = .init_single_threaded;
+    defer threaded.deinit();
+    var client = try initPublicClient(&threaded);
+    defer client.deinit();
+    var response = try client.key.get(.{});
+    defer response.deinit();
+    try std.testing.expect(response.data.label.len > 0);
+}
+
+test "chat buffered integration" {
+    try requireProfile(.chat);
+    var threaded: std.Io.Threaded = .init_single_threaded;
+    defer threaded.deinit();
+    var client = try initPublicClient(&threaded);
+    defer client.deinit();
+    try prepareChat(&client, threaded.io());
+    var response = try client.chat.completions.create(.{
+        .model = try chatModel(),
+        .messages = &.{.{ .role = .user, .content = .{ .text = "Reply with only: ok" } }},
+        .max_tokens = 64,
+    }, .{});
+    defer response.deinit();
+    try std.testing.expect(response.choices.len > 0);
+    const choice = response.choices[0];
+    try std.testing.expect(choice.finish_reason != null);
+    const message = choice.message;
+    const has_content = if (message.content) |text| text.len > 0 else false;
+    const has_reasoning = if (message.reasoning) |text| text.len > 0 else false;
+    try std.testing.expect(has_content or has_reasoning);
+}
+
+test "integration profile selection excludes paid inference from free and management" {
+    try std.testing.expect(try allowsProfile("free", .discovery));
+    try std.testing.expect(try allowsProfile("free", .chat));
+    try std.testing.expect(!try allowsProfile("free", .standard));
+    try std.testing.expect(!try allowsProfile("free", .management));
+    try std.testing.expect(try allowsProfile("management", .management));
+    try std.testing.expect(!try allowsProfile("management", .discovery));
+    try std.testing.expect(!try allowsProfile("management", .chat));
+    try std.testing.expect(!try allowsProfile("management", .standard));
+    try std.testing.expect(try allowsProfile("paid", .standard));
+    try std.testing.expect(!try allowsProfile("paid", .management));
+    try std.testing.expectError(error.InvalidTestProfile, allowsProfile("typo", .chat));
+}
+
+test "free model selection rejects paid models and automatic paid routing" {
+    try std.testing.expect(freeModelAllowed("openrouter/free"));
+    try std.testing.expect(freeModelAllowed("vendor/model:free"));
+    try std.testing.expect(!freeModelAllowed("openrouter/auto"));
+    try std.testing.expect(!freeModelAllowed("vendor/model"));
 }

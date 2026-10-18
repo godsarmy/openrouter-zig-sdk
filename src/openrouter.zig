@@ -234,6 +234,7 @@ pub const ImagePricing = @import("images.zig").Pricing;
 pub const ImageUrl = @import("images.zig").ImageUrl;
 pub const ImageUsage = @import("images.zig").Usage;
 pub const Key = @import("key.zig").ApiKey;
+pub const KeyFreeModelDailyRequests = @import("key.zig").FreeModelDailyRequests;
 pub const KeyGetResponse = @import("key.zig").GetResponse;
 pub const KeyRateLimit = @import("key.zig").RateLimit;
 pub const ManagedApiKey = @import("keys.zig").ManagedApiKey;

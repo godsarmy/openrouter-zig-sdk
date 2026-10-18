@@ -67,6 +67,9 @@ pub fn build(b: *std.Build) void {
         }),
     });
     const run_integration_tests = b.addRunArtifact(integration_tests);
+    // Credentials, quotas, and provider availability can change without a
+    // source change. Every explicit invocation must execute the tests.
+    run_integration_tests.has_side_effects = true;
 
     const integration_test_step = b.step("integration-test", "Run opt-in integration tests");
     integration_test_step.dependOn(&run_integration_tests.step);
