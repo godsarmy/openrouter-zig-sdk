@@ -56,6 +56,7 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_tests.step);
 
     const integration_tests = b.addTest(.{
+        .filters = b.option([]const []const u8, "integration-filter", "Run matching integration test names") orelse &.{},
         .root_module = b.createModule(.{
             .root_source_file = b.path("tests/integration.zig"),
             .target = target,

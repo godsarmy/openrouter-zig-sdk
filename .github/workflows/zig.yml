@@ -23,8 +23,7 @@ jobs:
           zig build
       - name: Format check
         run: |
-          zig fmt --check src/*
-          zig fmt --check examples/* tests/* build.zig
+          zig fmt --check src tests examples build.zig
       - name: Unit tests
         run: |
           zig build test

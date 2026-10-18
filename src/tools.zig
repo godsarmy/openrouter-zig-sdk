@@ -21,6 +21,7 @@ pub const ListRequest = struct {
 };
 
 pub const GetRequest = struct {
+    /// Canonical tool ID or supported input alias, not the catalog display name.
     name: []const u8,
 };
 

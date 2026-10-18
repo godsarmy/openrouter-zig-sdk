@@ -22,7 +22,7 @@ zig fmt .
 zig build test
 ```
 
-Build the package with `zig build` and all runnable examples with `zig build examples` when those checks apply. The build script defines the `test`, `examples`, and opt-in `integration-test` steps.[^build]
+Build the package with `zig build` and all runnable examples with `zig build examples` when those checks apply. The build script defines the `test`, `examples`, and opt-in `integration-test` steps. Integration checks are grouped under `tests/integration/` with a thin `tests/integration.zig` entry point.[^build]
 
 # Integration tests
 

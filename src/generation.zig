@@ -116,13 +116,14 @@ pub const Generation = struct {
 };
 
 pub const ProviderResponse = struct {
-    endpoint_id: ?[]const u8,
-    id: ?[]const u8,
-    is_byok: ?bool,
-    latency: ?f64,
-    model_permaslug: ?[]const u8,
-    provider_name: ?[]const u8,
-    status: ?f64,
+    // Failed or partially reported provider attempts may omit these fields.
+    endpoint_id: ?[]const u8 = null,
+    id: ?[]const u8 = null,
+    is_byok: ?bool = null,
+    latency: ?f64 = null,
+    model_permaslug: ?[]const u8 = null,
+    provider_name: ?[]const u8 = null,
+    status: ?f64 = null,
 };
 
 pub const GenerationContent = struct {
@@ -660,4 +661,24 @@ fn feedbackFakeResponse(allocator: std.mem.Allocator, status: std.http.Status, b
     }, .{});
     defer prepared.deinit();
     return (http.FakeTransport{ .status = status, .body = body }).execute(allocator, prepared);
+}
+
+test "generation provider attempts accept omitted metadata" {
+    var parsed = try json.parseResponse(
+        []ProviderResponse,
+        std.testing.allocator,
+        "[{\"provider_name\":\"Provider\",\"status\":502},{\"status\":200,\"latency\":12,\"future\":true}]",
+    );
+    defer parsed.deinit();
+    try std.testing.expectEqual(@as(usize, 2), parsed.value.len);
+    try std.testing.expectEqual(@as(?f64, 502), parsed.value[0].status);
+    try std.testing.expect(parsed.value[0].endpoint_id == null);
+    try std.testing.expect(parsed.value[0].id == null);
+    try std.testing.expect(parsed.value[0].is_byok == null);
+    try std.testing.expect(parsed.value[0].latency == null);
+    try std.testing.expect(parsed.value[0].model_permaslug == null);
+    try std.testing.expectEqualStrings("Provider", parsed.value[0].provider_name.?);
+    try std.testing.expect(parsed.value[1].provider_name == null);
+    try std.testing.expectEqual(@as(?f64, 200), parsed.value[1].status);
+    try std.testing.expectEqual(@as(?f64, 12), parsed.value[1].latency);
 }

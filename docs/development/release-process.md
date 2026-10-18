@@ -18,7 +18,7 @@ sources:
 # Verify
 
 ```sh
-zig fmt --check src/*.zig tests/*.zig examples/*.zig build.zig
+zig fmt --check src tests examples build.zig
 zig build test
 zig build examples
 zig build integration-test
