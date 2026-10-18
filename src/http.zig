@@ -16,6 +16,8 @@ pub const Error = error{
 
 pub const HttpRequest = struct {
     method: std.http.Method,
+    /// Public authentication infrastructure must not receive the client API key.
+    authenticated: bool = true,
     path: []const u8,
     query: ?[]const u8 = null,
     body: ?[]const u8 = null,
@@ -63,6 +65,10 @@ pub const ResponseMetadata = struct {
     request_id: ?[]const u8 = null,
     rate_limit_remaining: ?[]const u8 = null,
     rate_limit_reset: ?[]const u8 = null,
+
+    pub fn fromHead(allocator: std.mem.Allocator, head: std.http.Client.Response.Head) !ResponseMetadata {
+        return responseMetadataFromHead(allocator, head);
+    }
 
     pub fn fromHttpResponse(allocator: std.mem.Allocator, response: HttpResponse) !ResponseMetadata {
         var metadata: ResponseMetadata = .{};
@@ -309,7 +315,7 @@ fn buildHeaders(
     var headers: std.ArrayList(Header) = .empty;
     errdefer headers.deinit(allocator);
 
-    try appendHeader(allocator, &headers, "Authorization", try std.fmt.allocPrint(allocator, "Bearer {s}", .{config.api_key}));
+    if (request.authenticated) try appendHeader(allocator, &headers, "Authorization", try std.fmt.allocPrint(allocator, "Bearer {s}", .{config.api_key}));
     try appendHeader(allocator, &headers, "User-Agent", version_mod.user_agent);
     try appendHeader(allocator, &headers, "Accept", request.accept);
     if (request.body != null) {

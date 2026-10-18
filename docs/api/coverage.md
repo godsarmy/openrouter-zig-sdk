@@ -1,16 +1,26 @@
 ---
 type: API Reference
 title: OpenRouter Zig endpoint coverage
-description: Canonical categorized inventory of the 115 HTTP endpoint operations exported by the client.
+description: Canonical categorized inventory of the 150 HTTP endpoint operations exported by the client.
 tags: [api, endpoints, coverage]
 generated: { by: openai/gpt-5.6-terra, at: 2026-10-17T00:00:00Z }
 sources:
+  - resource: ../../src/containers.zig
+    title: Container files
+  - resource: ../../src/interns.zig
+    title: Intern lifecycle and chat
+  - resource: ../../src/vault.zig
+    title: Workspace and intern secrets
+  - resource: ../../src/oauth.zig
+    title: OAuth infrastructure
+  - resource: ../../src/decisions.zig
+    title: System One and alpha Decisions
   - resource: ../../src/scim.zig
     title: SCIM directory management
   - resource: ../../src/organization.zig
     title: Organization settings and members
   - resource: ../../src/private_endpoints.zig
-    title: Private endpoint reads
+    title: Private endpoint lifecycle
   - id: client
     resource: ../../src/client.zig
     title: Client resource registration
@@ -179,4 +189,38 @@ Every row is implemented and registered on `openrouter.Client`; method names are
 | GET/POST | `/observability/destinations` | `observability.destinations.list`, `.create` | management |
 | GET/PATCH/DELETE | `/observability/destinations/{id}` | `observability.destinations.get`, `.update`, `.delete` | management |
 
-The matrix represents **115 distinct method/path operations**: rows combining verbs are expanded for that count. It excludes the upstream-deprecated `POST /credits/coinbase`, which is intentionally not exported. For audited specification gaps and implementation priorities, see the [API audit and roadmap](roadmap.md); planned operations are not coverage claims.
+# Enterprise and specialized operations
+
+| Method | Path | Client call | Notes |
+|---|---|---|---|
+| POST | `/private-endpoints` | `private_endpoints.create` | management and entitlement; preserves partial-failure draft data. |
+| PATCH/DELETE | `/private-endpoints/{id}` | `private_endpoints.update`, `.delete` | management and entitlement. |
+| POST | `/private-endpoints/{id}/activate` | `private_endpoints.activate` | management and entitlement; validate first. |
+| POST | `/private-endpoints/{id}/disable` | `private_endpoints.disable` | management and entitlement. |
+| POST | `/private-endpoints/{id}/enable` | `private_endpoints.enable` | management and entitlement. |
+| POST | `/private-endpoints/{id}/validate` | `private_endpoints.validate` | management and entitlement; explicit workspace. |
+| PUT | `/private-endpoints/{id}/pricing` | `private_endpoints.updatePricing` | management and entitlement; decimal strings. |
+| GET | `/containers/{container_id}/files` | `containers.listFiles` | Resume using last_id, including empty pages. |
+| GET | `/containers/{container_id}/files/{file_id}` | `containers.getFile` | File metadata. |
+| GET | `/containers/{container_id}/files/{file_id}/content` | `containers.content` | Buffered raw binary. |
+| POST | `/containers/{container_id}/files/{file_id}/promote` | `containers.promoteFile` | Durable Files copy; consumes quota. |
+| GET/POST | `/interns` | `interns.list`, `.create` | Intern API access; scoped to workspace. |
+| GET/PATCH/DELETE | `/interns/{internId}` | `interns.get`, `.update`, `.delete` | Nullable updates; deletion accepted asynchronously. |
+| POST | `/interns/{internId}/chat/completions` | `interns.chat` | SSE or 202 steering; preserves final session/usage chunk. |
+| GET | `/interns/{internId}/daemon` | `interns.getDaemon` | Returns a sensitive daemon credential. |
+| POST | `/interns/{internId}/daemon/sign` | `interns.signDaemon` | Personal OAuth grant with vault:read; API keys are refused. |
+| POST | `/interns/{internId}/invoke` | `interns.invoke` | Asynchronous run or steering; HTTP 202. |
+| POST | `/interns/{internId}/provision` | `interns.provision` | No body; HTTP 202. |
+| POST | `/interns/{internId}/suspend` | `interns.suspendIntern` | No body. |
+| GET | `/vault/secrets` | `vault.listSecrets` | Intern API access; workspace secret metadata. |
+| PUT/DELETE | `/vault/secrets/{name}` | `vault.putSecret`, `.deleteSecret` | Workspace scope; deletion returns 204. |
+| GET | `/vault/interns/{internId}/secrets` | `vault.listInternSecrets` | Secret metadata only. |
+| GET | `/vault/interns/{internId}/effective-secrets` | `vault.listEffectiveSecrets` | Resolved metadata, including origin scope. |
+| PUT/DELETE | `/vault/interns/{internId}/secrets/{name}` | `vault.putInternSecret`, `.deleteInternSecret` | Intern scope; deletion returns 204. |
+| POST | `/vault/interns/{internId}/secrets/copy` | `vault.copySecrets` | Atomic workspace-to-intern copy. |
+| GET | `/oauth/jwks` | `oauth.jwks` | Public signing keys; no bearer header. |
+| POST | `/oauth/token` | `oauth.exchangeToken` | RFC 8693 form body; no client API-key header. |
+| POST | `/systemone` | `systemone.create` | Typed questions/answers and application-defined state. |
+| POST | `/api/alpha/decisions` | `alpha.decisions.create` | Special alpha base; shared System One types. |
+
+The matrix represents **150 distinct method/path operations**: rows combining verbs are expanded for that count. It excludes the three upstream-deprecated operations (`POST /credits/coinbase` and the two intern daemon-access aliases). All 148 non-deprecated specification operations are covered; two retained dataset benchmark operations are absent from the current specification. For audited specification gaps and implementation priorities, see the [API audit and roadmap](roadmap.md); planned operations are not coverage claims.

@@ -234,19 +234,19 @@ pub fn workspaceQueryString(allocator: std.mem.Allocator, request: WorkspaceRequ
 }
 
 pub fn multipartBody(allocator: std.mem.Allocator, request: UploadRequest) ![]u8 {
-    var body: std.ArrayList(u8) = .empty;
-    errdefer body.deinit(allocator);
+    var body: std.Io.Writer.Allocating = .init(allocator);
+    errdefer body.deinit();
 
-    try body.writer(allocator).print(
+    try body.writer.print(
         "--" ++ multipart_boundary ++ "\r\n" ++
             "Content-Disposition: form-data; name=\"file\"; filename=\"{s}\"\r\n" ++
             "Content-Type: {s}\r\n\r\n",
         .{ request.filename, request.mime_type orelse "application/octet-stream" },
     );
-    try body.appendSlice(allocator, request.data);
-    try body.appendSlice(allocator, "\r\n--" ++ multipart_boundary ++ "--\r\n");
+    try body.writer.writeAll(request.data);
+    try body.writer.writeAll("\r\n--" ++ multipart_boundary ++ "--\r\n");
 
-    return try body.toOwnedSlice(allocator);
+    return try body.toOwnedSlice();
 }
 
 fn filePath(allocator: std.mem.Allocator, file_id: []const u8, suffix: []const u8) ![]u8 {

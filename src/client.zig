@@ -1,6 +1,11 @@
 //! Root OpenRouter client.
 
 const std = @import("std");
+const decisions_mod = @import("decisions.zig");
+const oauth_mod = @import("oauth.zig");
+const interns_mod = @import("interns.zig");
+const containers_mod = @import("containers.zig");
+const vault_mod = @import("vault.zig");
 const activity_mod = @import("activity.zig");
 const analytics_mod = @import("analytics.zig");
 const audio_mod = @import("audio.zig");
@@ -595,6 +600,46 @@ pub const ScimResource = struct {
 };
 
 pub const PrivateEndpointsResource = struct {
+    pub fn create(self: *PrivateEndpointsResource, request: private_endpoints_mod.CreateRequest, request_options: options_mod.RequestOptions) !private_endpoints_mod.CreateResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("private_endpoints", self));
+        return private_endpoints_mod.create(client, request, request_options);
+    }
+
+    pub fn updatePricing(self: *PrivateEndpointsResource, id: []const u8, request: private_endpoints_mod.UpdatePricingRequest, request_options: options_mod.RequestOptions) !private_endpoints_mod.GetResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("private_endpoints", self));
+        return private_endpoints_mod.updatePricing(client, id, request, request_options);
+    }
+
+    pub fn validate(self: *PrivateEndpointsResource, id: []const u8, request: private_endpoints_mod.ValidateRequest, request_options: options_mod.RequestOptions) !private_endpoints_mod.ValidationResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("private_endpoints", self));
+        return private_endpoints_mod.validate(client, id, request, request_options);
+    }
+
+    pub fn enable(self: *PrivateEndpointsResource, id: []const u8, request_options: options_mod.RequestOptions) !private_endpoints_mod.ManagedResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("private_endpoints", self));
+        return private_endpoints_mod.enable(client, id, request_options);
+    }
+
+    pub fn disable(self: *PrivateEndpointsResource, id: []const u8, request_options: options_mod.RequestOptions) !private_endpoints_mod.ManagedResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("private_endpoints", self));
+        return private_endpoints_mod.disable(client, id, request_options);
+    }
+
+    pub fn activate(self: *PrivateEndpointsResource, id: []const u8, request_options: options_mod.RequestOptions) !private_endpoints_mod.ManagedResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("private_endpoints", self));
+        return private_endpoints_mod.activate(client, id, request_options);
+    }
+
+    pub fn delete(self: *PrivateEndpointsResource, id: []const u8, request_options: options_mod.RequestOptions) !private_endpoints_mod.DeleteResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("private_endpoints", self));
+        return private_endpoints_mod.delete(client, id, request_options);
+    }
+
+    pub fn update(self: *PrivateEndpointsResource, id: []const u8, request: private_endpoints_mod.UpdateRequest, request_options: options_mod.RequestOptions) !private_endpoints_mod.GetResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("private_endpoints", self));
+        return private_endpoints_mod.update(client, id, request, request_options);
+    }
+
     pub fn list(self: *PrivateEndpointsResource, request_options: options_mod.RequestOptions) !private_endpoints_mod.ListResponse {
         const client: *Client = @alignCast(@fieldParentPtr("private_endpoints", self));
         return private_endpoints_mod.list(client, request_options);
@@ -628,6 +673,15 @@ pub const OrganizationMembersResource = struct {
     }
 };
 pub const OAuthResource = struct {
+    pub fn jwks(self: *OAuthResource, request_options: options_mod.RequestOptions) !oauth_mod.JwksResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("oauth", self));
+        return oauth_mod.jwks(client, request_options);
+    }
+    pub fn exchangeToken(self: *OAuthResource, request: oauth_mod.TokenExchangeRequest, request_options: options_mod.RequestOptions) !oauth_mod.TokenExchangeResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("oauth", self));
+        return oauth_mod.exchangeToken(client, request, request_options);
+    }
+
     pub fn createAuthCode(self: *OAuthResource, request: auth_keys_mod.CreateCodeRequest, request_options: options_mod.RequestOptions) !auth_keys_mod.CreateCodeResponse {
         const client: *Client = @alignCast(@fieldParentPtr("oauth", self));
         return auth_keys_mod.createCode(client, request, request_options);
@@ -807,6 +861,124 @@ pub const SessionCostResource = struct {
 ///
 /// A `Client` owns its HTTP connection pool and is not thread-safe unless the
 /// caller externally synchronizes access or uses one client per worker.
+pub const VaultResource = struct {
+    pub fn listSecrets(self: *VaultResource, request: vault_mod.ListRequest, request_options: options_mod.RequestOptions) !vault_mod.ListSecretsResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("vault", self));
+        return vault_mod.listSecrets(client, request, request_options);
+    }
+    pub fn putSecret(self: *VaultResource, name: []const u8, request: vault_mod.WriteRequest, request_options: options_mod.RequestOptions) !vault_mod.PutSecretResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("vault", self));
+        return vault_mod.putSecret(client, name, request, request_options);
+    }
+    pub fn deleteSecret(self: *VaultResource, name: []const u8, request_options: options_mod.RequestOptions) !vault_mod.DeleteSecretResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("vault", self));
+        return vault_mod.deleteSecret(client, name, request_options);
+    }
+    pub fn listInternSecrets(self: *VaultResource, id: []const u8, request: vault_mod.ListRequest, request_options: options_mod.RequestOptions) !vault_mod.ListInternSecretsResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("vault", self));
+        return vault_mod.listInternSecrets(client, id, request, request_options);
+    }
+    pub fn listEffectiveSecrets(self: *VaultResource, id: []const u8, request: vault_mod.ListRequest, request_options: options_mod.RequestOptions) !vault_mod.ListEffectiveSecretsResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("vault", self));
+        return vault_mod.listEffectiveSecrets(client, id, request, request_options);
+    }
+    pub fn putInternSecret(self: *VaultResource, id: []const u8, name: []const u8, request: vault_mod.WriteRequest, request_options: options_mod.RequestOptions) !vault_mod.PutInternSecretResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("vault", self));
+        return vault_mod.putInternSecret(client, id, name, request, request_options);
+    }
+    pub fn deleteInternSecret(self: *VaultResource, id: []const u8, name: []const u8, request_options: options_mod.RequestOptions) !vault_mod.DeleteInternSecretResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("vault", self));
+        return vault_mod.deleteInternSecret(client, id, name, request_options);
+    }
+    pub fn copySecrets(self: *VaultResource, id: []const u8, request: vault_mod.CopyRequest, request_options: options_mod.RequestOptions) !vault_mod.CopySecretsResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("vault", self));
+        return vault_mod.copySecrets(client, id, request, request_options);
+    }
+};
+
+pub const ContainersResource = struct {
+    pub fn content(self: *ContainersResource, container_id: []const u8, file_id: []const u8, request_options: options_mod.RequestOptions) !containers_mod.ContentResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("containers", self));
+        return containers_mod.content(client, container_id, file_id, request_options);
+    }
+
+    pub fn listFiles(self: *ContainersResource, container_id: []const u8, request: containers_mod.ListRequest, request_options: options_mod.RequestOptions) !containers_mod.ListFilesResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("containers", self));
+        return containers_mod.listFiles(client, container_id, request, request_options);
+    }
+    pub fn getFile(self: *ContainersResource, container_id: []const u8, file_id: []const u8, request_options: options_mod.RequestOptions) !containers_mod.GetFileResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("containers", self));
+        return containers_mod.getFile(client, container_id, file_id, request_options);
+    }
+    pub fn promoteFile(self: *ContainersResource, container_id: []const u8, file_id: []const u8, request_options: options_mod.RequestOptions) !containers_mod.PromoteFileResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("containers", self));
+        return containers_mod.promoteFile(client, container_id, file_id, request_options);
+    }
+};
+
+pub const InternsResource = struct {
+    pub fn chat(self: *InternsResource, id: []const u8, request: interns_mod.ChatRequest, request_options: options_mod.RequestOptions) !interns_mod.ChatResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("interns", self));
+        return interns_mod.chat(client, id, request, request_options);
+    }
+
+    pub fn list(self: *InternsResource, request: interns_mod.ListRequest, request_options: options_mod.RequestOptions) !interns_mod.ListResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("interns", self));
+        return interns_mod.list(client, request, request_options);
+    }
+    pub fn create(self: *InternsResource, request: interns_mod.CreateRequest, request_options: options_mod.RequestOptions) !interns_mod.CreateResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("interns", self));
+        return interns_mod.create(client, request, request_options);
+    }
+    pub fn get(self: *InternsResource, id: []const u8, request_options: options_mod.RequestOptions) !interns_mod.GetResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("interns", self));
+        return interns_mod.get(client, id, request_options);
+    }
+    pub fn update(self: *InternsResource, id: []const u8, request: interns_mod.UpdateRequest, request_options: options_mod.RequestOptions) !interns_mod.UpdateResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("interns", self));
+        return interns_mod.update(client, id, request, request_options);
+    }
+    pub fn delete(self: *InternsResource, id: []const u8, request: interns_mod.DeleteRequest, request_options: options_mod.RequestOptions) !interns_mod.DeleteResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("interns", self));
+        return interns_mod.delete(client, id, request, request_options);
+    }
+    pub fn getDaemon(self: *InternsResource, id: []const u8, request_options: options_mod.RequestOptions) !interns_mod.GetDaemonResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("interns", self));
+        return interns_mod.getDaemon(client, id, request_options);
+    }
+    pub fn signDaemon(self: *InternsResource, id: []const u8, request: interns_mod.SignRequest, request_options: options_mod.RequestOptions) !interns_mod.SignDaemonResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("interns", self));
+        return interns_mod.signDaemon(client, id, request, request_options);
+    }
+    pub fn invoke(self: *InternsResource, id: []const u8, request: interns_mod.InvokeRequest, request_options: options_mod.RequestOptions) !interns_mod.InvokeResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("interns", self));
+        return interns_mod.invoke(client, id, request, request_options);
+    }
+    pub fn provision(self: *InternsResource, id: []const u8, request_options: options_mod.RequestOptions) !interns_mod.ProvisionResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("interns", self));
+        return interns_mod.provision(client, id, request_options);
+    }
+    pub fn suspendIntern(self: *InternsResource, id: []const u8, request_options: options_mod.RequestOptions) !interns_mod.SuspendResponse {
+        const client: *Client = @alignCast(@fieldParentPtr("interns", self));
+        return interns_mod.suspendIntern(client, id, request_options);
+    }
+};
+
+pub const SystemOneResource = struct {
+    pub fn create(self: *SystemOneResource, request: decisions_mod.Request, request_options: options_mod.RequestOptions) !decisions_mod.Response {
+        const client: *Client = @alignCast(@fieldParentPtr("systemone", self));
+        return decisions_mod.create(client, request, request_options);
+    }
+};
+pub const DecisionsResource = struct {
+    pub fn create(self: *DecisionsResource, request: decisions_mod.Request, request_options: options_mod.RequestOptions) !decisions_mod.Response {
+        const alpha_resource: *AlphaResource = @alignCast(@fieldParentPtr("decisions", self));
+        const client: *Client = @alignCast(@fieldParentPtr("alpha", alpha_resource));
+        return decisions_mod.alpha(client, request, request_options);
+    }
+};
+pub const AlphaResource = struct { decisions: DecisionsResource = .{} };
+
 pub const Client = struct {
     allocator: std.mem.Allocator,
     io: std.Io,
@@ -834,6 +1006,11 @@ pub const Client = struct {
     observability: ObservabilityResource,
     organization: OrganizationResource,
     scim: ScimResource,
+    vault: VaultResource,
+    containers: ContainersResource,
+    interns: InternsResource,
+    systemone: SystemOneResource,
+    alpha: AlphaResource,
     private_endpoints: PrivateEndpointsResource,
     oauth: OAuthResource,
     key: KeyResource,
@@ -882,6 +1059,11 @@ pub const Client = struct {
             .observability = .{},
             .organization = .{},
             .scim = .{},
+            .vault = .{},
+            .containers = .{},
+            .interns = .{},
+            .systemone = .{},
+            .alpha = .{},
             .private_endpoints = .{},
             .oauth = .{},
             .key = .{},
@@ -1088,4 +1270,46 @@ test "SCIM client calls forward request options before network IO" {
     try std.testing.expectError(error.OptionsInvalid, client.scim.deleteMapping("m", .{ .keep_members = true }, invalid));
     try std.testing.expectError(error.OptionsInvalid, client.scim.createSyncJob(invalid));
     try std.testing.expectError(error.OptionsInvalid, client.scim.getSyncJob("j", invalid));
+}
+
+test "Phase 3 client resources forward typed calls and request options" {
+    var client = try Client.init(std.testing.allocator, std.testing.io, .{ .api_key = "test" });
+    defer client.deinit();
+    const invalid: options_mod.RequestOptions = .{ .extra_headers = &.{.{ .name = "Authorization", .value = "forbidden" }} };
+    try std.testing.expectError(error.OptionsInvalid, client.containers.listFiles("a/b", .{ .limit = 2, .after = "scan/?" }, invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.containers.getFile("a/b", "c?d", invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.containers.promoteFile("a/b", "c?d", invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.vault.listSecrets(.{ .limit = 2, .offset = 3 }, invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.vault.putSecret("a/b", .{ .value = "secret", .hosts = &.{"api.example.com"} }, invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.vault.deleteSecret("a/b", invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.vault.listInternSecrets("a/b", .{}, invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.vault.listEffectiveSecrets("a/b", .{}, invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.vault.putInternSecret("a/b", "c?d", .{ .value = "secret", .hosts = &.{"api.example.com"} }, invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.vault.deleteInternSecret("a/b", "c?d", invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.vault.copySecrets("a/b", .{ .names = &.{"github_token"} }, invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.interns.list(.{ .status = "running,queued", .starting_after = "opaque/?", .workspace_id = "ws" }, invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.interns.create(.{ .name = "assistant", .workspace_id = "ws", .provision = false }, invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.interns.get("a/b", invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.interns.update("a/b", .{ .model = .clear, .description = .{ .value = "hello" } }, invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.interns.delete("a/b", .{}, invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.interns.getDaemon("a/b", invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.interns.signDaemon("a/b", .{ .bodySha256 = "digest" }, invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.interns.invoke("a/b", .{ .input = "hello", .session_id = "session" }, invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.interns.provision("a/b", invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.interns.suspendIntern("a/b", invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.containers.content("c", "f", invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.oauth.jwks(invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.oauth.exchangeToken(.{ .subject_token = "jwt", .federation_policy_id = "p" }, invalid));
+    const decision_request: decisions_mod.Request = .{ .model = "m", .state = .{ .string = "state" }, .questions = .{} };
+    try std.testing.expectError(error.OptionsInvalid, client.systemone.create(decision_request, invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.alpha.decisions.create(decision_request, invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.interns.chat("i", .{ .messages = &.{.{ .role = .user, .content = .{ .text = "hello" } }} }, invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.private_endpoints.create(.{ .model_permaslug = "m", .provider_slug = "p", .upstream_model_id = "id" }, invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.private_endpoints.update("id", .{ .upstream_model_id = "model" }, invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.private_endpoints.delete("id", invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.private_endpoints.activate("id", invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.private_endpoints.disable("id", invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.private_endpoints.enable("id", invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.private_endpoints.validate("id", .{ .workspace_id = "ws" }, invalid));
+    try std.testing.expectError(error.OptionsInvalid, client.private_endpoints.updatePricing("id", .{ .pricing = .{ .prompt = "0", .completion = "0" } }, invalid));
 }

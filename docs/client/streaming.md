@@ -62,3 +62,31 @@ Function-call argument deltas are intentionally not returned by `textDelta()`; u
 
 [^stream]: Completion stream implementation.
 [^sse]: Server-Sent Events parser.
+
+# Intern chat
+
+`client.interns.chat(id, request, options)` returns a tagged result: `.stream` for SSE or `.steered` for a `202` response delivered into an already running turn. Deinitialize either result. A stream yields owned events with typed data in `.value`; deinitialize every event too.
+
+```zig
+var result = try client.interns.chat("intern-id", .{
+    .messages = &.{.{ .role = .user, .content = .{ .text = "Summarize the project" } }},
+    .approval_mode = .manual,
+}, .{});
+defer result.deinit();
+switch (result) {
+    .stream => |stream_value| {
+        var stream = stream_value;
+        while (try stream.next()) |event_value| {
+            var event = event_value;
+            defer event.deinit();
+            // Read event.value.choices, session_id, usage, and @"error".
+        }
+    },
+    .steered => |response| {
+        // response.value.session_id identifies the existing turn.
+        _ = response;
+    },
+}
+```
+
+Empty-choice events are returned because the final event carries the session ID and usage. Keep reading through terminal choices to this event and `[DONE]`. A `tool_calls` finish pauses the run for input; answer with a tool message containing the interaction's `tool_call_id` and the same `session_id`. Stream errors expose a reason and retryable flag. Repeat `.approval_mode = .manual` on each new run that should ask for approvals; omitting it uses the server's self-drive default.

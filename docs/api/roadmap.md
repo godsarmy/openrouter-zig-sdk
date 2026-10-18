@@ -41,11 +41,11 @@ sources:
 
 # API audit and implementation roadmap
 
-This is a planning document, not an endpoint-coverage claim. The audit was retrieved on 2026-10-15 from the [official OpenAPI specification](https://openrouter.ai/openapi.json) and the [API reference overview](https://openrouter.ai/docs/api_reference/overview). It found 151 method/path operations, including 3 deprecated operations, or **148 non-deprecated operations**. Of the canonical [115 implemented operations](coverage.md), **113 overlap with the current specification**, leaving **35 current specification gaps**. This comparison normalizes path-parameter names and does not establish when any API was introduced.
+This is a planning document, not an endpoint-coverage claim. The audit was retrieved on 2026-10-15 from the [official OpenAPI specification](https://openrouter.ai/openapi.json) and the [API reference overview](https://openrouter.ai/docs/api_reference/overview). It found 151 method/path operations, including 3 deprecated operations, or **148 non-deprecated operations**. Of the canonical [150 implemented operations](coverage.md), **148 overlap with the current specification**, leaving **zero non-deprecated endpoint gaps**. This comparison normalizes path-parameter names and does not establish when any API was introduced.
 
-Two implemented operations, `GET /datasets/benchmarks/artificial-analysis` and `GET /datasets/benchmarks/design-arena`, are absent from the retrieved OpenAPI. Their absence does not establish server-side removal or deprecation; verify their current support before changing the client. The Phase 2 additions, four initial Phase 3 operations, and eight SCIM operations are included in these counts. The specification was retrieved again on 2026-10-18 and still contains 151 operations, including 3 deprecated operations. The Phase 3 inventory was rechecked; this is not a fresh field-parity audit of existing implementations. The gap calculation therefore uses the 113-operation intersection, not direct subtraction of all 115 implemented operations.
+Two implemented operations, `GET /datasets/benchmarks/artificial-analysis` and `GET /datasets/benchmarks/design-arena`, are absent from the retrieved OpenAPI. Their absence does not establish server-side removal or deprecation; verify their current support before changing the client. All Phase 3 operations are included in these counts. The specification was retrieved again on 2026-10-18 and still contains 151 operations, including 3 deprecated operations. The Phase 3 inventory was rechecked; this is not a fresh field-parity audit of existing implementations. The gap calculation therefore uses the 148-operation intersection, not direct subtraction of all 150 implemented operations.
 
-Paths below are normally relative to `https://openrouter.ai/api/v1`. `/api/alpha/decisions` is recorded exactly as specified: it is a special path and must not be normalized blindly. Verify its base URL before implementation.
+Paths below are normally relative to `https://openrouter.ai/api/v1`. `/api/alpha/decisions` is a special alpha path. The client derives it by replacing the configured trailing `/v1` with `/alpha`, preserving proxy prefixes, as in the [official OpenRouter AI SDK](https://github.com/OpenRouterTeam/ai-sdk-provider). Other custom base URL layouts return `InvalidBaseUrl` for this operation.
 
 ## Priorities
 
@@ -72,23 +72,21 @@ End-user lifecycle endpoints require a management API key; `end_users.create` re
 
 ### Phase 3 — enterprise and specialized APIs
 
-**Started:** SCIM group discovery, mapping management, sync creation/polling, organization settings GET/PATCH, and private-endpoint list/get are implemented with typed requests/responses, owned metadata, and offline transport tests. All three groups require management keys; private endpoints additionally require an entitlement. Account access has not been verified with live requests. Phase 3 remains incomplete.
+**Done (endpoint scope):** all 35 remaining operations are implemented alongside organization settings, SCIM, and private-endpoint reads. The client now exports private-endpoint mutations, container files, interns (including chat SSE and daemon signing), Vault, OAuth infrastructure, System One, and alpha Decisions. Requests and responses are typed, with owned data/metadata and offline tests. This is endpoint coverage, not a promise of exhaustive field parity or verified account access.
 
-The 2026-10-17 specification review establishes the next implementation constraints:
-
-| Group | Access and implementation considerations | Status |
+| Group | Access and lifecycle behavior | Status |
 |---|---|---|
-| Organization settings | Management key; required boolean controls authenticated model discovery. | Implemented. |
-| Private endpoints | Entitlement and management key. Creation makes a draft; validation and activation are separate. Create-with-activate can fail while leaving a draft in response `data`. Creation supports `Idempotency-Key`; draft edits invalidate validation and active edits return 409. | Reads implemented; 8 mutations remain. Preserve partial-failure data before adding them. |
-| SCIM | Management key. Recreating the same mapping and role re-applies it; a different role conflicts. Sync creation requires status polling. | All 8 operations implemented with offline tests; account availability unverified. |
-| Containers | List cursor is `last_id`, including scan-boundary pages; file content is binary. Promotion copies into durable Files storage and consumes quota. | Separate file-lifecycle implementation. |
-| Interns | Explicit workspace and caller visibility; regional hosts are refused. Provision/suspend accept no fields. Daemon signing requires a personal OAuth grant with `vault:read`, not an API key, and a rollout gate. | Defer until credential and lifecycle behavior can be validated. Exclude deprecated daemon-access aliases. |
-| Vault | API-key workspace selects scope; no default/fallback. Reads return metadata only. Writes can return 503 when disabled; intern copying is atomic and may reject legacy hostless secrets. | Defer until workspace scope and write availability can be validated. |
-| OAuth infrastructure | JWKS is public; token exchange uses RFC 8693 and a trusted issuer/federation policy, rather than the existing API-key authorization-code flow. | Requires separate authentication/encoding review. |
-| SystemOne | Specialized typed-question/state interface and model namespace mapping. | Defer pending focused schema and usage review. |
-| Alpha decisions | Special `/api/alpha/decisions` path while the specification server is `/api/v1`; base-path interpretation and alpha access remain unresolved. | Defer until base URL and access are verified. |
+| Organization settings | Management key; controls authenticated model discovery. | Implemented. |
+| Private endpoints | Management key and entitlement. Creation makes a draft; validation and activation are separate. Create-with-activate may fail after creating a draft. `CreateResponse.failure` and `.status` report HTTP failure while `.endpoint` and `.validation` preserve recovery data. Pass `Idempotency-Key` through request options. Draft edits invalidate validation; active edits may return 409. | All 10 operations implemented. |
+| SCIM | Management key. Same-role mapping creation re-applies membership; different roles conflict. Sync creation requires explicit polling. | All 8 operations implemented. |
+| Containers | Use `last_id` as the next `after`, including empty scan-boundary pages. Content is buffered binary. Promotion copies into durable Files storage and consumes quota. | All 4 operations implemented. |
+| Interns | Explicit workspace on creation; regional hosts are refused by the service. Provision/suspend send no body. Chat returns SSE or a 202 steering response; final empty-choice SSE events preserve session ID and usage. Daemon signing requires a personal OAuth grant with `vault:read`, supplied as the client bearer credential. | All 11 non-deprecated operations implemented. |
+| Vault | API-key workspace selects scope; no fallback. Reads return metadata only, including nullable legacy host bindings. Writes may return 503 when disabled. Copy is atomic and may reject legacy hostless secrets. | All 8 operations implemented. |
+| OAuth infrastructure | JWKS is public. RFC 8693 token exchange uses form encoding and the workload identity JWT, without sending the client API key. Separate from API-key authorization-code exchange. | Both operations implemented. |
+| System One | Typed question variants and answers; application-defined state, guidance, and trace remain JSON. The service maps bare model IDs to `typesafe/`. | Implemented. |
+| Alpha Decisions | Uses `/api/alpha/decisions`, preserving the configured API prefix. Shares typed questions/answers with System One. Alpha shapes may change. | Implemented. |
 
-Specification presence alone does not establish endpoint stability or account entitlement. The initial implementation used no live mutations and makes no claim of verified enterprise or alpha access.
+Live enterprise entitlement, rollout gates, OAuth federation, and alpha account access have not been verified. Verification used no live mutations. Endpoint coverage does not imply that every caller is entitled to these APIs.
 
 ## Verification per phase
 
@@ -99,48 +97,9 @@ Specification presence alone does not establish endpoint stability or account en
 - Use opt-in integration tests only with configured credentials.
 - Update [endpoint coverage](coverage.md) only when an operation is implemented, and repeat this specification-drift comparison for future audits.
 
-## Current non-deprecated gap inventory (35 operations)
+## Current non-deprecated gap inventory
 
-The following confirmed audit baseline is verb-expanded: every listed verb/path pair is one operation.
-
-| Method | Path | Phase / notes |
-|---|---|---|
-| POST | `/api/alpha/decisions` | P3; special alpha path; verify base and access. |
-| GET | `/containers/{container_id}/files` | P3 |
-| GET | `/containers/{container_id}/files/{file_id}` | P3 |
-| GET | `/containers/{container_id}/files/{file_id}/content` | P3 |
-| POST | `/containers/{container_id}/files/{file_id}/promote` | P3 |
-| GET | `/interns` | P3 |
-| POST | `/interns` | P3 |
-| GET | `/interns/{internId}` | P3 |
-| PATCH | `/interns/{internId}` | P3 |
-| DELETE | `/interns/{internId}` | P3 |
-| POST | `/interns/{internId}/chat/completions` | P3 |
-| GET | `/interns/{internId}/daemon` | P3; replacement daemon API. |
-| POST | `/interns/{internId}/daemon/sign` | P3; replacement daemon API. |
-| POST | `/interns/{internId}/invoke` | P3 |
-| POST | `/interns/{internId}/provision` | P3 |
-| POST | `/interns/{internId}/suspend` | P3 |
-| GET | `/oauth/jwks` | P3 |
-| POST | `/oauth/token` | P3 |
-| POST | `/private-endpoints` | P3 |
-| PATCH | `/private-endpoints/{id}` | P3 |
-| DELETE | `/private-endpoints/{id}` | P3 |
-| POST | `/private-endpoints/{id}/activate` | P3 |
-| POST | `/private-endpoints/{id}/disable` | P3 |
-| POST | `/private-endpoints/{id}/enable` | P3 |
-| POST | `/private-endpoints/{id}/validate` | P3 |
-| PUT | `/private-endpoints/{id}/pricing` | P3 |
-| POST | `/systemone` | P3 |
-| GET | `/vault/secrets` | P3 |
-| PUT | `/vault/secrets/{name}` | P3 |
-| DELETE | `/vault/secrets/{name}` | P3 |
-| GET | `/vault/interns/{internId}/effective-secrets` | P3 |
-| GET | `/vault/interns/{internId}/secrets` | P3 |
-| PUT | `/vault/interns/{internId}/secrets/{name}` | P3 |
-| DELETE | `/vault/interns/{internId}/secrets/{name}` | P3 |
-| POST | `/vault/interns/{internId}/secrets/copy` | P3 |
-
+No endpoint gaps remain against the specification retrieved on 2026-10-18 (148 non-deprecated operations). Future specification changes and field-level fidelity remain separate follow-up work.
 
 ## Deprecated exclusions
 

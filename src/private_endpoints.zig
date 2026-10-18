@@ -1,5 +1,6 @@
-//! Private endpoint discovery. Requires a management key and private-endpoint entitlement.
+//! Private endpoint lifecycle management. Requires a management key and private-endpoint entitlement.
 const std = @import("std");
+const common = @import("enterprise.zig");
 const config_mod = @import("config.zig");
 const errors = @import("errors.zig");
 const http = @import("http.zig");
@@ -39,6 +40,68 @@ pub const Endpoint = struct {
     pricing: Pricing,
 };
 
+pub const Activation = struct { workspace_id: []const u8 };
+pub const CreateRequest = struct {
+    model_permaslug: []const u8,
+    provider_slug: []const u8,
+    upstream_model_id: []const u8,
+    base_url: ?[]const u8 = null,
+    declared_region: ?[]const u8 = null,
+    declared_zdr: ?bool = null,
+    pricing: ?Pricing = null,
+    activate: ?Activation = null,
+};
+pub const NullableString = common.Nullable([]const u8);
+pub const NullableBool = common.Nullable(bool);
+/// Draft edits invalidate previous validation; active endpoints cannot be edited.
+pub const UpdateRequest = struct {
+    upstream_model_id: []const u8,
+    base_url: ?[]const u8 = null,
+    declared_region: ?NullableString = null,
+    declared_zdr: ?NullableBool = null,
+};
+pub const UpdatePricingRequest = struct { pricing: Pricing };
+pub const ValidateRequest = Activation;
+pub const ManagedEndpoint = struct {
+    id: []const u8,
+    status: []const u8,
+    model_permaslug: []const u8,
+    model_slug: ?[]const u8,
+    model_name: ?[]const u8,
+    provider_name: []const u8,
+    created_at: []const u8,
+    declared_zdr: ?bool,
+    declared_region: ?[]const u8,
+};
+pub const Check = struct {
+    name: []const u8,
+    passed: bool,
+    actual_model: ?[]const u8 = null,
+    reason: ?[]const u8 = null,
+    upstream_message: ?[]const u8 = null,
+    upstream_status: ?u16 = null,
+};
+pub const Validation = struct { passed: bool, checks: []Check };
+pub const ManagedResponse = OwnedResponse(ManagedEndpoint);
+pub const ValidationResponse = OwnedResponse(Validation);
+const Deleted = struct { id: []const u8 };
+pub const DeleteResponse = OwnedResponse(Deleted);
+pub const Failure = struct { code: i64, message: []const u8 };
+/// An HTTP failure can still contain a created draft. Check `failure` before
+/// treating this as success. All fields and metadata live until `deinit`.
+pub const CreateResponse = struct {
+    arena: std.heap.ArenaAllocator,
+    status: std.http.Status,
+    endpoint: ?ManagedEndpoint,
+    validation: ?Validation,
+    failure: ?Failure,
+    response_metadata: http.ResponseMetadata,
+    pub fn deinit(self: *@This()) void {
+        self.arena.deinit();
+        self.* = undefined;
+    }
+};
+
 pub const ListResponse = OwnedResponse([]Summary);
 pub const GetResponse = OwnedResponse(Endpoint);
 
@@ -69,25 +132,23 @@ pub fn get(client: anytype, id: []const u8, request_options: options_mod.Request
 }
 
 pub fn getWithTransport(allocator: std.mem.Allocator, config: config_mod.Config, transport: anytype, id: []const u8, request_options: options_mod.RequestOptions) !GetResponse {
-    if (id.len == 0 or std.mem.eql(u8, id, ".") or std.mem.eql(u8, id, "..")) return error.InvalidPath;
-    var buffer: std.ArrayList(u8) = .empty;
-    defer buffer.deinit(allocator);
-    try buffer.appendSlice(allocator, "/private-endpoints/");
-    const hex = "0123456789ABCDEF";
-    for (id) |byte| {
-        if (std.ascii.isAlphanumeric(byte) or byte == '-' or byte == '_' or byte == '.' or byte == '~') {
-            try buffer.append(allocator, byte);
-        } else {
-            try buffer.appendSlice(allocator, &.{ '%', hex[byte >> 4], hex[byte & 0x0F] });
-        }
-    }
-    const path = try buffer.toOwnedSlice(allocator);
+    const path = try endpointPath(allocator, id);
     defer allocator.free(path);
     return read(Endpoint, allocator, config, transport, path, request_options);
 }
 
+fn endpointPath(allocator: std.mem.Allocator, id: []const u8) ![]u8 {
+    const encoded = try common.segment(allocator, id);
+    defer allocator.free(encoded);
+    return std.fmt.allocPrint(allocator, "/private-endpoints/{s}", .{encoded});
+}
+
 fn read(comptime T: type, allocator: std.mem.Allocator, config: config_mod.Config, transport: anytype, path: []const u8, request_options: options_mod.RequestOptions) !OwnedResponse(T) {
-    var prepared = try http.prepareRequest(allocator, config, .{ .method = .GET, .path = path }, request_options);
+    return execute(T, allocator, config, transport, .{ .method = .GET, .path = path }, request_options);
+}
+
+fn execute(comptime T: type, allocator: std.mem.Allocator, config: config_mod.Config, transport: anytype, request: http.HttpRequest, request_options: options_mod.RequestOptions) !OwnedResponse(T) {
+    var prepared = try http.prepareRequest(allocator, config, request, request_options);
     defer prepared.deinit();
     var response = try transport.execute(allocator, prepared);
     defer response.deinit();
@@ -95,7 +156,8 @@ fn read(comptime T: type, allocator: std.mem.Allocator, config: config_mod.Confi
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
     const parsed = try json.parseResponseLeaky(struct { data: T }, arena.allocator(), try arena.allocator().dupe(u8, response.body));
-    return .{ .arena = arena, .data = parsed.data, .response_metadata = try http.ResponseMetadata.fromHttpResponse(arena.allocator(), response) };
+    const metadata = try http.ResponseMetadata.fromHttpResponse(arena.allocator(), response);
+    return .{ .arena = arena, .data = parsed.data, .response_metadata = metadata };
 }
 
 test "private endpoint detail escapes identifiers and preserves response data" {
@@ -140,4 +202,275 @@ test "private endpoint reads reject invalid shapes and map access errors" {
     for ([_][]const u8{ "", ".", ".." }) |id| {
         try std.testing.expectError(error.InvalidPath, getWithTransport(std.testing.allocator, config, http.FakeTransport{}, id, .{}));
     }
+}
+
+fn mutate(comptime T: type, allocator: std.mem.Allocator, config: config_mod.Config, transport: anytype, method: std.http.Method, id: []const u8, suffix: []const u8, body: ?[]const u8, request_options: options_mod.RequestOptions) !OwnedResponse(T) {
+    const base = try endpointPath(allocator, id);
+    defer allocator.free(base);
+    const path = try std.fmt.allocPrint(allocator, "{s}{s}", .{ base, suffix });
+    defer allocator.free(path);
+    return execute(T, allocator, config, transport, .{ .method = method, .path = path, .body = body }, request_options);
+}
+
+/// Supply an Idempotency-Key through request_options.extra_headers when retrying creation.
+pub fn create(client: anytype, request: CreateRequest, request_options: options_mod.RequestOptions) !CreateResponse {
+    return createWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, request, request_options);
+}
+pub fn createWithTransport(allocator: std.mem.Allocator, config: config_mod.Config, transport: anytype, request: CreateRequest, request_options: options_mod.RequestOptions) !CreateResponse {
+    const body = try json.stringifyRequest(allocator, request);
+    defer allocator.free(body);
+    var prepared = try http.prepareRequest(allocator, config, .{ .method = .POST, .path = "/private-endpoints", .body = body }, request_options);
+    defer prepared.deinit();
+    var response = try transport.execute(allocator, prepared);
+    defer response.deinit();
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    errdefer arena.deinit();
+    const a = arena.allocator();
+    const text = try a.dupe(u8, response.body);
+    var endpoint: ?ManagedEndpoint = null;
+    var validation: ?Validation = null;
+    var failure: ?Failure = null;
+    if (errors.isErrorStatus(@backingInt(response.status))) {
+        const parsed = try json.parseResponseLeaky(struct {
+            @"error": Failure,
+            data: ?struct { endpoint: ManagedEndpoint, validation: ?Validation } = null,
+        }, a, text);
+        failure = parsed.@"error";
+        if (parsed.data) |data| {
+            endpoint = data.endpoint;
+            validation = data.validation;
+        }
+    } else {
+        const parsed = try json.parseResponseLeaky(struct { data: ManagedEndpoint }, a, text);
+        endpoint = parsed.data;
+    }
+    const metadata = try http.ResponseMetadata.fromHttpResponse(a, response);
+    return .{ .arena = arena, .status = response.status, .endpoint = endpoint, .validation = validation, .failure = failure, .response_metadata = metadata };
+}
+
+pub fn update(client: anytype, id: []const u8, request: UpdateRequest, request_options: options_mod.RequestOptions) !GetResponse {
+    return updateWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, id, request, request_options);
+}
+pub fn updateWithTransport(allocator: std.mem.Allocator, config: config_mod.Config, transport: anytype, id: []const u8, request: UpdateRequest, request_options: options_mod.RequestOptions) !GetResponse {
+    const body = try json.stringifyRequest(allocator, request);
+    defer allocator.free(body);
+    return mutate(Endpoint, allocator, config, transport, .PATCH, id, "", body, request_options);
+}
+pub fn delete(client: anytype, id: []const u8, request_options: options_mod.RequestOptions) !DeleteResponse {
+    return deleteWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, id, request_options);
+}
+pub fn deleteWithTransport(allocator: std.mem.Allocator, config: config_mod.Config, transport: anytype, id: []const u8, request_options: options_mod.RequestOptions) !DeleteResponse {
+    return mutate(Deleted, allocator, config, transport, .DELETE, id, "", null, request_options);
+}
+pub fn activate(client: anytype, id: []const u8, request_options: options_mod.RequestOptions) !ManagedResponse {
+    return activateWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, id, request_options);
+}
+pub fn activateWithTransport(allocator: std.mem.Allocator, config: config_mod.Config, transport: anytype, id: []const u8, request_options: options_mod.RequestOptions) !ManagedResponse {
+    return mutate(ManagedEndpoint, allocator, config, transport, .POST, id, "/activate", null, request_options);
+}
+pub fn disable(client: anytype, id: []const u8, request_options: options_mod.RequestOptions) !ManagedResponse {
+    return disableWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, id, request_options);
+}
+pub fn disableWithTransport(allocator: std.mem.Allocator, config: config_mod.Config, transport: anytype, id: []const u8, request_options: options_mod.RequestOptions) !ManagedResponse {
+    return mutate(ManagedEndpoint, allocator, config, transport, .POST, id, "/disable", null, request_options);
+}
+pub fn enable(client: anytype, id: []const u8, request_options: options_mod.RequestOptions) !ManagedResponse {
+    return enableWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, id, request_options);
+}
+pub fn enableWithTransport(allocator: std.mem.Allocator, config: config_mod.Config, transport: anytype, id: []const u8, request_options: options_mod.RequestOptions) !ManagedResponse {
+    return mutate(ManagedEndpoint, allocator, config, transport, .POST, id, "/enable", null, request_options);
+}
+pub fn validate(client: anytype, id: []const u8, request: ValidateRequest, request_options: options_mod.RequestOptions) !ValidationResponse {
+    return validateWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, id, request, request_options);
+}
+pub fn validateWithTransport(allocator: std.mem.Allocator, config: config_mod.Config, transport: anytype, id: []const u8, request: ValidateRequest, request_options: options_mod.RequestOptions) !ValidationResponse {
+    const body = try json.stringifyRequest(allocator, request);
+    defer allocator.free(body);
+    return mutate(Validation, allocator, config, transport, .POST, id, "/validate", body, request_options);
+}
+pub fn updatePricing(client: anytype, id: []const u8, request: UpdatePricingRequest, request_options: options_mod.RequestOptions) !GetResponse {
+    return updatePricingWithTransport(client.allocator, client.config, http.RealTransport{ .client = &client.http_client }, id, request, request_options);
+}
+pub fn updatePricingWithTransport(allocator: std.mem.Allocator, config: config_mod.Config, transport: anytype, id: []const u8, request: UpdatePricingRequest, request_options: options_mod.RequestOptions) !GetResponse {
+    const body = try json.stringifyRequest(allocator, request);
+    defer allocator.free(body);
+    return mutate(Endpoint, allocator, config, transport, .PUT, id, "/pricing", body, request_options);
+}
+
+test "update private endpoint constructs lifecycle request and owns metadata" {
+    const Transport = struct {
+        pub fn execute(_: @This(), allocator: std.mem.Allocator, prepared: http.PreparedRequest) !http.HttpResponse {
+            try std.testing.expectEqual(std.http.Method.PATCH, prepared.method);
+            try std.testing.expectEqualStrings("https://openrouter.ai/api/v1/private-endpoints/a%2Fb", prepared.url);
+            try std.testing.expect(prepared.body != null);
+            try std.testing.expect(std.mem.indexOf(u8, prepared.body.?, "\"declared_zdr\":false") != null);
+            return (http.FakeTransport{ .body = "{\"data\":{\"id\":\"ep_1\",\"status\":\"draft\",\"model_permaslug\":\"vendor/model\",\"model_slug\":null,\"model_name\":null,\"provider_name\":\"Provider\",\"declared_zdr\":null,\"declared_region\":null,\"provider_slug\":null,\"base_url\":null,\"upstream_model_id\":\"deploy\",\"pricing\":{\"prompt\":\"0.01\",\"completion\":\"0.02\"}}}", .headers = &.{.{ .name = "x-request-id", .value = "owned" }} }).execute(allocator, prepared);
+        }
+    };
+    var result = try updateWithTransport(std.testing.allocator, .{ .api_key = "test" }, Transport{}, "a/b", .{ .upstream_model_id = "deploy", .declared_zdr = .{ .value = false } }, .{});
+    defer result.deinit();
+    try std.testing.expectEqualStrings("owned", result.response_metadata.request_id.?);
+    try std.testing.expectError(error.ApiError, updateWithTransport(std.testing.allocator, .{ .api_key = "test" }, http.FakeTransport{ .status = .conflict }, "ep_1", .{ .upstream_model_id = "deploy", .declared_zdr = .{ .value = false } }, .{}));
+}
+test "delete private endpoint constructs lifecycle request and owns metadata" {
+    const Transport = struct {
+        pub fn execute(_: @This(), allocator: std.mem.Allocator, prepared: http.PreparedRequest) !http.HttpResponse {
+            try std.testing.expectEqual(std.http.Method.DELETE, prepared.method);
+            try std.testing.expectEqualStrings("https://openrouter.ai/api/v1/private-endpoints/a%2Fb", prepared.url);
+            try std.testing.expect(prepared.body == null);
+            return (http.FakeTransport{ .body = "{\"data\":{\"id\":\"ep_1\"}}", .headers = &.{.{ .name = "x-request-id", .value = "owned" }} }).execute(allocator, prepared);
+        }
+    };
+    var result = try deleteWithTransport(std.testing.allocator, .{ .api_key = "test" }, Transport{}, "a/b", .{});
+    defer result.deinit();
+    try std.testing.expectEqualStrings("owned", result.response_metadata.request_id.?);
+    try std.testing.expectError(error.ApiError, deleteWithTransport(std.testing.allocator, .{ .api_key = "test" }, http.FakeTransport{ .status = .conflict }, "ep_1", .{}));
+}
+test "activate private endpoint constructs lifecycle request and owns metadata" {
+    const Transport = struct {
+        pub fn execute(_: @This(), allocator: std.mem.Allocator, prepared: http.PreparedRequest) !http.HttpResponse {
+            try std.testing.expectEqual(std.http.Method.POST, prepared.method);
+            try std.testing.expectEqualStrings("https://openrouter.ai/api/v1/private-endpoints/a%2Fb/activate", prepared.url);
+            try std.testing.expect(prepared.body == null);
+            return (http.FakeTransport{ .body = "{\"data\":{\"id\":\"ep_1\",\"status\":\"draft\",\"model_permaslug\":\"vendor/model\",\"model_slug\":null,\"model_name\":null,\"provider_name\":\"Provider\",\"created_at\":\"2026-10-18\",\"declared_zdr\":null,\"declared_region\":null}}", .headers = &.{.{ .name = "x-request-id", .value = "owned" }} }).execute(allocator, prepared);
+        }
+    };
+    var result = try activateWithTransport(std.testing.allocator, .{ .api_key = "test" }, Transport{}, "a/b", .{});
+    defer result.deinit();
+    try std.testing.expectEqualStrings("owned", result.response_metadata.request_id.?);
+    try std.testing.expectError(error.ApiError, activateWithTransport(std.testing.allocator, .{ .api_key = "test" }, http.FakeTransport{ .status = .conflict }, "ep_1", .{}));
+}
+test "disable private endpoint constructs lifecycle request and owns metadata" {
+    const Transport = struct {
+        pub fn execute(_: @This(), allocator: std.mem.Allocator, prepared: http.PreparedRequest) !http.HttpResponse {
+            try std.testing.expectEqual(std.http.Method.POST, prepared.method);
+            try std.testing.expectEqualStrings("https://openrouter.ai/api/v1/private-endpoints/a%2Fb/disable", prepared.url);
+            try std.testing.expect(prepared.body == null);
+            return (http.FakeTransport{ .body = "{\"data\":{\"id\":\"ep_1\",\"status\":\"draft\",\"model_permaslug\":\"vendor/model\",\"model_slug\":null,\"model_name\":null,\"provider_name\":\"Provider\",\"created_at\":\"2026-10-18\",\"declared_zdr\":null,\"declared_region\":null}}", .headers = &.{.{ .name = "x-request-id", .value = "owned" }} }).execute(allocator, prepared);
+        }
+    };
+    var result = try disableWithTransport(std.testing.allocator, .{ .api_key = "test" }, Transport{}, "a/b", .{});
+    defer result.deinit();
+    try std.testing.expectEqualStrings("owned", result.response_metadata.request_id.?);
+    try std.testing.expectError(error.ApiError, disableWithTransport(std.testing.allocator, .{ .api_key = "test" }, http.FakeTransport{ .status = .conflict }, "ep_1", .{}));
+}
+test "enable private endpoint constructs lifecycle request and owns metadata" {
+    const Transport = struct {
+        pub fn execute(_: @This(), allocator: std.mem.Allocator, prepared: http.PreparedRequest) !http.HttpResponse {
+            try std.testing.expectEqual(std.http.Method.POST, prepared.method);
+            try std.testing.expectEqualStrings("https://openrouter.ai/api/v1/private-endpoints/a%2Fb/enable", prepared.url);
+            try std.testing.expect(prepared.body == null);
+            return (http.FakeTransport{ .body = "{\"data\":{\"id\":\"ep_1\",\"status\":\"draft\",\"model_permaslug\":\"vendor/model\",\"model_slug\":null,\"model_name\":null,\"provider_name\":\"Provider\",\"created_at\":\"2026-10-18\",\"declared_zdr\":null,\"declared_region\":null}}", .headers = &.{.{ .name = "x-request-id", .value = "owned" }} }).execute(allocator, prepared);
+        }
+    };
+    var result = try enableWithTransport(std.testing.allocator, .{ .api_key = "test" }, Transport{}, "a/b", .{});
+    defer result.deinit();
+    try std.testing.expectEqualStrings("owned", result.response_metadata.request_id.?);
+    try std.testing.expectError(error.ApiError, enableWithTransport(std.testing.allocator, .{ .api_key = "test" }, http.FakeTransport{ .status = .conflict }, "ep_1", .{}));
+}
+test "validate private endpoint constructs lifecycle request and owns metadata" {
+    const Transport = struct {
+        pub fn execute(_: @This(), allocator: std.mem.Allocator, prepared: http.PreparedRequest) !http.HttpResponse {
+            try std.testing.expectEqual(std.http.Method.POST, prepared.method);
+            try std.testing.expectEqualStrings("https://openrouter.ai/api/v1/private-endpoints/a%2Fb/validate", prepared.url);
+            try std.testing.expect(prepared.body != null);
+            return (http.FakeTransport{ .body = "{\"data\":{\"passed\":false,\"checks\":[{\"name\":\"auth_ok\",\"passed\":false,\"reason\":\"future_reason\",\"upstream_status\":502}]}}", .headers = &.{.{ .name = "x-request-id", .value = "owned" }} }).execute(allocator, prepared);
+        }
+    };
+    var result = try validateWithTransport(std.testing.allocator, .{ .api_key = "test" }, Transport{}, "a/b", .{ .workspace_id = "ws" }, .{});
+    defer result.deinit();
+    try std.testing.expectEqualStrings("owned", result.response_metadata.request_id.?);
+    try std.testing.expectError(error.ApiError, validateWithTransport(std.testing.allocator, .{ .api_key = "test" }, http.FakeTransport{ .status = .conflict }, "ep_1", .{ .workspace_id = "ws" }, .{}));
+}
+test "updatePricing private endpoint constructs lifecycle request and owns metadata" {
+    const Transport = struct {
+        pub fn execute(_: @This(), allocator: std.mem.Allocator, prepared: http.PreparedRequest) !http.HttpResponse {
+            try std.testing.expectEqual(std.http.Method.PUT, prepared.method);
+            try std.testing.expectEqualStrings("https://openrouter.ai/api/v1/private-endpoints/a%2Fb/pricing", prepared.url);
+            try std.testing.expect(prepared.body != null);
+            return (http.FakeTransport{ .body = "{\"data\":{\"id\":\"ep_1\",\"status\":\"draft\",\"model_permaslug\":\"vendor/model\",\"model_slug\":null,\"model_name\":null,\"provider_name\":\"Provider\",\"declared_zdr\":null,\"declared_region\":null,\"provider_slug\":null,\"base_url\":null,\"upstream_model_id\":\"deploy\",\"pricing\":{\"prompt\":\"0.01\",\"completion\":\"0.02\"}}}", .headers = &.{.{ .name = "x-request-id", .value = "owned" }} }).execute(allocator, prepared);
+        }
+    };
+    var result = try updatePricingWithTransport(std.testing.allocator, .{ .api_key = "test" }, Transport{}, "a/b", .{ .pricing = .{ .prompt = "0.01", .completion = "0.02" } }, .{});
+    defer result.deinit();
+    try std.testing.expectEqualStrings("owned", result.response_metadata.request_id.?);
+    try std.testing.expectError(error.ApiError, updatePricingWithTransport(std.testing.allocator, .{ .api_key = "test" }, http.FakeTransport{ .status = .conflict }, "ep_1", .{ .pricing = .{ .prompt = "0.01", .completion = "0.02" } }, .{}));
+}
+test "private endpoint creation preserves created result" {
+    const Transport = struct {
+        pub fn execute(_: @This(), allocator: std.mem.Allocator, prepared: http.PreparedRequest) !http.HttpResponse {
+            try std.testing.expectEqual(std.http.Method.POST, prepared.method);
+            try std.testing.expectEqualStrings("https://openrouter.ai/api/v1/private-endpoints", prepared.url);
+            var found = false;
+            for (prepared.headers) |h| {
+                if (std.ascii.eqlIgnoreCase(h.name, "Idempotency-Key")) {
+                    try std.testing.expectEqualStrings("stable", h.value);
+                    found = true;
+                }
+            }
+            try std.testing.expect(found);
+            return (http.FakeTransport{ .status = .created, .body = "{\"data\":{\"id\":\"ep_1\",\"status\":\"draft\",\"model_permaslug\":\"vendor/model\",\"model_slug\":null,\"model_name\":null,\"provider_name\":\"Provider\",\"created_at\":\"2026-10-18\",\"declared_zdr\":null,\"declared_region\":null}}" }).execute(allocator, prepared);
+        }
+    };
+    var result = try createWithTransport(std.testing.allocator, .{ .api_key = "test" }, Transport{}, .{ .model_permaslug = "vendor/model", .provider_slug = "provider", .upstream_model_id = "deploy", .activate = .{ .workspace_id = "ws" } }, .{ .extra_headers = &.{.{ .name = "Idempotency-Key", .value = "stable" }} });
+    defer result.deinit();
+    try std.testing.expectEqual(std.http.Status.created, result.status);
+    try std.testing.expectEqual(false, result.failure != null);
+    try std.testing.expectEqual(true, result.endpoint != null);
+}
+test "private endpoint creation preserves unprocessable_entity result" {
+    const Transport = struct {
+        pub fn execute(_: @This(), allocator: std.mem.Allocator, prepared: http.PreparedRequest) !http.HttpResponse {
+            try std.testing.expectEqual(std.http.Method.POST, prepared.method);
+            try std.testing.expectEqualStrings("https://openrouter.ai/api/v1/private-endpoints", prepared.url);
+            var found = false;
+            for (prepared.headers) |h| {
+                if (std.ascii.eqlIgnoreCase(h.name, "Idempotency-Key")) {
+                    try std.testing.expectEqualStrings("stable", h.value);
+                    found = true;
+                }
+            }
+            try std.testing.expect(found);
+            return (http.FakeTransport{ .status = .unprocessable_entity, .body = "{\"error\":{\"code\":422,\"message\":\"Validation failed\"},\"data\":{\"endpoint\":{\"id\":\"ep_1\",\"status\":\"draft\",\"model_permaslug\":\"vendor/model\",\"model_slug\":null,\"model_name\":null,\"provider_name\":\"Provider\",\"created_at\":\"2026-10-18\",\"declared_zdr\":null,\"declared_region\":null},\"validation\":{\"passed\":false,\"checks\":[]}}}" }).execute(allocator, prepared);
+        }
+    };
+    var result = try createWithTransport(std.testing.allocator, .{ .api_key = "test" }, Transport{}, .{ .model_permaslug = "vendor/model", .provider_slug = "provider", .upstream_model_id = "deploy", .activate = .{ .workspace_id = "ws" } }, .{ .extra_headers = &.{.{ .name = "Idempotency-Key", .value = "stable" }} });
+    defer result.deinit();
+    try std.testing.expectEqual(std.http.Status.unprocessable_entity, result.status);
+    try std.testing.expectEqual(true, result.failure != null);
+    try std.testing.expectEqual(true, result.endpoint != null);
+    try std.testing.expect(!result.validation.?.passed);
+    try std.testing.expectEqualStrings("ep_1", result.endpoint.?.id);
+}
+test "private endpoint creation preserves forbidden result" {
+    const Transport = struct {
+        pub fn execute(_: @This(), allocator: std.mem.Allocator, prepared: http.PreparedRequest) !http.HttpResponse {
+            try std.testing.expectEqual(std.http.Method.POST, prepared.method);
+            try std.testing.expectEqualStrings("https://openrouter.ai/api/v1/private-endpoints", prepared.url);
+            var found = false;
+            for (prepared.headers) |h| {
+                if (std.ascii.eqlIgnoreCase(h.name, "Idempotency-Key")) {
+                    try std.testing.expectEqualStrings("stable", h.value);
+                    found = true;
+                }
+            }
+            try std.testing.expect(found);
+            return (http.FakeTransport{ .status = .forbidden, .body = "{\"error\":{\"code\":403,\"message\":\"Forbidden\"}}" }).execute(allocator, prepared);
+        }
+    };
+    var result = try createWithTransport(std.testing.allocator, .{ .api_key = "test" }, Transport{}, .{ .model_permaslug = "vendor/model", .provider_slug = "provider", .upstream_model_id = "deploy", .activate = .{ .workspace_id = "ws" } }, .{ .extra_headers = &.{.{ .name = "Idempotency-Key", .value = "stable" }} });
+    defer result.deinit();
+    try std.testing.expectEqual(std.http.Status.forbidden, result.status);
+    try std.testing.expectEqual(true, result.failure != null);
+    try std.testing.expectEqual(false, result.endpoint != null);
+}
+
+test "private endpoint updates distinguish omitted and cleared declarations" {
+    const body = try json.stringifyRequest(std.testing.allocator, UpdateRequest{ .upstream_model_id = "model", .declared_region = .clear, .declared_zdr = .{ .value = false } });
+    defer std.testing.allocator.free(body);
+    var parsed = try json.parseResponse(std.json.Value, std.testing.allocator, body);
+    defer parsed.deinit();
+    try std.testing.expect(parsed.value.object.get("declared_region").? == .null);
+    try std.testing.expect(!parsed.value.object.get("declared_zdr").?.bool);
+    try std.testing.expect(!parsed.value.object.contains("base_url"));
 }

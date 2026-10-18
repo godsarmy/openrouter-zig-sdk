@@ -1,6 +1,7 @@
 # Update Log
 
 ## 2026-10-18
+* **Phase 3 completion (endpoint scope)**: Implemented the 35 remaining operations and added offline transport/stream tests. Coverage is 150 operations, including all 148 non-deprecated specification operations. Updated lifecycle and authentication guidance; live account access remains unverified.
 * **Phase 3**: Added eight SCIM operations with typed requests/responses and offline transport tests. Coverage is 115 operations with 35 non-deprecated specification gaps. Phase 3 remains incomplete; live enterprise access is unverified.
 
 ## 2026-10-17

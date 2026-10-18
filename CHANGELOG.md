@@ -5,7 +5,9 @@
 - Added all eight SCIM operations: group discovery, mapping management with explicit membership retention, and asynchronous sync creation/polling; includes typed owned responses and offline transport tests.
 
 - Added organization settings get/update and private-endpoint list/get calls, with owned response metadata and typed data.
-- Audited Phase 3 access and lifecycle requirements; private-endpoint mutations and the remaining specialized APIs are still planned.
+- Completed Phase 3 endpoint coverage: added the 35 remaining operations for private-endpoint lifecycle, container files, interns and chat SSE, Vault, OAuth workload identity, System One, and alpha Decisions.
+- Preserve partial-failure private-endpoint drafts, binary file content, scan-boundary cursors, nullable intern updates, and terminal chat session/usage events. OAuth infrastructure omits API-key authorization and uses form encoding for token exchange.
+- Added offline tests and updated coverage to 150 operations (all 148 non-deprecated specification operations plus two retained dataset routes). Live enterprise, federation, and alpha account access remain unverified.
 
 ## v1.2.0 - 2026-10-04
 

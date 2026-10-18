@@ -323,6 +323,33 @@ pub const ScimListGroupsResponse = scim.ListGroupsResponse;
 pub const ScimMappingResponse = scim.MappingResponse;
 pub const ScimSyncJobResponse = scim.SyncJobResponse;
 pub const ScimDeleteMappingResponse = scim.DeleteMappingResponse;
+pub const PrivateEndpointActivation = @import("private_endpoints.zig").Activation;
+pub const PrivateEndpointNullableString = @import("private_endpoints.zig").NullableString;
+pub const PrivateEndpointNullableBool = @import("private_endpoints.zig").NullableBool;
+pub const PrivateEndpointCreateRequest = @import("private_endpoints.zig").CreateRequest;
+pub const PrivateEndpointUpdateRequest = @import("private_endpoints.zig").UpdateRequest;
+pub const PrivateEndpointUpdatePricingRequest = @import("private_endpoints.zig").UpdatePricingRequest;
+pub const PrivateEndpointValidateRequest = @import("private_endpoints.zig").ValidateRequest;
+pub const PrivateEndpointManagedEndpoint = @import("private_endpoints.zig").ManagedEndpoint;
+pub const PrivateEndpointCheck = @import("private_endpoints.zig").Check;
+pub const PrivateEndpointValidation = @import("private_endpoints.zig").Validation;
+pub const PrivateEndpointManagedResponse = @import("private_endpoints.zig").ManagedResponse;
+pub const PrivateEndpointValidationResponse = @import("private_endpoints.zig").ValidationResponse;
+pub const PrivateEndpointDeleteResponse = @import("private_endpoints.zig").DeleteResponse;
+pub const PrivateEndpointFailure = @import("private_endpoints.zig").Failure;
+pub const PrivateEndpointCreateResponse = @import("private_endpoints.zig").CreateResponse;
+
+pub const vault = @import("vault.zig");
+
+pub const containers = @import("containers.zig");
+
+pub const interns = @import("interns.zig");
+
+pub const OAuthTokenExchangeRequest = @import("oauth.zig").TokenExchangeRequest;
+pub const OAuthTokenExchangeResponse = @import("oauth.zig").TokenExchangeResponse;
+pub const OAuthJwksResponse = @import("oauth.zig").JwksResponse;
+
+pub const decisions = @import("decisions.zig");
 pub const PrivateEndpoint = @import("private_endpoints.zig").Endpoint;
 pub const PrivateEndpointPricing = @import("private_endpoints.zig").Pricing;
 pub const PrivateEndpointSummary = @import("private_endpoints.zig").Summary;
@@ -388,6 +415,12 @@ test "openrouter module exposes package version" {
 }
 
 test {
+    _ = @import("containers.zig");
+    _ = @import("decisions.zig");
+    _ = @import("enterprise.zig");
+    _ = @import("files.zig");
+    _ = @import("interns.zig");
+    _ = @import("vault.zig");
     _ = @import("activity.zig");
     _ = @import("audio.zig");
     _ = @import("byok.zig");

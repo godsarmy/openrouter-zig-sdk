@@ -3,9 +3,9 @@
 * [Endpoint coverage](coverage.md) - Canonical, categorized matrix of every SDK HTTP endpoint.
 * [API audit and roadmap](roadmap.md) - Current specification gaps, priorities, and implementation caveats.
 
-The base URL is `https://openrouter.ai/api/v1`. Paths in the matrix are relative to it.
+The base URL is `https://openrouter.ai/api/v1`. Paths in the matrix are relative to it, except alpha Decisions, which replaces the trailing `/v1` with `/alpha`.
 
-Organization settings and private-endpoint reads require a management API key; private endpoints also require an entitlement. Returned values own their data and must be deinitialized:
+Organization settings and private-endpoint operations require a management API key; private endpoints also require an entitlement. Returned values own their data and must be deinitialized:
 
 ```zig
 var settings = try client.organization.settings.get(.{});
@@ -33,3 +33,21 @@ defer status.deinit();
 ```
 
 Poll sync jobs explicitly until `succeeded` or `failed`; unknown status values are preserved. Mapping deletion takes `.{ .keep_members = true }` to retain workspace membership, or `false` to remove memberships granted by the mapping. Recreating an existing mapping with the same role re-applies it; a different role returns an API error. Live account access has not been verified.
+
+Phase 3 endpoint coverage is complete. Container, intern, Vault, and Decisions types are exported under `openrouter.containers`, `.interns`, `.vault`, and `.decisions`. Their owned JSON responses expose the decoded payload as `.value`; deinitialize every returned response. Container content exposes raw bytes with `.data()`.
+
+```zig
+var files = try client.containers.listFiles("container-id", .{}, .{});
+defer files.deinit();
+// Use files.value.last_id as the next request's after, even if data is empty.
+var secrets = try client.vault.listSecrets(.{ .limit = 20 }, .{});
+defer secrets.deinit();
+```
+
+Private-endpoint creation returns an owned result even on an HTTP error: inspect `.failure` and `.status`, then recover `.endpoint` and `.validation` if a draft was created. Set an `Idempotency-Key` in request options when retrying creation. Validation takes a workspace ID; activation is a separate call. Update declarations use `.clear` for JSON null or `.{ .value = false }` / `.{ .value = "us" }` to set a value. Pricing updates take `.{ .pricing = .{ .prompt = "0.0000025", .completion = "0.00001" } }`.
+
+Intern creation requires an explicit workspace ID. Update fields support `.clear` to send JSON null, or `.{ .value = "..." }` to set a string; omitted fields stay unchanged. `interns.provision` and `interns.suspendIntern` send no body. `interns.delete` defaults `acknowledge_workspace_loss` to false. Daemon signing requires a personal OAuth bearer with `vault:read`, supplied in the client credential; a management API key does not substitute for it.
+
+`oauth.jwks` fetches public signing keys without validating a JWT. `oauth.exchangeToken` performs RFC 8693 workload identity exchange with form encoding and omits the client API key. It returns an owned short-lived access token. These APIs are separate from `oauth.createAuthCode` and `oauth.exchangeAuthCodeForAPIKey`.
+
+`systemone.create` and `alpha.decisions.create` share `openrouter.decisions.Request`: application-defined JSON state, a map of typed `noul`, `choice`, `score`, or `box` questions, and typed answers. The alpha call requires a configured base ending in `/v1`, preserving proxy prefixes. The service maps bare System One model IDs into `typesafe/`. Entitlements, rollout gates, and live account access remain unverified; see the [roadmap](roadmap.md).
