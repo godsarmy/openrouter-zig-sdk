@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## v2.0.0 - 2026-10-24
+
+- Fixed batch request field ordering, added `callback_url`, and allowed omitted optional usage fields.
+- Fixed chat tool-call history serialization, added request reasoning-detail replay, and added JSON-schema response format configuration with serialization checks.
+- Corrected Messages `speed` to `.fast`/`.standard` enum values and switched `client.end_users` to documented `/external-users` routes while retaining public resource names.
+- Preserve buffered Responses `error` and `incomplete_details` payloads, including provider metadata.
+- Accept embeddings without `index`; `Embedding.index` is now optional, preserving the difference between an omitted index and index zero.
+- Breaking changes: numeric Messages `speed` callers must use `.fast`/`.standard`; embedding index callers must handle `?u32` null explicitly. No index is inferred when the API omits it. JSON-schema response formats now require a schema configuration with a name and object-valued schema.
+- Verification: offline unit tests, example builds, and credential-free integration skip/profile-policy checks; no live inference or management mutations were used to verify these changes.
+
 ## v1.3.1 - 2026-10-18
 
 - Documented organization-only APIs, management-key scope, private-endpoint entitlements, and the unverified SCIM access requirements.

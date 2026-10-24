@@ -10,6 +10,8 @@ Messages requests use `MessagesSpeed` values `.fast` and `.standard`; numeric `s
 
 Chat `ToolCall` retains its `id`, `name`, and `arguments` construction API but serializes the required nested `function` wire format. Request messages accept `reasoning_details` from response messages; keep the source response alive until the next request has been serialized. For structured output, set `response_format.type = .json_schema` and provide `response_format.json_schema` (`ChatJsonSchemaConfig`) with a name and JSON Schema object, plus optional `strict` and `description`. Missing configuration or a non-object schema fails serialization with `error.WriteFailed`; `.text` and `.json_object` formats remain unchanged.
 
+Buffered Responses expose `error` and `incomplete_details` as optional raw JSON values, owned until response `deinit`. Inspect them alongside `status` for failed or incomplete generations; they do not replace HTTP error handling. Embedding items expose `index: ?u32`: an omitted index is null, not an inferred position or zero. Handle null explicitly when matching vectors to inputs.
+
 Organization settings require an organization account and management key; private endpoints require an organization management key and entitlement. A personal management key does not unlock these APIs. See [account access](account-access.md) for live observations and SCIM access limitations. Returned values own their data and must be deinitialized:
 
 ```zig

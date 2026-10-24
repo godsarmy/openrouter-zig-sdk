@@ -43,7 +43,8 @@ pub const CreateResponse = struct {
 pub const ModelsListResponse = models_mod.ListResponse;
 
 pub const Embedding = struct {
-    index: u32,
+    /// Input index when supplied by the API; omission is distinct from zero.
+    index: ?u32 = null,
     embedding: []f32,
 };
 
@@ -163,11 +164,96 @@ test "embeddings create parses response" {
 
     try std.testing.expectEqualStrings("openai/text-embedding-3-small", result.model);
     try std.testing.expectEqual(@as(usize, 2), result.data.len);
-    try std.testing.expectEqual(@as(u32, 0), result.data[0].index);
+    try std.testing.expectEqual(@as(?u32, 0), result.data[0].index);
+    try std.testing.expectEqual(@as(?u32, 1), result.data[1].index);
     try std.testing.expectEqual(@as(usize, 3), result.data[0].embedding.len);
     try std.testing.expectApproxEqAbs(@as(f32, 0.1), result.data[0].embedding[0], 0.00001);
     try std.testing.expectApproxEqAbs(@as(f32, -0.2), result.data[0].embedding[1], 0.00001);
     try std.testing.expectEqual(@as(?u32, 4), result.usage.?.total_tokens);
+}
+
+test "embeddings create accepts omitted index and retains owned response" {
+    const allocator = std.testing.allocator;
+    const body = try allocator.dupe(u8,
+        \\{"object":"list","model":"test-model","data":[{"object":"embedding","embedding":[0.25,-0.5]}],"usage":{"prompt_tokens":2,"total_tokens":2}}
+    );
+    defer allocator.free(body);
+    var request_id = "request-123".*;
+
+    var result = try createWithTransport(allocator, .{ .api_key = "test-key" }, http.FakeTransport{
+        .body = body,
+        .headers = &.{.{ .name = "x-request-id", .value = &request_id }},
+    }, .{ .model = "test-model", .input = .{ .string = "Hello" } }, .{});
+    defer result.deinit();
+
+    // createWithTransport has already deinitialized its HTTP response. Neither
+    // the returned data nor metadata may borrow the transport's source buffers.
+    @memset(body, 'x');
+    @memset(&request_id, 'x');
+    try std.testing.expectEqualStrings("test-model", result.model);
+    try std.testing.expectEqual(@as(usize, 1), result.data.len);
+    try std.testing.expectEqual(@as(?u32, null), result.data[0].index);
+    try std.testing.expectEqualSlices(f32, &.{ 0.25, -0.5 }, result.data[0].embedding);
+    try std.testing.expectEqual(@as(?u32, 2), result.usage.?.total_tokens);
+    try std.testing.expectEqualStrings("request-123", result.response_metadata.request_id.?);
+}
+
+test "embeddings create preserves mixed index presence and response order" {
+    var result = try createWithTransport(std.testing.allocator, .{ .api_key = "test-key" }, http.FakeTransport{ .body =
+        \\{"model":"test-model","data":[{"object":"embedding","index":7,"embedding":[0.75]},{"object":"embedding","embedding":[0.5]},{"object":"embedding","index":0,"embedding":[0.25]}]}
+    }, .{ .model = "test-model", .input = .{ .strings = &.{ "a", "b", "c" } } }, .{});
+    defer result.deinit();
+
+    try std.testing.expectEqual(@as(usize, 3), result.data.len);
+    const indices = [_]?u32{ 7, null, 0 };
+    const vectors = [_]f32{ 0.75, 0.5, 0.25 };
+    for (result.data, indices, vectors) |item, index, value| {
+        try std.testing.expectEqual(index, item.index);
+        try std.testing.expectEqualSlices(f32, &.{value}, item.embedding);
+    }
+}
+
+test "embeddings create still requires embedding with or without index" {
+    const bodies = [_][]const u8{
+        \\{"model":"test-model","data":[{"object":"embedding"}]}
+        ,
+        \\{"model":"test-model","data":[{"object":"embedding","index":0}]}
+        ,
+    };
+    for (bodies) |body| {
+        try std.testing.expectError(error.MissingField, createWithTransport(
+            std.testing.allocator,
+            .{ .api_key = "test-key" },
+            http.FakeTransport{ .body = body },
+            .{ .model = "test-model", .input = .{ .string = "Hello" } },
+            .{},
+        ));
+    }
+}
+
+test "embeddings create rejects malformed index types" {
+    const invalid_indices = [_][]const u8{ "true", "[]", "{}", "\"invalid\"" };
+    for (invalid_indices) |index| {
+        const body = try std.fmt.allocPrint(
+            std.testing.allocator,
+            "{{\"model\":\"test-model\",\"data\":[{{\"object\":\"embedding\",\"index\":{s},\"embedding\":[0.25]}}]}}",
+            .{index},
+        );
+        defer std.testing.allocator.free(body);
+        if (createWithTransport(
+            std.testing.allocator,
+            .{ .api_key = "test-key" },
+            http.FakeTransport{ .body = body },
+            .{ .model = "test-model", .input = .{ .string = "Hello" } },
+            .{},
+        )) |response| {
+            var result = response;
+            result.deinit();
+            return error.TestExpectedError;
+        } else |err| {
+            try std.testing.expect(err == error.UnexpectedToken or err == error.InvalidCharacter);
+        }
+    }
 }
 
 test "embeddings create sends POST /embeddings" {

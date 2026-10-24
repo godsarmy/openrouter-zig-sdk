@@ -106,6 +106,10 @@ pub const CreateResponse = struct {
     created_at: ?i64 = null,
     model: ?[]const u8 = null,
     status: ?[]const u8 = null,
+    /// Raw failure details, owned by this response until `deinit`.
+    @"error": ?std.json.Value = null,
+    /// Raw incomplete-response details, owned by this response until `deinit`.
+    incomplete_details: ?std.json.Value = null,
     output: ?[]std.json.Value = null,
     usage: ?Usage = null,
     openrouter_metadata: ?std.json.Value = null,
@@ -130,6 +134,8 @@ const WireCreateResponse = struct {
     created_at: ?i64 = null,
     model: ?[]const u8 = null,
     status: ?[]const u8 = null,
+    @"error": ?std.json.Value = null,
+    incomplete_details: ?std.json.Value = null,
     output: ?[]std.json.Value = null,
     usage: ?Usage = null,
     openrouter_metadata: ?std.json.Value = null,
@@ -342,6 +348,8 @@ pub fn parseCreateResponse(allocator: std.mem.Allocator, response: http.HttpResp
         .created_at = parsed.created_at,
         .model = parsed.model,
         .status = parsed.status,
+        .@"error" = parsed.@"error",
+        .incomplete_details = parsed.incomplete_details,
         .output = parsed.output,
         .usage = parsed.usage,
         .openrouter_metadata = parsed.openrouter_metadata,
@@ -565,4 +573,92 @@ test "responses create maps error status to ApiError" {
         .{ .model = "openai/o4-mini", .input = .{ .text = "Hello" } },
         .{},
     ));
+}
+
+test "responses create preserves failed response error and nested metadata through transport" {
+    const body =
+        \\{"status":"failed","error":{"code":"server_error","message":"Provider failed","metadata":{"provider_name":"Example","alignment":{"calls":[{"outcome":"unavailable","reason":"evaluator_error"}]},"future":{"values":[null,true,42,{"opaque":"kept"}]}},"future_error_field":["extra"]}}
+    ;
+    var result = try createWithTransport(std.testing.allocator, .{ .api_key = "test-key" }, http.FakeTransport{ .body = body }, .{
+        .model = "openai/o4-mini",
+        .input = .{ .text = "Hello" },
+    }, .{});
+    defer result.deinit();
+
+    try std.testing.expectEqualStrings("failed", result.status.?);
+    const failure = result.@"error".?.object;
+    try std.testing.expectEqualStrings("server_error", failure.get("code").?.string);
+    try std.testing.expectEqualStrings("Provider failed", failure.get("message").?.string);
+    const metadata = failure.get("metadata").?.object;
+    try std.testing.expectEqualStrings("Example", metadata.get("provider_name").?.string);
+    const call = metadata.get("alignment").?.object.get("calls").?.array.items[0].object;
+    try std.testing.expectEqualStrings("evaluator_error", call.get("reason").?.string);
+    const values = metadata.get("future").?.object.get("values").?.array.items;
+    try std.testing.expectEqual(@as(usize, 4), values.len);
+    try std.testing.expect(values[0] == .null);
+    try std.testing.expect(values[1].bool);
+    try std.testing.expectEqual(@as(i64, 42), values[2].integer);
+    try std.testing.expectEqualStrings("kept", values[3].object.get("opaque").?.string);
+    try std.testing.expectEqualStrings("extra", failure.get("future_error_field").?.array.items[0].string);
+    try std.testing.expect(result.incomplete_details == null);
+}
+
+test "responses create owns incomplete details independently of HTTP body" {
+    var response: http.HttpResponse = .{
+        .allocator = std.testing.allocator,
+        .status = .ok,
+        .body = try std.testing.allocator.dupe(u8,
+            \\{"status":"incomplete","error":null,"incomplete_details":{"reason":"max_output_tokens","details":{"provider":{"limits":[123,"future"]},"retryable":false}}}
+        ),
+    };
+    var result = blk: {
+        defer response.deinit();
+        const parsed = try parseCreateResponse(std.testing.allocator, response);
+        @memset(response.body, 'x');
+        break :blk parsed;
+    };
+    defer result.deinit();
+
+    try std.testing.expectEqualStrings("incomplete", result.status.?);
+    try std.testing.expect(result.@"error" == null);
+    const incomplete = result.incomplete_details.?.object;
+    try std.testing.expectEqualStrings("max_output_tokens", incomplete.get("reason").?.string);
+    const details = incomplete.get("details").?.object;
+    try std.testing.expect(!details.get("retryable").?.bool);
+    const limits = details.get("provider").?.object.get("limits").?.array.items;
+    try std.testing.expectEqual(@as(i64, 123), limits[0].integer);
+    try std.testing.expectEqualStrings("future", limits[1].string);
+}
+
+test "responses create completed response accepts omitted and null failure details" {
+    for ([_][]const u8{
+        "{\"status\":\"completed\"}",
+        "{\"status\":\"completed\",\"error\":null,\"incomplete_details\":null}",
+    }) |body| {
+        var result = try createWithTransport(std.testing.allocator, .{ .api_key = "test-key" }, http.FakeTransport{ .body = body }, .{
+            .model = "openai/o4-mini",
+            .input = .{ .text = "Hello" },
+        }, .{});
+        defer result.deinit();
+        try std.testing.expectEqualStrings("completed", result.status.?);
+        try std.testing.expect(result.@"error" == null);
+        try std.testing.expect(result.incomplete_details == null);
+    }
+}
+
+test "responses create HTTP errors take precedence over response failure details and invalid JSON" {
+    for ([_]std.http.Status{ .bad_request, .too_many_requests, .internal_server_error, .bad_gateway }) |status| {
+        for ([_][]const u8{
+            "{\"status\":\"failed\",\"error\":{\"code\":\"server_error\",\"metadata\":{\"nested\":[true]}},\"incomplete_details\":{\"reason\":\"content_filter\"}}",
+            "not JSON",
+        }) |body| {
+            try std.testing.expectError(error.ApiError, createWithTransport(
+                std.testing.allocator,
+                .{ .api_key = "test-key" },
+                http.FakeTransport{ .status = status, .body = body },
+                .{ .model = "openai/o4-mini", .input = .{ .text = "Hello" } },
+                .{},
+            ));
+        }
+    }
 }

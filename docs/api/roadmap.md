@@ -51,7 +51,7 @@ Paths below are normally relative to `https://openrouter.ai/api/v1`. `/api/alpha
 
 The current specification documents `/external-users` rather than `/end-users`; the SDK now uses the documented routes while retaining `client.end_users` and existing public type names. No live management mutations were used to verify old-route support. The review also identified `GET /vault/interns/{internId}/connections` as a follow-up endpoint gap. Retained intern lifecycle and benchmark operations are absent from the reviewed specification; do not infer server removal from that absence.
 
-Remaining field-fidelity priorities include buffered Responses `error`/`incomplete_details` and embeddings options and optional response `index`. The review was targeted, not an exhaustive field-parity audit.
+Buffered Responses now retain `error`/`incomplete_details`, and embeddings accept an omitted response `index`. Expanded embeddings request options remain follow-up work. The review was targeted, not an exhaustive field-parity audit.
 
 ## Priorities
 
