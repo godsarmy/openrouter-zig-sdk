@@ -141,6 +141,12 @@ Every row is implemented and registered on `openrouter.Client`; method names are
 | GET/POST | `/end-users` | `end_users.list`, `.create` | management; end-user lifecycle API; create returns `201`. |
 | GET/PATCH/DELETE | `/end-users/{user}` | `end_users.get`, `.update`, `.delete` | management; delete is soft deactivation and returns `204`, not an inference access restriction. |
 
+Batch creation supports `/v1/chat/completions`, `/v1/responses`, `/v1/messages`, and `/v1/embeddings`, with optional `completion_window`, `provider.only`, `provider.allow_fallbacks`, and `callback_url`. Batch-level fields serialize before `requests`, as required by OpenRouter's streaming request parser. Request bodies and result response bodies remain raw `std.json.Value` objects. See the [Batch API quickstart](https://openrouter.ai/docs/batch-quickstart).
+
+Batch usage requires the three token counts; omitted optional cost and usage-detail fields default to null, matching the [official response schema](https://openrouter.ai/docs/api/api-reference/batch/get-a-batch). Other required batch and result fields remain required: abbreviated quickstart examples are not complete response fixtures.
+
+Polling, webhook receiving/signature verification, and deduplication are caller responsibilities; setting `callback_url` does not install a receiver. Save results before deleting a terminal batch. The SDK has no batch cancellation operation.
+
 # Guardrails, workspaces, and organization
 
 | Method | Path | Client call | Notes |

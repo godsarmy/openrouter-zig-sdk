@@ -40,9 +40,11 @@ pub const BatchInput = struct {
 pub const CreateRequest = struct {
     endpoint: Endpoint,
     model: []const u8,
-    requests: []const BatchInput,
     completion_window: ?[]const u8 = null,
     provider: ?Provider = null,
+    callback_url: ?[]const u8 = null,
+    // Keep last: OpenRouter's streaming parser requires batch options before requests.
+    requests: []const BatchInput,
 };
 
 pub const RequestCounts = struct { total: u64, completed: u64, failed: u64 };
@@ -51,16 +53,16 @@ pub const Usage = struct {
     prompt_tokens: u64,
     completion_tokens: u64,
     total_tokens: u64,
-    cost: ?f64,
-    is_byok: ?bool,
-    service_tier: ?[]const u8,
-    speed: ?[]const u8,
-    cost_details: ?std.json.Value,
-    prompt_tokens_details: ?std.json.Value,
-    completion_tokens_details: ?std.json.Value,
-    cache_creation: ?std.json.Value,
-    iterations: ?std.json.Value,
-    server_tool_use: ?std.json.Value,
+    cost: ?f64 = null,
+    is_byok: ?bool = null,
+    service_tier: ?[]const u8 = null,
+    speed: ?[]const u8 = null,
+    cost_details: ?std.json.Value = null,
+    prompt_tokens_details: ?std.json.Value = null,
+    completion_tokens_details: ?std.json.Value = null,
+    cache_creation: ?std.json.Value = null,
+    iterations: ?std.json.Value = null,
+    server_tool_use: ?std.json.Value = null,
 };
 
 pub const ResultResponse = struct {
@@ -256,10 +258,61 @@ test "batches create sends POST JSON and parses accepted batch" {
     var input_arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer input_arena.deinit();
     const input_body = try std.json.parseFromSliceLeaky(std.json.Value, input_arena.allocator(), "{\"messages\":[]}", .{});
-    var result = try createWithTransport(std.testing.allocator, .{ .api_key = "test" }, http.FakeTransport{ .status = .accepted, .body = body }, .{ .endpoint = .@"/v1/chat/completions", .model = "openai/gpt-4o", .requests = &.{.{ .custom_id = "one", .body = input_body }}, .provider = .{ .allow_fallbacks = false, .only = &.{"openai"} } }, .{});
+    const CheckingTransport = struct {
+        response_body: []const u8,
+
+        pub fn execute(self: @This(), allocator: std.mem.Allocator, prepared: http.PreparedRequest) !http.HttpResponse {
+            try std.testing.expectEqual(std.http.Method.POST, prepared.method);
+            try std.testing.expectEqualStrings("https://openrouter.ai/api/v1/batches", prepared.url);
+            try std.testing.expectEqualStrings(
+                "{\"endpoint\":\"/v1/chat/completions\",\"model\":\"openai/gpt-4o\",\"completion_window\":\"24h\",\"provider\":{\"only\":[\"openai\"],\"allow_fallbacks\":false},\"callback_url\":\"https://example.com/batch-complete\",\"requests\":[{\"custom_id\":\"one\",\"body\":{\"messages\":[]}}]}",
+                prepared.body.?,
+            );
+            return (http.FakeTransport{ .status = .accepted, .body = self.response_body }).execute(allocator, prepared);
+        }
+    };
+    var result = try createWithTransport(std.testing.allocator, .{ .api_key = "test" }, CheckingTransport{ .response_body = body }, .{
+        .endpoint = .@"/v1/chat/completions",
+        .model = "openai/gpt-4o",
+        .completion_window = "24h",
+        .provider = .{ .allow_fallbacks = false, .only = &.{"openai"} },
+        .callback_url = "https://example.com/batch-complete",
+        .requests = &.{.{ .custom_id = "one", .body = input_body }},
+    }, .{});
     defer result.deinit();
     try std.testing.expectEqualStrings("batch_1", result.data.id);
     try std.testing.expect(result.data.finalized_at == null);
+}
+
+test "batches create serializes all options before requests" {
+    const body = try json.stringifyRequest(std.testing.allocator, CreateRequest{
+        .endpoint = .@"/v1/messages",
+        .model = "anthropic/claude-sonnet-4",
+        .completion_window = "24h",
+        .provider = .{ .only = &.{ "anthropic", "google-vertex" }, .allow_fallbacks = true },
+        .callback_url = "https://example.com/batch-complete?token=abc",
+        .requests = &.{.{ .custom_id = "one", .body = .{ .object = .empty } }},
+    });
+    defer std.testing.allocator.free(body);
+    try std.testing.expectEqualStrings(
+        "{\"endpoint\":\"/v1/messages\",\"model\":\"anthropic/claude-sonnet-4\",\"completion_window\":\"24h\",\"provider\":{\"only\":[\"anthropic\",\"google-vertex\"],\"allow_fallbacks\":true},\"callback_url\":\"https://example.com/batch-complete?token=abc\",\"requests\":[{\"custom_id\":\"one\",\"body\":{}}]}",
+        body,
+    );
+}
+
+test "batches create omits unset options and preserves all four endpoints" {
+    const endpoints = [_]Endpoint{ .@"/v1/chat/completions", .@"/v1/responses", .@"/v1/messages", .@"/v1/embeddings" };
+    for (endpoints) |endpoint| {
+        const body = try json.stringifyRequest(std.testing.allocator, CreateRequest{
+            .endpoint = endpoint,
+            .model = "m",
+            .requests = &.{},
+        });
+        defer std.testing.allocator.free(body);
+        const expected = try std.fmt.allocPrint(std.testing.allocator, "{{\"endpoint\":\"{s}\",\"model\":\"m\",\"requests\":[]}}", .{@tagName(endpoint)});
+        defer std.testing.allocator.free(expected);
+        try std.testing.expectEqualStrings(expected, body);
+    }
 }
 
 test "batches list repeats status and omits defaults" {
@@ -314,8 +367,62 @@ test "batches get parses native results usage and metadata" {
     try std.testing.expectEqualStrings("req", result.response_metadata.request_id.?);
 }
 
+test "batches get and list accept optional usage details but require token counts" {
+    const minimal = "{\"prompt_tokens\":1,\"completion_tokens\":2,\"total_tokens\":3}";
+    const quickstart = "{\"prompt_tokens\":1,\"completion_tokens\":2,\"total_tokens\":3,\"cost\":0.25,\"is_byok\":false}";
+    const explicit_nulls = "{\"prompt_tokens\":1,\"completion_tokens\":2,\"total_tokens\":3,\"cost\":null,\"is_byok\":null,\"service_tier\":null,\"speed\":null,\"cost_details\":null,\"prompt_tokens_details\":null,\"completion_tokens_details\":null,\"cache_creation\":null,\"iterations\":null,\"server_tool_use\":null}";
+    const populated = "{\"prompt_tokens\":1,\"completion_tokens\":2,\"total_tokens\":3,\"cost\":0.25,\"is_byok\":false,\"service_tier\":\"standard\",\"speed\":\"fast\",\"cost_details\":{},\"prompt_tokens_details\":{},\"completion_tokens_details\":{},\"cache_creation\":{},\"iterations\":[],\"server_tool_use\":{}}";
+    const missing_counts = [_][]const u8{
+        "{\"completion_tokens\":2,\"total_tokens\":3}",
+        "{\"prompt_tokens\":1,\"total_tokens\":3}",
+        "{\"prompt_tokens\":1,\"completion_tokens\":2}",
+    };
+    const usages = [_][]const u8{ minimal, quickstart, explicit_nulls, populated } ++ missing_counts;
+    for (usages, 0..) |usage_json, index| {
+        // Complete schema-required batch metadata, not the abbreviated quickstart object.
+        const body = try std.fmt.allocPrint(
+            std.testing.allocator,
+            "{{\"id\":\"b\",\"object\":\"batch\",\"endpoint\":\"/v1/responses\",\"model\":\"m\",\"completion_window\":\"24h\",\"status\":\"completed\",\"created_at\":1,\"finalized_at\":2,\"provider\":\"OpenAI\",\"expires_at\":86401,\"request_counts\":{{\"total\":1,\"completed\":1,\"failed\":0}},\"usage\":{s},\"results\":null,\"error\":null}}",
+            .{usage_json},
+        );
+        defer std.testing.allocator.free(body);
+        const list_body = try std.fmt.allocPrint(std.testing.allocator, "{{\"object\":\"list\",\"data\":[{s}],\"first_id\":\"b\",\"last_id\":\"b\",\"has_more\":false}}", .{body});
+        defer std.testing.allocator.free(list_body);
+        if (index >= 4) {
+            try std.testing.expectError(error.MissingField, getWithTransport(std.testing.allocator, .{ .api_key = "test" }, http.FakeTransport{ .body = body }, "b", .{}));
+            try std.testing.expectError(error.MissingField, listWithTransport(std.testing.allocator, .{ .api_key = "test" }, http.FakeTransport{ .body = list_body }, .{}, .{}));
+            continue;
+        }
+        var batch = try getWithTransport(std.testing.allocator, .{ .api_key = "test" }, http.FakeTransport{ .body = body }, "b", .{});
+        defer batch.deinit();
+        var batches = try listWithTransport(std.testing.allocator, .{ .api_key = "test" }, http.FakeTransport{ .body = list_body }, .{}, .{});
+        defer batches.deinit();
+        for ([_]Usage{ batch.data.usage.?, batches.data.data[0].usage.? }) |usage| {
+            try std.testing.expectEqual(@as(u64, 1), usage.prompt_tokens);
+            try std.testing.expectEqual(@as(u64, 2), usage.completion_tokens);
+            try std.testing.expectEqual(@as(u64, 3), usage.total_tokens);
+            if (index == 0 or index == 2) {
+                try std.testing.expectEqualDeep(Usage{ .prompt_tokens = 1, .completion_tokens = 2, .total_tokens = 3 }, usage);
+            } else {
+                try std.testing.expectEqual(@as(?f64, 0.25), usage.cost);
+                try std.testing.expectEqual(@as(?bool, false), usage.is_byok);
+            }
+            if (index == 3) {
+                try std.testing.expectEqualStrings("standard", usage.service_tier.?);
+                try std.testing.expectEqualStrings("fast", usage.speed.?);
+                try std.testing.expect(usage.cost_details.? == .object);
+                try std.testing.expect(usage.prompt_tokens_details.? == .object);
+                try std.testing.expect(usage.completion_tokens_details.? == .object);
+                try std.testing.expect(usage.cache_creation.? == .object);
+                try std.testing.expect(usage.iterations.? == .array);
+                try std.testing.expect(usage.server_tool_use.? == .object);
+            }
+        }
+    }
+}
+
 test "batches delete parses both upstream forms and exact statuses" {
-    const with_upstream = "{\"id\":\"b\",\"object\":\"batch.deleted\",\"deletion\":{\"openrouter\":\"deleted\",\"upstream\":{\"provider\":\"x\",\"status\":\"deleted\"}}}";
+    const with_upstream = "{\"id\":\"b\",\"object\":\"batch\",\"deletion\":{\"openrouter\":\"deleted\",\"upstream\":{\"provider\":\"x\",\"status\":\"deleted\"}}}";
     var result = try deleteWithTransport(std.testing.allocator, .{ .api_key = "test" }, http.FakeTransport{ .body = with_upstream }, "a/b", .{});
     defer result.deinit();
     try std.testing.expectEqualStrings("x", result.data.deletion.upstream.?.provider);
