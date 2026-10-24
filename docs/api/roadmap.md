@@ -41,11 +41,17 @@ sources:
 
 # API audit and implementation roadmap
 
-This is a planning document, not an endpoint-coverage claim. The audit was retrieved on 2026-10-15 from the [official OpenAPI specification](https://openrouter.ai/openapi.json) and the [API reference overview](https://openrouter.ai/docs/api_reference/overview). It found 151 method/path operations, including 3 deprecated operations, or **148 non-deprecated operations**. Of the canonical [150 implemented operations](coverage.md), **148 overlap with the current specification**, leaving **zero non-deprecated endpoint gaps**. This comparison normalizes path-parameter names and does not establish when any API was introduced.
+This is a planning document, not an endpoint-coverage claim. The historical audit was retrieved on 2026-10-15 from the [official OpenAPI specification](https://openrouter.ai/openapi.json) and the [API reference overview](https://openrouter.ai/docs/api_reference/overview). It found 151 method/path operations, including 3 deprecated operations, or **148 non-deprecated operations**. At that time, of the canonical [150 implemented operations](coverage.md), **148 overlapped with the specification**, leaving **zero non-deprecated endpoint gaps**. These are historical counts, not current coverage claims. This comparison normalizes path-parameter names and does not establish when any API was introduced.
 
 Two implemented operations, `GET /datasets/benchmarks/artificial-analysis` and `GET /datasets/benchmarks/design-arena`, are absent from the retrieved OpenAPI. Their absence does not establish server-side removal or deprecation; verify their current support before changing the client. All Phase 3 operations are included in these counts. The specification was retrieved again on 2026-10-18 and still contains 151 operations, including 3 deprecated operations. The Phase 3 inventory was rechecked; this is not a fresh field-parity audit of existing implementations. The gap calculation therefore uses the 148-operation intersection, not direct subtraction of all 150 implemented operations.
 
 Paths below are normally relative to `https://openrouter.ai/api/v1`. `/api/alpha/decisions` is a special alpha path. The client derives it by replacing the configured trailing `/v1` with `/alpha`, preserving proxy prefixes, as in the [official OpenRouter AI SDK](https://github.com/OpenRouterTeam/ai-sdk-provider). Other custom base URL layouts return `InvalidBaseUrl` for this operation.
+
+### Subsequent compatibility review
+
+The current specification documents `/external-users` rather than `/end-users`; the SDK now uses the documented routes while retaining `client.end_users` and existing public type names. No live management mutations were used to verify old-route support. The review also identified `GET /vault/interns/{internId}/connections` as a follow-up endpoint gap. Retained intern lifecycle and benchmark operations are absent from the reviewed specification; do not infer server removal from that absence.
+
+Remaining field-fidelity priorities include buffered Responses `error`/`incomplete_details` and embeddings options and optional response `index`. The review was targeted, not an exhaustive field-parity audit.
 
 ## Priorities
 

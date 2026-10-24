@@ -89,7 +89,7 @@ pub fn list(client: anytype, request: ListRequest, request_options: options_mod.
 pub fn listWithTransport(allocator: std.mem.Allocator, config: config_mod.Config, transport: anytype, request: ListRequest, request_options: options_mod.RequestOptions) !ListResponse {
     const query = try listQueryString(allocator, request);
     defer allocator.free(query);
-    var response = try execute(allocator, config, transport, .{ .method = .GET, .path = "/end-users", .query = query }, request_options);
+    var response = try execute(allocator, config, transport, .{ .method = .GET, .path = "/external-users", .query = query }, request_options);
     defer response.deinit();
     return parseListResponse(allocator, response);
 }
@@ -101,7 +101,7 @@ pub fn create(client: anytype, request: CreateRequest, request_options: options_
 pub fn createWithTransport(allocator: std.mem.Allocator, config: config_mod.Config, transport: anytype, request: CreateRequest, request_options: options_mod.RequestOptions) !CreateResponse {
     const body = try json.stringifyRequest(allocator, request);
     defer allocator.free(body);
-    var response = try execute(allocator, config, transport, .{ .method = .POST, .path = "/end-users", .body = body }, request_options);
+    var response = try execute(allocator, config, transport, .{ .method = .POST, .path = "/external-users", .body = body }, request_options);
     defer response.deinit();
     return parseCreateResponse(allocator, response);
 }
@@ -213,7 +213,7 @@ fn endUserPath(allocator: std.mem.Allocator, user: []const u8) ![]u8 {
     if (std.mem.eql(u8, user, ".") or std.mem.eql(u8, user, "..")) return error.InvalidUser;
     var path: std.ArrayList(u8) = .empty;
     errdefer path.deinit(allocator);
-    try path.appendSlice(allocator, "/end-users/");
+    try path.appendSlice(allocator, "/external-users/");
     try appendPathSegment(allocator, &path, user);
     return path.toOwnedSlice(allocator);
 }
@@ -316,16 +316,22 @@ fn headerValue(headers: []const http.Header, name: []const u8) ?[]const u8 {
     return null;
 }
 
-test "end user paths encode complete identifiers and mutations send precise requests" {
+test "end user operations use external user paths and encode complete identifiers" {
     const encoded = "person%2F%E6%9D%B1%E4%BA%AC%3Fx%3D1";
     const options: options_mod.RequestOptions = .{ .extra_headers = &.{.{ .name = "X-Test", .value = "test-header" }} };
-    const create_transport = CapturingTransport{ .expected_method = .POST, .expected_url = "https://openrouter.ai/api/v1/end-users", .expected_body = "{\"user\":\"alice\"}", .status = .created };
+    const list_transport = CapturingTransport{ .expected_method = .GET, .expected_url = "https://openrouter.ai/api/v1/external-users?user=" ++ encoded, .body = "{\"data\":[],\"total_count\":0}" };
+    var listed = try listWithTransport(std.testing.allocator, .{ .api_key = "test-key" }, &list_transport, .{ .user = "person/東京?x=1" }, options);
+    defer listed.deinit();
+    const create_transport = CapturingTransport{ .expected_method = .POST, .expected_url = "https://openrouter.ai/api/v1/external-users", .expected_body = "{\"user\":\"alice\"}", .status = .created };
     var created = try createWithTransport(std.testing.allocator, .{ .api_key = "test-key" }, &create_transport, .{ .user = "alice" }, options);
     defer created.deinit();
-    const update_transport = CapturingTransport{ .expected_method = .PATCH, .expected_url = "https://openrouter.ai/api/v1/end-users/" ++ encoded, .expected_body = "{\"is_active\":false}" };
+    const get_transport = CapturingTransport{ .expected_method = .GET, .expected_url = "https://openrouter.ai/api/v1/external-users/" ++ encoded };
+    var got = try getWithTransport(std.testing.allocator, .{ .api_key = "test-key" }, &get_transport, "person/東京?x=1", options);
+    defer got.deinit();
+    const update_transport = CapturingTransport{ .expected_method = .PATCH, .expected_url = "https://openrouter.ai/api/v1/external-users/" ++ encoded, .expected_body = "{\"is_active\":false}" };
     var updated = try updateWithTransport(std.testing.allocator, .{ .api_key = "test-key" }, &update_transport, "person/東京?x=1", .{ .is_active = false }, options);
     defer updated.deinit();
-    const delete_transport = CapturingTransport{ .expected_method = .DELETE, .expected_url = "https://openrouter.ai/api/v1/end-users/" ++ encoded, .status = .no_content, .body = "" };
+    const delete_transport = CapturingTransport{ .expected_method = .DELETE, .expected_url = "https://openrouter.ai/api/v1/external-users/" ++ encoded, .status = .no_content, .body = "" };
     var deleted = try deleteWithTransport(std.testing.allocator, .{ .api_key = "test-key" }, &delete_transport, "person/東京?x=1", options);
     defer deleted.deinit();
     try std.testing.expectError(error.InvalidUser, getWithTransport(std.testing.allocator, .{ .api_key = "test-key" }, http.FakeTransport{}, ".", .{}));

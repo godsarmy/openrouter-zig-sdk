@@ -138,8 +138,8 @@ Every row is implemented and registered on `openrouter.Client`; method names are
 |---|---|---|---|
 | GET/POST | `/batches` | `batches.list`, `.create` | Batch creation queues with `202`; request bodies are raw JSON objects, not file uploads. |
 | GET/DELETE | `/batches/{id}` | `batches.get`, `.delete` | Delete is terminal-result deletion, not cancellation; do not blindly retry ambiguous mutations. |
-| GET/POST | `/end-users` | `end_users.list`, `.create` | management; end-user lifecycle API; create returns `201`. |
-| GET/PATCH/DELETE | `/end-users/{user}` | `end_users.get`, `.update`, `.delete` | management; delete is soft deactivation and returns `204`, not an inference access restriction. |
+| GET/POST | `/external-users` | `end_users.list`, `.create` | management; public SDK naming is retained; create returns `201`. |
+| GET/PATCH/DELETE | `/external-users/{user}` | `end_users.get`, `.update`, `.delete` | management; delete is soft deactivation and returns `204`, not an inference access restriction. |
 
 Batch creation supports `/v1/chat/completions`, `/v1/responses`, `/v1/messages`, and `/v1/embeddings`, with optional `completion_window`, `provider.only`, `provider.allow_fallbacks`, and `callback_url`. Batch-level fields serialize before `requests`, as required by OpenRouter's streaming request parser. Request bodies and result response bodies remain raw `std.json.Value` objects. See the [Batch API quickstart](https://openrouter.ai/docs/batch-quickstart).
 
@@ -231,4 +231,4 @@ Requires a management key and enabled SCIM access. Account availability is unver
 | POST | `/systemone` | `systemone.create` | Typed questions/answers and application-defined state. |
 | POST | `/api/alpha/decisions` | `alpha.decisions.create` | Special alpha base; shared System One types. |
 
-The matrix represents **150 distinct method/path operations**: rows combining verbs are expanded for that count. It excludes the three upstream-deprecated operations (`POST /credits/coinbase` and the two intern daemon-access aliases). All 148 non-deprecated specification operations are covered; two retained dataset benchmark operations are absent from the current specification. For audited specification gaps and implementation priorities, see the [API audit and roadmap](roadmap.md); planned operations are not coverage claims.
+The matrix represents **150 distinct method/path operations**: rows combining verbs are expanded for that count. It excludes `POST /credits/coinbase` and the two intern daemon-access aliases, which were deprecated in the earlier audit. This is an implementation inventory, not a claim of complete current specification coverage: the latest review identified a missing Vault connections read and specification drift affecting retained intern and benchmark routes. Absence from the specification does not establish server-side removal. See the [API audit and roadmap](roadmap.md); planned operations are not coverage claims.

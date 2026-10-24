@@ -6,6 +6,10 @@
 
 The base URL is `https://openrouter.ai/api/v1`. Paths in the matrix are relative to it, except alpha Decisions, which replaces the trailing `/v1` with `/alpha`.
 
+Messages requests use `MessagesSpeed` values `.fast` and `.standard`; numeric `speed` values are no longer accepted by the typed API. Leaving `speed` null omits it in both buffered and streaming requests. The existing `client.end_users` resource now targets the documented `/external-users` routes; its public resource and type names are unchanged.
+
+Chat `ToolCall` retains its `id`, `name`, and `arguments` construction API but serializes the required nested `function` wire format. Request messages accept `reasoning_details` from response messages; keep the source response alive until the next request has been serialized. For structured output, set `response_format.type = .json_schema` and provide `response_format.json_schema` (`ChatJsonSchemaConfig`) with a name and JSON Schema object, plus optional `strict` and `description`. Missing configuration or a non-object schema fails serialization with `error.WriteFailed`; `.text` and `.json_object` formats remain unchanged.
+
 Organization settings require an organization account and management key; private endpoints require an organization management key and entitlement. A personal management key does not unlock these APIs. See [account access](account-access.md) for live observations and SCIM access limitations. Returned values own their data and must be deinitialized:
 
 ```zig
@@ -35,7 +39,7 @@ defer status.deinit();
 
 Poll sync jobs explicitly until `succeeded` or `failed`; unknown status values are preserved. Mapping deletion takes `.{ .keep_members = true }` to retain workspace membership, or `false` to remove memberships granted by the mapping. Recreating an existing mapping with the same role re-applies it; a different role returns an API error. Live account access has not been verified.
 
-Phase 3 endpoint coverage is complete. Container, intern, Vault, and Decisions types are exported under `openrouter.containers`, `.interns`, `.vault`, and `.decisions`. Their owned JSON responses expose the decoded payload as `.value`; deinitialize every returned response. Container content exposes raw bytes with `.data()`.
+The originally planned Phase 3 endpoints are implemented; this is not a claim of complete coverage of the evolving specification (see the [roadmap](roadmap.md)). Container, intern, Vault, and Decisions types are exported under `openrouter.containers`, `.interns`, `.vault`, and `.decisions`. Their owned JSON responses expose the decoded payload as `.value`; deinitialize every returned response. Container content exposes raw bytes with `.data()`.
 
 ```zig
 var files = try client.containers.listFiles("container-id", .{}, .{});

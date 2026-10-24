@@ -107,6 +107,7 @@ pub const ChatProviderPrice = @import("chat.zig").ProviderPrice;
 pub const ChatProviderMaxPrice = @import("chat.zig").ProviderMaxPrice;
 pub const ChatResponseFormat = @import("chat.zig").ResponseFormat;
 pub const ChatResponseFormatType = @import("chat.zig").ResponseFormatType;
+pub const ChatJsonSchemaConfig = @import("chat.zig").JsonSchemaConfig;
 pub const ChatRole = @import("chat.zig").Role;
 pub const ChatServerTool = @import("chat.zig").ServerTool;
 pub const ChatToolChoice = @import("chat.zig").ToolChoice;
@@ -244,6 +245,7 @@ pub const MessagesCreateRequest = @import("messages.zig").CreateRequest;
 pub const MessagesCreateResponse = @import("messages.zig").CreateResponse;
 pub const MessagesMessage = @import("messages.zig").Message;
 pub const MessagesRole = @import("messages.zig").Role;
+pub const MessagesSpeed = @import("messages.zig").Speed;
 pub const MessagesStream = @import("messages.zig").MessageStream;
 pub const MessagesStreamEvent = @import("messages.zig").MessageStreamEvent;
 pub const MessagesStreamMessage = @import("messages.zig").StreamMessage;
@@ -413,6 +415,16 @@ pub const version = version_mod.sdk_version;
 
 test "openrouter module exposes package version" {
     try std.testing.expectEqualStrings(version_mod.sdk_version, version);
+}
+
+test "openrouter exposes updated chat and Messages request types" {
+    const format: ChatResponseFormat = .{
+        .type = .json_schema,
+        .json_schema = ChatJsonSchemaConfig{ .name = "answer", .schema = .{ .object = .empty } },
+    };
+    const request: MessagesCreateRequest = .{ .model = "m", .messages = &.{}, .speed = MessagesSpeed.fast };
+    try std.testing.expectEqualStrings("answer", format.json_schema.?.name);
+    try std.testing.expectEqual(MessagesSpeed.fast, request.speed.?);
 }
 
 test {

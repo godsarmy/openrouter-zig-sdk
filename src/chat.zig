@@ -21,6 +21,8 @@ pub const Message = struct {
     name: ?[]const u8 = null,
     tool_call_id: ?[]const u8 = null,
     tool_calls: ?[]const ToolCall = null,
+    /// Borrowed from the response; keep its arena alive until request serialization completes.
+    reasoning_details: ?[]const ReasoningDetail = null,
 };
 
 pub const MessageContent = union(enum) {
@@ -66,6 +68,14 @@ pub const ToolCall = struct {
     id: []const u8,
     name: []const u8,
     arguments: []const u8,
+
+    pub fn jsonStringify(self: ToolCall, jws: anytype) !void {
+        try jws.write(.{
+            .id = self.id,
+            .type = "function",
+            .function = .{ .name = self.name, .arguments = self.arguments },
+        });
+    }
 };
 
 pub const CompletionRequest = struct {
@@ -158,6 +168,37 @@ pub const CompletionRequest = struct {
 
 pub const ResponseFormat = struct {
     type: ResponseFormatType,
+    json_schema: ?JsonSchemaConfig = null,
+
+    pub fn jsonStringify(self: ResponseFormat, jws: anytype) !void {
+        const needs_schema = switch (self.type) {
+            .json_schema => true,
+            .raw => |value| std.mem.eql(u8, value, "json_schema"),
+            else => false,
+        };
+        if (needs_schema and self.json_schema == null) return error.WriteFailed;
+        try jws.beginObject();
+        try jws.objectField("type");
+        try jws.write(self.type);
+        if (self.json_schema) |value| {
+            try jws.objectField("json_schema");
+            try jws.write(value);
+        }
+        try jws.endObject();
+    }
+};
+
+pub const JsonSchemaConfig = struct {
+    name: []const u8,
+    /// Borrowed JSON Schema object, required by this API for meaningful structured output.
+    schema: std.json.Value,
+    strict: ?bool = null,
+    description: ?[]const u8 = null,
+
+    pub fn jsonStringify(self: JsonSchemaConfig, jws: anytype) !void {
+        if (self.schema != .object) return error.WriteFailed;
+        try jws.write(.{ .name = self.name, .schema = self.schema, .strict = self.strict, .description = self.description });
+    }
 };
 
 pub const ResponseFormatType = union(enum) {
@@ -582,6 +623,24 @@ pub const ReasoningDetail = union(enum) {
     encrypted: struct { data: ?[]const u8 = null, id: ?[]const u8 = null, format: ?[]const u8 = null, index: ?u32 = null },
     server_tool_call: struct { tool_name: ?[]const u8 = null, arguments: ?[]const u8 = null, result: ?[]const u8 = null, tool_call_id: ?[]const u8 = null, id: ?[]const u8 = null, format: ?[]const u8 = null, index: ?u32 = null },
     raw: std.json.Value,
+
+    pub fn jsonStringify(self: ReasoningDetail, jws: anytype) !void {
+        switch (self) {
+            .raw => |value| try jws.write(value),
+            inline else => |detail, tag| {
+                try jws.beginObject();
+                try jws.objectField("type");
+                try jws.write("reasoning." ++ @tagName(tag));
+                inline for (@typeInfo(@TypeOf(detail)).@"struct".field_names) |field_name| {
+                    if (@field(detail, field_name)) |value| {
+                        try jws.objectField(field_name);
+                        try jws.write(value);
+                    }
+                }
+                try jws.endObject();
+            },
+        }
+    }
 };
 
 pub const Annotation = union(enum) {
@@ -840,6 +899,133 @@ test "chat request serializes content string and omits null optionals" {
     try std.testing.expect(std.mem.indexOf(u8, body, "\"content\":\"Hello\"") != null);
     try std.testing.expect(std.mem.indexOf(u8, body, "\"temperature\"") == null);
     try std.testing.expect(std.mem.indexOf(u8, body, "\"stream\":false") != null);
+}
+
+test "chat compatibility sends nested function tool calls through transport" {
+    const CaptureTransport = struct {
+        body: *?[]u8,
+
+        pub fn execute(self: @This(), allocator: std.mem.Allocator, prepared: http.PreparedRequest) !http.HttpResponse {
+            self.body.* = try allocator.dupe(u8, prepared.body.?);
+            return (http.FakeTransport{ .body = "{\"id\":\"gen\",\"model\":\"m\",\"choices\":[]}" }).execute(allocator, prepared);
+        }
+    };
+    var captured: ?[]u8 = null;
+    defer if (captured) |body| std.testing.allocator.free(body);
+    var result = try createWithTransport(std.testing.allocator, .{ .api_key = "test-key" }, CaptureTransport{ .body = &captured }, .{
+        .model = "m",
+        .messages = &.{.{
+            .role = .assistant,
+            .content = .{ .text = "" },
+            .tool_calls = &.{.{ .id = "call_1", .name = "weather", .arguments = "{\"city\":\"London\",\"note\":\"a\\\\b\\n\\\"quoted\\\"\"}" }},
+        }},
+    }, .{});
+    defer result.deinit();
+    var parsed = try std.json.parseFromSlice(std.json.Value, std.testing.allocator, captured.?, .{});
+    defer parsed.deinit();
+    const call = parsed.value.object.get("messages").?.array.items[0].object.get("tool_calls").?.array.items[0].object;
+    try std.testing.expectEqual(@as(usize, 3), call.count());
+    try std.testing.expectEqualStrings("call_1", call.get("id").?.string);
+    try std.testing.expectEqualStrings("function", call.get("type").?.string);
+    const function = call.get("function").?.object;
+    try std.testing.expectEqual(@as(usize, 2), function.count());
+    try std.testing.expectEqualStrings("weather", function.get("name").?.string);
+    try std.testing.expectEqualStrings("{\"city\":\"London\",\"note\":\"a\\\\b\\n\\\"quoted\\\"\"}", function.get("arguments").?.string);
+    var arguments = try std.json.parseFromSlice(std.json.Value, std.testing.allocator, function.get("arguments").?.string, .{});
+    defer arguments.deinit();
+    try std.testing.expectEqualStrings("a\\b\n\"quoted\"", arguments.value.object.get("note").?.string);
+}
+
+test "chat compatibility replays response reasoning details in request" {
+    const input =
+        \\{"role":"assistant","content":"answer","reasoning_details":[{"type":"reasoning.summary","summary":"summary","id":"s","format":"unknown","index":0},{"type":"reasoning.text","text":"thinking","signature":"sig","index":1},{"type":"reasoning.encrypted","data":"encrypted","id":"e","index":2},{"type":"reasoning.server_tool_call","tool_name":"search","arguments":"{}","result":"ok","tool_call_id":"call","index":3},{"type":"future.detail","opaque":{"x":true}}]}
+    ;
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const value = try std.json.parseFromSliceLeaky(std.json.Value, arena.allocator(), input, .{});
+    const response = try parseAssistantMessage(arena.allocator(), value);
+    const body = try json.stringifyRequest(std.testing.allocator, CompletionRequest{
+        .model = "m",
+        .messages = &.{.{ .role = response.role, .content = .{ .text = response.content.? }, .reasoning_details = response.reasoning_details }},
+    });
+    defer std.testing.allocator.free(body);
+    var parsed = try std.json.parseFromSlice(std.json.Value, std.testing.allocator, body, .{});
+    defer parsed.deinit();
+    const details = parsed.value.object.get("messages").?.array.items[0].object.get("reasoning_details").?;
+    // Object field order is not significant, so compare each detail's fields by key.
+    const originals = value.object.get("reasoning_details").?.array.items;
+    try std.testing.expectEqual(originals.len, details.array.items.len);
+    for (originals, details.array.items) |original, replayed| {
+        try std.testing.expectEqual(original.object.count(), replayed.object.count());
+        var it = original.object.iterator();
+        while (it.next()) |entry| {
+            const original_field = try json.stringifyRequest(std.testing.allocator, entry.value_ptr.*);
+            defer std.testing.allocator.free(original_field);
+            const replayed_field = try json.stringifyRequest(std.testing.allocator, replayed.object.get(entry.key_ptr.*).?);
+            defer std.testing.allocator.free(replayed_field);
+            try std.testing.expectEqualStrings(original_field, replayed_field);
+        }
+    }
+}
+
+test "chat compatibility serializes JSON schema configuration" {
+    var schema = try std.json.parseFromSlice(std.json.Value, std.testing.allocator,
+        \\{"type":"object","properties":{"answer":{"type":"number"}},"required":["answer"],"additionalProperties":false}
+    , .{});
+    defer schema.deinit();
+    const body = try json.stringifyRequest(std.testing.allocator, CompletionRequest{
+        .model = "m",
+        .messages = &.{},
+        .response_format = .{ .type = .json_schema, .json_schema = .{ .name = "answer", .schema = schema.value, .strict = true, .description = "An answer" } },
+    });
+    defer std.testing.allocator.free(body);
+    var parsed = try std.json.parseFromSlice(std.json.Value, std.testing.allocator, body, .{});
+    defer parsed.deinit();
+    const format = parsed.value.object.get("response_format").?.object;
+    try std.testing.expectEqualStrings("json_schema", format.get("type").?.string);
+    const config = format.get("json_schema").?.object;
+    try std.testing.expectEqualStrings("answer", config.get("name").?.string);
+    try std.testing.expectEqualStrings("An answer", config.get("description").?.string);
+    try std.testing.expect(config.get("strict").?.bool);
+    const actual_schema = try json.stringifyRequest(std.testing.allocator, config.get("schema").?);
+    defer std.testing.allocator.free(actual_schema);
+    const expected_schema = try json.stringifyRequest(std.testing.allocator, schema.value);
+    defer std.testing.allocator.free(expected_schema);
+    try std.testing.expectEqualStrings(expected_schema, actual_schema);
+
+    const minimal = try json.stringifyRequest(std.testing.allocator, ResponseFormat{ .type = .json_schema, .json_schema = .{ .name = "minimal", .schema = .{ .object = .empty } } });
+    defer std.testing.allocator.free(minimal);
+    try std.testing.expectEqualStrings("{\"type\":\"json_schema\",\"json_schema\":{\"name\":\"minimal\",\"schema\":{}}}", minimal);
+    try std.testing.expectError(error.WriteFailed, json.stringifyRequest(std.testing.allocator, ResponseFormat{ .type = .json_schema }));
+    try std.testing.expectError(error.WriteFailed, json.stringifyRequest(std.testing.allocator, ResponseFormat{ .type = .{ .raw = "json_schema" } }));
+    try std.testing.expectError(error.WriteFailed, json.stringifyRequest(std.testing.allocator, ResponseFormat{ .type = .json_schema, .json_schema = .{ .name = "bad", .schema = .null } }));
+}
+
+test "chat compatibility preserves text and JSON object response formats" {
+    inline for (.{ ResponseFormatType.text, ResponseFormatType.json_object }) |format_type| {
+        const body = try json.stringifyRequest(std.testing.allocator, ResponseFormat{ .type = format_type });
+        defer std.testing.allocator.free(body);
+        var parsed = try std.json.parseFromSlice(std.json.Value, std.testing.allocator, body, .{});
+        defer parsed.deinit();
+        try std.testing.expectEqual(@as(usize, 1), parsed.value.object.count());
+        try std.testing.expectEqualStrings(@tagName(format_type), parsed.value.object.get("type").?.string);
+    }
+}
+
+test "chat compatibility omits absent message optionals" {
+    const body = try json.stringifyRequest(std.testing.allocator, CompletionRequest{
+        .model = "m",
+        .messages = &.{.{ .role = .user, .content = .{ .text = "Hello" } }},
+    });
+    defer std.testing.allocator.free(body);
+    var parsed = try std.json.parseFromSlice(std.json.Value, std.testing.allocator, body, .{});
+    defer parsed.deinit();
+    const message = parsed.value.object.get("messages").?.array.items[0].object;
+    try std.testing.expectEqual(@as(usize, 2), message.count());
+    inline for (.{ "name", "tool_call_id", "tool_calls", "reasoning_details" }) |field| {
+        try std.testing.expect(message.get(field) == null);
+    }
+    try std.testing.expect(parsed.value.object.get("response_format") == null);
 }
 
 test "chat request serializes typed response format" {

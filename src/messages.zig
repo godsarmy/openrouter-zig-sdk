@@ -9,6 +9,12 @@ const json = @import("json.zig");
 const options_mod = @import("options.zig");
 const sse = @import("sse.zig");
 
+/// AnthropicSpeed in the official OpenRouter schema; null omits the field.
+pub const Speed = enum {
+    fast,
+    standard,
+};
+
 pub const CreateRequest = struct {
     model: []const u8,
     messages: []const Message,
@@ -22,7 +28,7 @@ pub const CreateRequest = struct {
     user: ?[]const u8 = null,
     trace: ?std.json.Value = null,
     session_id: ?[]const u8 = null,
-    speed: ?f32 = null,
+    speed: ?Speed = null,
     models: ?[]const []const u8 = null,
     output_config: ?std.json.Value = null,
     plugins: ?[]const std.json.Value = null,
@@ -97,7 +103,7 @@ fn writeCreateRequest(self: CreateRequest, jws: anytype, streaming: bool) !void 
     }
     if (self.speed) |value| {
         try jws.objectField("speed");
-        try jws.write(value);
+        try jws.write(@tagName(value));
     }
     if (self.models) |value| {
         try jws.objectField("models");
@@ -484,6 +490,31 @@ test "messages create serializes text request" {
     try std.testing.expect(std.mem.indexOf(u8, body, "\"max_tokens\":128") != null);
     try std.testing.expect(std.mem.indexOf(u8, body, "\"system\":\"Be concise.\"") != null);
     try std.testing.expect(std.mem.indexOf(u8, body, "\"stream\"") == null);
+}
+
+test "messages speed serializes schema strings and omits null for create and stream" {
+    for ([_]?Speed{ .fast, .standard, null }) |speed| {
+        const request: CreateRequest = .{
+            .model = "anthropic/claude-sonnet-4",
+            .messages = &.{},
+            .speed = speed,
+        };
+        const body = try json.stringifyRequest(std.testing.allocator, request);
+        defer std.testing.allocator.free(body);
+        const stream_body = try json.stringifyRequest(std.testing.allocator, StreamingCreateRequest{ .request = request });
+        defer std.testing.allocator.free(stream_body);
+        for ([_][]const u8{ body, stream_body }) |serialized| {
+            var parsed = try std.json.parseFromSlice(std.json.Value, std.testing.allocator, serialized, .{});
+            defer parsed.deinit();
+            if (speed) |value| {
+                const wire_speed = parsed.value.object.get("speed").?;
+                try std.testing.expect(wire_speed == .string);
+                try std.testing.expectEqualStrings(@tagName(value), wire_speed.string);
+            } else {
+                try std.testing.expect(parsed.value.object.get("speed") == null);
+            }
+        }
+    }
 }
 
 test "messages create merges extra body" {
